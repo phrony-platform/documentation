@@ -14,6 +14,7 @@
 
 ## Terminology
 
+- **Workflows vs. agents** — `product/workflows-vs-agents.mdx`
 - **Agent** — `product/concepts/agent.mdx`
 - **Agent version** — `product/concepts/agent-version.mdx`
 - **Session** — `product/concepts/session.mdx`

@@ -17,6 +17,7 @@
             "group": "Phrony",
             "pages": [
               "index",
+              "product/workflows-vs-agents",
               "product/dashboard/overview",
               "product/concepts/agent",
               "product/concepts/agent-version",
