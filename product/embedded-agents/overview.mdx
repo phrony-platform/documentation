@@ -18,7 +18,7 @@ Embedding is a **calling pattern**: one agent definition, **multiple surfaces** 
 1. **Build the agent** — Configure the **[version](/product/concepts/agent-version)**, then **deploy** the line automation should use.
 2. **Expose a start path** — Add an **API** **trigger** (at most one per agent) so your servers can start runs with a payload.
 3. **Authenticate** — Create an **API key** under **Settings**, scoped to that **agent** and **API** trigger.
-4. **Call the gateway** — `POST` to `/v1/agents/{agentId}/runs` with `X-API-Key` and an optional `input` object—details and **curl** on **[Calling the HTTP API](/product/embedded-agents/calling-the-api)**.
+4. **Call the API** — `POST` to `https://api.phrony.com/v1/agents/{agentId}/runs` (or your workspace’s dedicated API host) with `X-API-Key` and an optional `input` object—details and **curl** on **[Calling the HTTP API](/product/embedded-agents/calling-the-api)**.
 
 **Sub-agent** agents are not API-started on their own; a parent invokes them. For a user-facing feature, embed the **Request** or **HITL** root agent.
 
