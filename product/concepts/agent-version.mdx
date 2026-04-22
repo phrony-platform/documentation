@@ -36,6 +36,8 @@ Settings are grouped in **Version configuration** sub-tabs. Live versions are **
 | --- | --- | --- |
 | **Allowed operations** | Checkboxes of **[Integration](/product/concepts/integration)** operations exposed as tools. | Only operations in **your workspace** appear. Empty state directs you to create integrations and operations first. |
 
+![Version configuration — Operations tab, selecting allowed tools](/images/agents-operations-tab.png)
+
 #### Limits & Safety
 
 | Field | What it is | Rules and limitations |
@@ -52,11 +54,15 @@ Settings are grouped in **Version configuration** sub-tabs. Live versions are **
 | **Allowed sub-agents** | Which Sub-agent agents may be called. | Only **Sub-agent** agents; cannot add **this** agent to its own list. Plan may cap **count** per version (UI shows limit). |
 | **Execution model** | **Sequential** (one sub-agent call per turn) vs **Parallel** (multiple calls to the **same** sub-agent in one turn). | **Parallel** only parallelizes calls to the **same** sub-agent with different inputs; different sub-agents in one message are serialized. Disabled when delegation is off or snapshot is **live**. |
 
+![Version configuration — Multi-agent tab](/images/agent-multi-agent-tab.png)
+
 #### Version metadata
 
 | Field | What it is | Rules and limitations |
 | --- | --- | --- |
 | **Version label** | Human-readable id (e.g. `v1.2`). | **Unique per agent**; duplicates fail on **Save**. |
+
+![Version configuration — tabs, version selector, Save and Deploy](/images/agent-version-details.png)
 
 ## 2. How to create an agent version
 

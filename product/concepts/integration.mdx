@@ -1,6 +1,6 @@
 ---
 title: "Integration"
-description: "HTTP and built-in services, operations, and how agent versions and triggers use them."
+description: "HTTP and built-in services, operations, authentication, and how agent versions use them."
 ---
 
 ## 1. What is an integration
@@ -12,18 +12,108 @@ An **integration** (service) is a workspace-level **connector**: either **HTTP**
 | Field / concept | What it is | Rules and limitations |
 | --- | --- | --- |
 | **Name** | Label in dashboard and operation pickers. | Shown when assigning operations to versions; use a clear name. |
-| **Integration type** | **HTTP** or **Built-in** toggle in **Add Integration**. | **HTTP**: external APIs; secrets referenced, never shown after selection. **Built-in**: toolkit + connect/sign-in flow. |
-| **HTTP connection fields** | Base URL, auth, headers, etc. | Per your Phrony HTTP connector form; may reference **[secrets](/product/concepts/secret)**. |
-| **Built-in connection** | Toolkit-specific login or API key. | Must reach **active** connection for **event** triggers. |
-| **Operations** | Actions defined per integration. | Created on the integration detail screen; versions pick from workspace operations only. |
+| **Integration type** | **HTTP** or **Built-in** toggle in **Add Integration**. | See **HTTP vs built-in** below. |
+| **HTTP connection fields** | Base URL, auth mode, optional default headers/query, approval defaults. | Matches the HTTP connector form; **[secrets](/product/concepts/secret)** are chosen by id—values are never shown again in the UI after secret creation. |
+| **Built-in connection** | Toolkit-specific sign-in, OAuth, or API key. | Must show as **connected** / **active** before **[event](/product/concepts/trigger)** triggers can rely on it. |
+| **Operations** | Actions defined per integration (HTTP method + path + schema, or toolkit-defined). | Created on the integration detail screen; versions pick from workspace operations only. |
 
-Default type in **Add Integration** is **Built-in** (switch to **HTTP** if needed).
+Default type in **Add Integration** is **Built-in** (switch to **HTTP** if you are wiring a REST API yourself).
+
+---
+
+## HTTP vs built-in
+
+### HTTP integration
+
+An **HTTP** integration is a **template for outbound HTTPS calls** to an API you specify. You set:
+
+- A **base URL** (for example `https://api.example.com`) that prefixes every operation’s path.
+- How **authentication** is applied on every request (or **none** for public endpoints).
+- Optional **default headers** and **default query** parameters merged into each operation.
+
+You then define **operations**: HTTP method, path (relative to the base URL), headers/query/body templates, and a tool **arguments** schema so the model knows what parameters to pass. At run time, Phrony performs the HTTP request on behalf of the agent when the model selects that tool.
+
+Use HTTP when the capability you need is already exposed as a **REST API** you control or a **third-party API** (CRM, payments, market data, internal microservice, etc.).
+
+![Add Integration — HTTP connector (base URL, authentication, headers)](/images/add-integration-http.png)
+
+### Built-in integration
+
+A **Built-in** integration uses a **managed connector** that Phrony provides for a specific product or protocol (a “toolkit”). You do **not** type raw base URLs for the vendor API yourself; instead you **pick the toolkit** and complete a **connection** flow (often OAuth sign-in to the vendor, or pasting an API key into a guided form).
+
+Built-ins exist so common vendors work **consistently** (auth refresh, pagination patterns, event subscriptions) and so **[event triggers](/product/concepts/trigger)** can subscribe to vendor webhooks or sync events where supported.
+
+Use **Built-in** when Phrony ships that connector for your system; use **HTTP** for everything else.
+
+![Add Integration — Built-in toolkit connection flow](/images/add-integration-builtin.png)
+
+---
+
+## HTTP authentication
+
+The HTTP connector’s **Authentication** setting controls how credentials are attached to **every** outbound request from this integration (unless an operation overrides something explicitly). The dashboard offers:
+
+| Authentication | Meaning | Typical use |
+| --- | --- | --- |
+| **None** | No credential headers from secrets. | Truly **public** read-only APIs or internal networks where auth is not required. |
+| **API key header** | Sends a **[secret](/product/concepts/secret)** value in a **custom header** you name (for example `X-Api-Key`). | APIs that expect a static key in a vendor-specific header. |
+| **Bearer token** | Sends `Authorization: Bearer <secret value>` using the raw secret string. | JWT or opaque tokens treated as a single secret value. |
+| **Grant credentials (JSON secret)** | The secret holds **JSON** (for example `{ "accessToken": "..." }`). You map **one or more header names** to **templates** that reference fields (for example `Bearer {{accessToken}}`). | OAuth-style responses or multi-field credential blobs without splitting them into many secrets. |
+
+**Important:** You choose an existing **secret** from **Secret Manager**; the UI does **not** display the secret value after you save. Rotate by creating a new secret and editing the integration to point at it.
+
+Optional: **Always require approval** on the HTTP integration forces **human approval** before each call (unless an operation overrides it)—useful for destructive or high-risk endpoints.
+
+You can still add **default headers** (static name/value pairs) for non-secret metadata (for example `Accept: application/json`). Use **secrets** or header templates for anything sensitive.
+
+---
+
+## Built-in authentication
+
+Built-in connectors do **not** use the same four-way HTTP auth dropdown. Instead, authentication is **defined by the toolkit**:
+
+- **OAuth / “Connect account”** — you sign in with the vendor; Phrony stores tokens needed for refresh and outbound calls. You may see **connected account** state on the integration.
+- **API key in vendor form** — the toolkit’s UI asks for a key or token once; it is stored as part of the **connection**, not re-displayed as plain text in lists.
+- **Mixed** — some toolkits use both (for example connect for user context plus a workspace API key).
+
+Until the built-in shows a **good** connection, **[event](/product/concepts/trigger)** triggers that depend on that service may not deliver, and operations may fail at run time. Hosting and enablement are also required on the Phrony side—see **Limitations** and **[Limits & plans](/product/reference/platform-rules)**.
+
+---
+
+## Example: HTTP integration for a public crypto API (CoinGecko)
+
+This example uses **[CoinGecko’s](https://www.coingecko.com/en/api)** public REST API (third-party terms and rate limits apply to you as the API consumer). It shows how **HTTP** + **no auth** can expose a **read-only price lookup** to an agent.
+
+**1. Create the integration**
+
+1. **Integrations** → **Add Integration** → type **HTTP**.
+2. **Name:** e.g. `CoinGecko`.
+3. **Base URL:** `https://api.coingecko.com/api/v3`
+4. **Authentication:** **None** (the public `api/v3` endpoints many tutorials use do not require a key; CoinGecko also offers optional **Demo** / **Pro** keys with higher limits—if you use a key, switch to **API key header** and set the header name CoinGecko documents for your tier).
+5. **Create** the integration.
+
+**2. Add an operation**
+
+On the integration detail page, add an operation, for example:
+
+- **Name:** `Get coin price`
+- **HTTP method:** `GET`
+- **Path:** `/simple/price`
+- **Query parameters:** e.g. `ids` = `bitcoin`, `vs_currencies` = `usd` (or expose `ids` and `vs_currencies` via the tool **arguments** schema so the model can pass `ethereum`, `eur`, etc.)
+
+**3. Attach to an [agent version](/product/concepts/agent-version)**
+
+Under **Version configuration** → **Operations**, enable this operation for a **testing** snapshot, **Save**, then **Test run** and ask for a price in natural language—the model should call the tool and Phrony should perform the GET.
+
+**If you add an API key later:** create a **[secret](/product/concepts/secret)** with the key, edit the integration, set **API key header** (or **Bearer**, per vendor docs), select that secret, **Save**, then re-run.
+
+---
 
 ## 2. How to create an integration
 
 1. Open **Integrations** in the sidebar.
 2. **Add Integration** → set **name** and **type**.
-3. **HTTP**: fill connector fields → **Create**. **Built-in**: complete connection flow; on success you may be sent to add an **operation**.
+3. **HTTP**: fill **base URL**, **authentication**, optional defaults → **Create**. **Built-in**: complete the toolkit connection; on success you may be sent to add an **operation**.
 
 **Quick Create → New Integration** opens the same flow.
 
@@ -54,6 +144,7 @@ Choose **delete** on the integration; confirm **Delete integration?** The dialog
 ## 8. Cautions
 
 - Deleting an integration breaks **every version** that referenced its operations—audit before delete.
+- Third-party APIs (crypto or otherwise) have their own **rate limits**, **terms**, and **breaking changes**—monitor vendor docs.
 
 ## 9. Common errors
 
@@ -62,3 +153,4 @@ Choose **delete** on the integration; confirm **Delete integration?** The dialog
 | Cannot create connector | Plan cap on custom connectors or validation error on URL/auth. |
 | Event trigger never delivers | Built-in integration not connected or inactive. |
 | Run fails at start mentioning built-in | Hosting / platform configuration gap—needs platform team. |
+| HTTP tool returns 401/403 | Wrong auth mode, expired secret, or missing header name for the vendor. |

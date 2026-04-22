@@ -1,0 +1,131 @@
+---
+title: "Deploy an agent with integrations"
+description: "Step-by-step: secrets, LLM provider, integrations, agent version, test run, deploy, optional trigger."
+---
+
+This guide walks through shipping one **[agent](/product/concepts/agent)** that can call external **[integrations](/product/concepts/integration)** in the Phrony dashboard. For field-level detail, open the linked **concept** pages.
+
+**Who can do this:** typically **Owner**, **Admin**, or **Developer** (see **[Limits & plans](/product/reference/platform-rules)**—**Developers** cannot create **[secrets](/product/concepts/secret)** or **[LLM providers](/product/concepts/llm-provider)**; ask an **Owner** or **Admin** for those steps if needed).
+
+---
+
+## Before you start
+
+- You have dashboard access and a workspace on a plan that allows the objects you need (agents, connectors, sessions).
+- You know which external APIs or built-in toolkits you need and have API keys or login access where required.
+
+---
+
+## Step 1 — Store credentials (secrets)
+
+1. Open **Secret Manager**.
+2. **Add Secret**: choose a **unique name**, **kind**, and paste the **value** once.
+
+![Add Secret](/images/add-secret.png)
+
+Secrets are referenced by providers and HTTP integrations; the value is **not shown again** after creation. More: **[Secret](/product/concepts/secret)**.
+
+---
+
+## Step 2 — Connect your LLM
+
+1. Open **LLM Providers** (as **Owner** or **Admin** for create/edit).
+2. Create a provider: **name**, **type** (OpenAI, Azure, Anthropic, or Self-hosted), **API key secret**, and **base URL** if required (always for self-hosted).
+
+![New LLM provider](/images/add-llm-provider.png)
+
+Every agent uses exactly one provider. More: **[LLM provider](/product/concepts/llm-provider)**.
+
+---
+
+## Step 3 — Add an integration and operations
+
+1. Open **Integrations** → **Add Integration**.
+2. Choose the type (see **[Integration — HTTP vs built-in](/product/concepts/integration#http-vs-built-in)**):
+   - **HTTP** — you set **base URL**, **authentication** (**None**, **API key header**, **Bearer token**, or **Grant credentials** with a JSON **[secret](/product/concepts/secret)**), then define REST **operations** (method, path, tool schema).
+   - **Built-in** — you pick a **managed toolkit** and finish **connect** (often OAuth or vendor API key); auth is **toolkit-specific**, not the HTTP four-mode dropdown.
+3. On the integration, define at least one **operation** your agent will be allowed to call.
+
+**Concrete HTTP example (read-only crypto prices):** **[CoinGecko example](/product/concepts/integration#example-http-integration-for-a-public-crypto-api-coingecko)** — `Base URL` `https://api.coingecko.com/api/v3`, **Authentication** **None** for public endpoints, plus a `GET /simple/price` operation.
+
+**HTTP** integration dialog (base URL, auth, defaults):
+
+![Add Integration — HTTP](/images/add-integration-http.png)
+
+**Built-in** integration (toolkit and connection):
+
+![Add Integration — Built-in](/images/add-integration-builtin.png)
+
+Without operations, the agent’s **Operations** tab has nothing to select. Full detail: **[Integration](/product/concepts/integration)** (including **[HTTP authentication](/product/concepts/integration#http-authentication)** and **[Built-in authentication](/product/concepts/integration#built-in-authentication)**).
+
+---
+
+## Step 4 — Create the agent
+
+1. Open **Agents** → **New Agent**.
+2. Set **name** (unique in the workspace), **execution mode** (**Request** or **HITL** for a directly runnable agent), and the **LLM provider** from Step 2.
+
+![New Agent](/images/create-agent.png)
+
+More on modes: **[Agent](/product/concepts/agent)**.
+
+---
+
+## Step 5 — Configure a testing version
+
+1. Open the agent → **Version configuration**.
+2. Ensure a **testing** snapshot is selected (not **live**—live is read-only).
+3. **Model & Prompt:** pick **LLM model**, **instructions**, and limits (**temperature**, **max iterations**, **max tokens per run**, **max tool calls**).
+4. **Input & Output:** set **input** (and **output**) schemas if your use case needs structured I/O.
+5. **Operations:** enable the operations from Step 3 this version may use as tools.
+
+![Operations tab — allowed operations](/images/agents-operations-tab.png)
+
+6. **Limits & Safety:** optional **session** caps; leave **Anomaly control (L1)** off until you follow **[Guard L1 in production](/academy/guard-l1-production)**.
+7. **Save**.
+
+![Version configuration](/images/agent-version-details.png)
+
+Details on every tab: **[Agent version](/product/concepts/agent-version)**.
+
+---
+
+## Step 6 — Test run
+
+1. Still on **Version configuration** (or **Sessions**), open **Test run**.
+2. Provide input (**Visual** or **JSON**) that satisfies your **input schema**.
+3. Inspect the **[run](/product/concepts/run)** in the run inspector: tool calls should hit the expected operations.
+
+**Test run** uses whichever version is **selected** in the dropdown—not necessarily **live**. More: **[Run](/product/concepts/run)**.
+
+---
+
+## Step 7 — Deploy to production (live)
+
+1. When the testing snapshot behaves as you expect, click **Deploy** for that version.
+2. Confirm your workspace rules: only one **live** line per agent; automation uses **live** only.
+
+More: **[Agent version](/product/concepts/agent-version)** (testing vs live).
+
+---
+
+## Step 8 — Automate (optional)
+
+1. Open **Triggers** on the same agent (**Request** / **HITL** only—not **Sub-agent**).
+2. Add a **scheduled**, **API**, or **event** trigger as needed. **API**: at most one per agent. **Event**: requires a connected **built-in** integration.
+
+More: **[Trigger](/product/concepts/trigger)**.
+
+---
+
+## Step 9 — Monitor
+
+- Use **Dashboard** home **Recent sessions** for cross-agent activity, or the agent’s **Sessions** tab for history.
+- Failed runs, plan limits, and provider issues are covered in **[Limits & plans](/product/reference/platform-rules)** and the **Common errors** sections on each concept page.
+
+---
+
+## See also
+
+- **[Session](/product/concepts/session)** — how work is grouped and limited over time
+- **[Multi-agent](/academy/multi-agent)** — delegating to other agents

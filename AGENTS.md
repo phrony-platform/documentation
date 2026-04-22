@@ -7,7 +7,7 @@
 ## About this project
 
 - Phrony **customer-facing** documentation on [Mintlify](https://mintlify.com)
-- Pages are MDX under `index.mdx`, `product/concepts/`, `product/dashboard/`, `product/reference/`, and `api-reference/`
+- Pages are MDX under `index.mdx`, `academy/`, `product/concepts/`, `product/dashboard/`, `product/reference/`, and `api-reference/`
 - Navigation lives in `docs.json`
 - Run `mint dev` to preview locally; `mint broken-links` to check links
 - **Voice**: say **Phrony**, **Phrony dashboard**, **API** — do **not** use internal code names (e.g. Cockpit, control-plane) in user-visible MDX
@@ -15,6 +15,7 @@
 ## Terminology
 
 - **Workflows vs. agents** — `product/workflows-vs-agents.mdx`
+- **Academy** — `academy/*.mdx` (deploy, multi-agent, Guard L1)
 - **Agent** — `product/concepts/agent.mdx`
 - **Agent version** — `product/concepts/agent-version.mdx`
 - **Session** — `product/concepts/session.mdx`
@@ -24,7 +25,7 @@
 - **Secret** — `product/concepts/secret.mdx`
 - **Integration** — `product/concepts/integration.mdx`
 - **Limits, permissions, plans** — `product/reference/platform-rules.mdx`
-- **Dashboard (brief)** — `product/dashboard/*.mdx` (overview, home, settings, approvals, guard)
+- **Dashboard (brief)** — `product/dashboard/*.mdx` (home, settings, approvals, guard)
 
 ## Style preferences
 

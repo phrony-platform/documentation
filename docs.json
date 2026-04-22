@@ -14,11 +14,18 @@
         "tab": "Documentation",
         "groups": [
           {
+            "group": "Academy",
+            "pages": [
+              "academy/deploy-agent-with-integrations",
+              "academy/multi-agent",
+              "academy/guard-l1-production"
+            ]
+          },
+          {
             "group": "Phrony",
             "pages": [
               "index",
               "product/workflows-vs-agents",
-              "product/dashboard/overview",
               "product/concepts/agent",
               "product/concepts/agent-version",
               "product/concepts/session",

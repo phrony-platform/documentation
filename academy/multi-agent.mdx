@@ -1,0 +1,83 @@
+---
+title: "Use multi-agent delegation"
+description: "Step-by-step: Sub-agent agents, parent configuration, Sequential vs Parallel, test and deploy."
+---
+
+This guide sets up one **parent** **[agent](/product/concepts/agent)** (**Request** or **HITL** mode) that can delegate to other agents running in **Sub-agent** mode. For conceptual detail and limits, see **[Agent version](/product/concepts/agent-version)** → **Multi-agent**.
+
+**Prerequisites**
+
+- Your **plan** includes **multi-agent** (and any **sub-agent depth** cap your org uses).
+- You can edit **Agents** and **Version configuration** (**Owner**, **Admin**, or **Developer**).
+
+---
+
+## Step 1 — Create Sub-agent agent(s)
+
+1. **Agents** → **New Agent** → set **execution mode** to **Sub-agent**.
+2. Attach an **[LLM provider](/product/concepts/llm-provider)** (same as any agent).
+3. Open **Version configuration** on a **testing** snapshot.
+4. **Model & Prompt:** fill **instructions** and, for **Sub-agent** mode, the required **description** (short tool blurb for parent agents).
+5. Configure **Operations**, schemas, and limits as needed for the child’s job.
+6. **Save**.
+
+Sub-agents **do not** show a **Triggers** tab; parents invoke them as tools. More: **[Agent](/product/concepts/agent)**.
+
+---
+
+## Step 2 — Publish child line(s) you trust
+
+1. **Test run** the Sub-agent version until behavior is correct.
+2. **Deploy** the version you want parents to call in production (**live** line).
+
+Parents always use the child’s **live** configuration when delegation runs in real traffic (consistent with **[Run](/product/concepts/run)** and triggers using **live**).
+
+---
+
+## Step 3 — Configure the parent agent
+
+1. Create or open a **Request** or **HITL** agent (not Sub-agent).
+2. **Version configuration** → **Multi-agent** (tab appears when your plan supports it).
+3. Turn on **Can execute sub-agents**.
+4. Under **Allowed sub-agents**, select one or more **Sub-agent** agents (respect the plan’s **per-version** cap).
+5. Choose **Execution model**:
+   - **Sequential — one sub-agent per turn** — at most one child call per model turn.
+   - **Parallel — same sub-agent, multiple calls in one turn** — multiple simultaneous child runs only when every call targets the **same** sub-agent with different inputs; different sub-agents in one message are **serialized**.
+
+6. **Save** on a **testing** snapshot.
+
+![Version configuration — Multi-agent tab, allowed sub-agents, execution model](/images/agent-multi-agent-tab.png)
+
+More: **[Agent version](/product/concepts/agent-version)** → **Multi-agent**.
+
+---
+
+## Step 4 — Test the parent
+
+1. **Test run** the **parent** with inputs that should force delegation.
+2. In the **[run](/product/concepts/run)** inspector, confirm child runs appear under the same **[session](/product/concepts/session)** and that token totals roll up as expected.
+
+---
+
+## Step 5 — Deploy the parent
+
+1. **Deploy** the parent’s testing snapshot when satisfied.
+2. If you use **[triggers](/product/concepts/trigger)**, remember automation runs the **live** parent version only.
+
+---
+
+## Common pitfalls
+
+| Issue | What to check |
+| --- | --- |
+| **Multi-agent** tab missing | Plan feature; agent must be **Request** or **HITL**, not **Sub-agent**. |
+| Cannot add a sub-agent | Target is not **Sub-agent** mode, self-reference, over allow-list cap, or **Can execute sub-agents** off. |
+| **Save** fails | **Sub-agent** **description** empty; invalid **[Guard](/academy/guard-l1-production)** rules; plan depth. |
+| Delegation fails at runtime | **Sub-agent** not **live**; **session** or **depth** limits exceeded. |
+
+---
+
+## See also
+
+- **[Deploy an agent with integrations](/academy/deploy-agent-with-integrations)** — tools via integrations on a single agent
+- **[Limits & plans](/product/reference/platform-rules)** — roles and caps
