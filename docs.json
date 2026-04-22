@@ -14,14 +14,6 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Academy",
-            "pages": [
-              "academy/deploy-agent-with-integrations",
-              "academy/multi-agent",
-              "academy/guard-l1-production"
-            ]
-          },
-          {
             "group": "Phrony",
             "pages": [
               "index",
@@ -39,6 +31,18 @@
               "product/dashboard/approvals",
               "product/dashboard/guard-anomaly",
               "product/reference/platform-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Academy",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": [
+              "academy/deploy-your-first-agent",
+              "academy/multi-agent"
             ]
           }
         ]

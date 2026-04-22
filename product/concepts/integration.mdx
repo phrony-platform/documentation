@@ -13,7 +13,7 @@ An **integration** (service) is a workspace-level **connector**: either **HTTP**
 | --- | --- | --- |
 | **Name** | Label in dashboard and operation pickers. | Shown when assigning operations to versions; use a clear name. |
 | **Integration type** | **HTTP** or **Built-in** toggle in **Add Integration**. | See **HTTP vs built-in** below. |
-| **HTTP connection fields** | Base URL, auth mode, optional default headers/query, approval defaults. | Matches the HTTP connector form; **[secrets](/product/concepts/secret)** are chosen by id—values are never shown again in the UI after secret creation. |
+| **HTTP connection fields** | Base URL, auth mode, optional default headers/query, optional integration-wide approval. | Matches the HTTP connector form; **[secrets](/product/concepts/secret)** are chosen by id—values are never shown again in the UI after secret creation. |
 | **Built-in connection** | Toolkit-specific sign-in, OAuth, or API key. | Must show as **connected** / **active** before **[event](/product/concepts/trigger)** triggers can rely on it. |
 | **Operations** | Actions defined per integration (HTTP method + path + schema, or toolkit-defined). | Created on the integration detail screen; versions pick from workspace operations only. |
 
@@ -62,7 +62,9 @@ The HTTP connector’s **Authentication** setting controls how credentials are a
 
 **Important:** You choose an existing **secret** from **Secret Manager**; the UI does **not** display the secret value after you save. Rotate by creating a new secret and editing the integration to point at it.
 
-Optional: **Always require approval** on the HTTP integration forces **human approval** before each call (unless an operation overrides it)—useful for destructive or high-risk endpoints.
+**Human approval (HITL):** Turn on **Require approval for this operation** on each **operation** you add under **Integrations** (HTTP **and** built-in) when that **tool** should pause until someone approves in **[Approvals](/product/dashboard/approvals)** or **Run** detail. The **agent** must be in **HITL** **[execution mode](/product/concepts/agent)** for those pauses to take effect; in **Request** mode, approval-gated calls are not executed the same way.
+
+Prefer **per-operation** approval so harmless read-only tools stay unattended and only sensitive calls (payments, sends, deletes) wait on a human. Optionally, **Always require approval** on the **HTTP integration** itself applies a default gate to **every** operation on that connector—use sparingly when you truly want all calls reviewed.
 
 You can still add **default headers** (static name/value pairs) for non-secret metadata (for example `Accept: application/json`). Use **secrets** or header templates for anything sensitive.
 
@@ -82,28 +84,52 @@ Until the built-in shows a **good** connection, **[event](/product/concepts/trig
 
 ## Example: HTTP integration for a public crypto API (CoinGecko)
 
-This example uses **[CoinGecko’s](https://www.coingecko.com/en/api)** public REST API (third-party terms and rate limits apply to you as the API consumer). It shows how **HTTP** + **no auth** can expose a **read-only price lookup** to an agent.
+This example uses **[CoinGecko’s](https://www.coingecko.com/en/api)** public REST API (third-party terms and rate limits apply)—a compact pattern for **HTTP** tool definitions.
 
 **1. Create the integration**
 
 1. **Integrations** → **Add Integration** → type **HTTP**.
-2. **Name:** e.g. `CoinGecko`.
+2. **Name:** `CoinGecko`
 3. **Base URL:** `https://api.coingecko.com/api/v3`
-4. **Authentication:** **None** (the public `api/v3` endpoints many tutorials use do not require a key; CoinGecko also offers optional **Demo** / **Pro** keys with higher limits—if you use a key, switch to **API key header** and set the header name CoinGecko documents for your tier).
-5. **Create** the integration.
+4. **Authentication:** **None** for public `api/v3` (optional **Demo** / **Pro** keys: use **API key header** and CoinGecko’s documented header name).
+5. Leave **Always require approval** off unless you want a blanket gate on **all** operations; prefer **Require approval for this operation** in the next step.
+6. **Create** the integration.
 
 **2. Add an operation**
 
-On the integration detail page, add an operation, for example:
+Use **`{{parameterName}}`** in **path**, **query values**, **headers**, or **body** so tool arguments fill the request at run time.
 
-- **Name:** `Get coin price`
-- **HTTP method:** `GET`
-- **Path:** `/simple/price`
-- **Query parameters:** e.g. `ids` = `bitcoin`, `vs_currencies` = `usd` (or expose `ids` and `vs_currencies` via the tool **arguments** schema so the model can pass `ethereum`, `eur`, etc.)
+| Field | Example |
+| --- | --- |
+| **Name** | `get_simple_price` |
+| **HTTP method** | `GET` |
+| **Path** | `/simple/price` |
+| **Query** | `ids` → `{{ids}}`, `vs_currencies` → `{{vs_currencies}}` |
+| **Require approval for this operation** | **On** with a **HITL** agent if every price lookup should pause for **[Approvals](/product/dashboard/approvals)**; **Off** for unattended **Request** agents |
+| **Tool arguments schema** | `ids` and `vs_currencies` strings (JSON below) |
+
+**Tool arguments schema** (paste into the editor):
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "string",
+      "description": "CoinGecko id, e.g. bitcoin, ethereum"
+    },
+    "vs_currencies": {
+      "type": "string",
+      "description": "vs currency, e.g. usd or eur"
+    }
+  },
+  "required": ["ids", "vs_currencies"]
+}
+```
 
 **3. Attach to an [agent version](/product/concepts/agent-version)**
 
-Under **Version configuration** → **Operations**, enable this operation for a **testing** snapshot, **Save**, then **Test run** and ask for a price in natural language—the model should call the tool and Phrony should perform the GET.
+Enable **CoinGecko · get_simple_price** on **Operations**, **Save**, then **Test run** with input that asks for a price. With **HITL** and **Require approval for this operation** enabled on `get_simple_price`, approve the pending step in **[Approvals](/product/dashboard/approvals)** or **Run** detail.
 
 **If you add an API key later:** create a **[secret](/product/concepts/secret)** with the key, edit the integration, set **API key header** (or **Bearer**, per vendor docs), select that secret, **Save**, then re-run.
 

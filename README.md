@@ -18,13 +18,13 @@ Product documentation for Phrony, built with [Mintlify](https://mintlify.com).
 | Path | Purpose |
 |------|---------|
 | `index.mdx` | Introduction |
-| `academy/*.mdx` | Academy guides: deploy with integrations, multi-agent, Guard L1 |
+| `academy/*.mdx` | Academy guides: deploy your first agent (HITL, Gmail + Calendar), multi-agent |
 | `product/concepts/*.mdx` | Agent, agent version, session, run, trigger, integration, LLM provider, secret |
 | `product/dashboard/*.mdx` | Short dashboard screens (home, settings, approvals, guard) |
 | `product/reference/platform-rules.mdx` | Limits, permissions, plans (user-facing) |
 | `api-reference/introduction.mdx` | HTTP API overview |
 | `images/*.png` | Screenshots (including Operations tab, integrations, agent create, etc.) |
-| `docs.json` | Navigation and site config |
+| `docs.json` | Navigation: **Documentation**, **Academy**, and **API** Mintlify tabs |
 
 ## Contributing
 

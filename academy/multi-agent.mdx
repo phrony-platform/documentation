@@ -50,11 +50,96 @@ Parents always use the child’s **live** configuration when delegation runs in 
 
 More: **[Agent version](/product/concepts/agent-version)** → **Multi-agent**.
 
+### Example: **Parallel** — same sub-agent, three lookups in one turn
+
+**Parallel** only batches multiple calls when each call targets the **same** Sub-agent with **different** inputs in the **same** parent turn. Below is one coherent lab: one child **Company brief** agent, one parent **Research coordinator** that fans out one call per company.
+
+**1. Sub-agent (e.g. name `Company brief`)**
+
+- **Description** (required for Sub-agent; parents see this as the tool summary):
+
+```text
+Given `company` and `focus`, returns a tight factual paragraph (max ~4 sentences). One company per call.
+```
+
+- **Instructions:**
+
+```text
+You are a company research micro-agent. Input is JSON matching the input schema: `company` (string) and `focus` (string).
+
+Write one short paragraph for executives: what matters about `company` regarding `focus`. Be specific; if you are unsure, say so briefly. No bullet lists unless the input asks for them.
+```
+
+- **Input schema** (child):
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "company": { "type": "string", "description": "Company name" },
+    "focus": { "type": "string", "description": "Angle to research (e.g. AI strategy)" }
+  },
+  "required": ["company", "focus"]
+}
+```
+
+Enable whatever **operations** or defaults the child needs; **Save** and **Deploy** the child **live** (Step 2).
+
+**2. Parent agent — Multi-agent tab**
+
+- **Allowed sub-agents:** `Company brief` (your Sub-agent).
+- **Execution model:** **Parallel — same sub-agent, multiple calls in one turn**.
+
+**3. Parent — Model & Prompt**
+
+- **Instructions:**
+
+```text
+You are a research coordinator. The user supplies `companies` (comma-separated names) and `focus`.
+
+You must delegate to the Company brief sub-agent: exactly one tool call per company name, each with input `{ "company": "<single name>", "focus": "<user's focus>" }`. Do not merge multiple companies into one call—that breaks Parallel fan-out.
+
+After all sub-agent results are back in this turn, reply with a markdown table:
+
+| Company | Summary |
+
+Use one row per company, using only the sub-agent text for that row.
+```
+
+- **Input schema** (parent):
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "companies": {
+      "type": "string",
+      "description": "Comma-separated company names, e.g. Acme Corp, Globex, Initech"
+    },
+    "focus": { "type": "string", "description": "Research angle shared across all calls" }
+  },
+  "required": ["companies", "focus"]
+}
+```
+
+**Save** the parent testing snapshot.
+
+**4. Parent — Test run (JSON)**
+
+```json
+{
+  "companies": "Acme Corp, Globex, Initech",
+  "focus": "AI product strategy in 2025"
+}
+```
+
+You should see **three** child runs under one parent **[session](/product/concepts/session)** when the model issues three sub-agent tool calls in parallel (names in the UI may match your Sub-agent label). If you only see one child call, check **Execution model** is **Parallel** and the instructions forbid batching companies into a single payload.
+
 ---
 
 ## Step 4 — Test the parent
 
-1. **Test run** the **parent** with inputs that should force delegation.
+1. **Test run** the **parent**—use the sample JSON above for **Parallel**, or your own input that forces multiple same-sub-agent calls in one turn.
 2. In the **[run](/product/concepts/run)** inspector, confirm child runs appear under the same **[session](/product/concepts/session)** and that token totals roll up as expected.
 
 ---
@@ -68,16 +153,16 @@ More: **[Agent version](/product/concepts/agent-version)** → **Multi-agent**.
 
 ## Common pitfalls
 
-| Issue | What to check |
-| --- | --- |
-| **Multi-agent** tab missing | Plan feature; agent must be **Request** or **HITL**, not **Sub-agent**. |
-| Cannot add a sub-agent | Target is not **Sub-agent** mode, self-reference, over allow-list cap, or **Can execute sub-agents** off. |
-| **Save** fails | **Sub-agent** **description** empty; invalid **[Guard](/academy/guard-l1-production)** rules; plan depth. |
-| Delegation fails at runtime | **Sub-agent** not **live**; **session** or **depth** limits exceeded. |
+| Issue                       | What to check                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Multi-agent** tab missing | Plan feature; agent must be **Request** or **HITL**, not **Sub-agent**.                                   |
+| Cannot add a sub-agent      | Target is not **Sub-agent** mode, self-reference, over allow-list cap, or **Can execute sub-agents** off. |
+| **Save** fails              | **Sub-agent** **description** empty; invalid **Anomaly control (L1)** rules on **[Agent version](/product/concepts/agent-version)**; plan depth. |
+| Delegation fails at runtime | **Sub-agent** not **live**; **session** or **depth** limits exceeded.                                     |
 
 ---
 
 ## See also
 
-- **[Deploy an agent with integrations](/academy/deploy-agent-with-integrations)** — tools via integrations on a single agent
+- **[Deploy your first agent](/academy/deploy-your-first-agent)** — tools via integrations on a single agent
 - **[Limits & plans](/product/reference/platform-rules)** — roles and caps

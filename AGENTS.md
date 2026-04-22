@@ -8,14 +8,14 @@
 
 - Phrony **customer-facing** documentation on [Mintlify](https://mintlify.com)
 - Pages are MDX under `index.mdx`, `academy/`, `product/concepts/`, `product/dashboard/`, `product/reference/`, and `api-reference/`
-- Navigation lives in `docs.json`
+- Navigation lives in `docs.json` (**Documentation**, **Academy**, and **API** tabs)
 - Run `mint dev` to preview locally; `mint broken-links` to check links
 - **Voice**: say **Phrony**, **Phrony dashboard**, **API** — do **not** use internal code names (e.g. Cockpit, control-plane) in user-visible MDX
 
 ## Terminology
 
 - **Workflows vs. agents** — `product/workflows-vs-agents.mdx`
-- **Academy** — `academy/*.mdx` (deploy, multi-agent, Guard L1)
+- **Academy** — `academy/*.mdx` (deploy your first agent: HITL, Gmail + Calendar; multi-agent)
 - **Agent** — `product/concepts/agent.mdx`
 - **Agent version** — `product/concepts/agent-version.mdx`
 - **Session** — `product/concepts/session.mdx`
