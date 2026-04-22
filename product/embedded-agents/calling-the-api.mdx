@@ -1,0 +1,70 @@
+---
+title: "Calling the HTTP API"
+description: "Start an embedded agent run with curl: API trigger, X-API-Key, POST /v1/agents/{agentId}/runs, and optional input JSON."
+---
+
+Your deployment exposes a **gateway** base URL (your admin or environment docs). All examples below use placeholders—replace them with real values from the Phrony dashboard.
+
+## Before you call
+
+1. **Agent** — Not **Sub-agent** mode; a **live** **[agent version](/product/concepts/agent-version)** is **deployed**.
+2. **API trigger** — Exactly one **API** **[trigger](/product/concepts/trigger)** on that agent (required for this path).
+3. **API key** — Under **Settings**, create a key whose scope includes this **agent** and **API** trigger. The raw value looks like `phk_…` and is shown only once—store it as a secret in your backend.
+
+The gateway authenticates with the **`X-API-Key`** header. The key must match the **`agentId`** in the URL.
+
+## Start a run
+
+**Request**
+
+- **Method / path:** `POST /v1/agents/{agentId}/runs`
+- **Headers:** `Content-Type: application/json`, `X-API-Key: phk_…`
+- **Body:** JSON with an optional **`input`** object. Omit `input` or send `{}` if the run needs no structured payload. The object is what your **[version](/product/concepts/agent-version)** input schema (if any) expects.
+
+**Example (curl)**
+
+```bash
+curl -sS -X POST 'https://YOUR_GATEWAY_HOST/v1/agents/AGENT_UUID/runs' \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: phk_your_secret_key' \
+  -d '{
+    "input": {
+      "userId": "usr_123",
+      "caseId": "case_456",
+      "message": "Summarize the latest notes and draft a reply."
+    }
+  }'
+```
+
+Typical success response is **`202 Accepted`** with JSON that includes **`runId`** and **`sessionId`** (and related fields such as **status**). Your integration should persist **`runId`** if you poll status or open the run in the dashboard.
+
+Exact hostnames, TLS, and any org-specific headers are defined by your Phrony deployment—the **API** trigger screen in the dashboard often shows the same path and header pattern for copy/paste.
+
+## After the run starts
+
+From your backend you can drive or observe the same run the dashboard would show, using the **same API key** when your key scope matches the run’s agent and trigger:
+
+| Action | HTTP |
+| --- | --- |
+| Run status | `GET /v1/runs/{runId}` |
+| Conversation / trace payload | `GET /v1/runs/{runId}/conversation` |
+| Stream updates (SSE) | `GET /v1/runs/{runId}/stream` |
+| Send user input into a waiting run | `POST /v1/runs/{runId}/input` (body per your contract) |
+
+Paths and bodies for **`/v1/runs/...`** are also summarized on the **API** trigger detail view in the dashboard (for copy/paste).
+
+## Errors to expect
+
+| Situation | Typical outcome |
+| --- | --- |
+| Missing or wrong **`X-API-Key`** | **401** — key invalid or not scoped to this agent / API trigger |
+| Agent blocked by **Guard** | **409** with an anomaly / block code — see **[Guard & anomaly](/product/dashboard/guard-anomaly)** |
+| Rate or concurrency limits on the **API** trigger | **429** or similar — adjust limits or backoff |
+| Wrong **`agentId`** in the path | **403** — key not valid for that agent |
+
+## See also
+
+- [Overview](/product/embedded-agents/overview)
+- [Trigger](/product/concepts/trigger)
+- [Run](/product/concepts/run) and [Session](/product/concepts/session)
+- [HTTP API (reference)](/api-reference/introduction)

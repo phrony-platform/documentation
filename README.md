@@ -20,7 +20,7 @@ Product documentation for Phrony, built with [Mintlify](https://mintlify.com).
 | `index.mdx` | Introduction |
 | `academy/*.mdx` | Academy guides: deploy your first agent (HITL, Gmail + Calendar), multi-agent |
 | `product/workflows-vs-agents.mdx` | Automation vs. agents |
-| `product/embedded-agents.mdx` | Embedding agents in your product (API triggers, governance) |
+| `product/embedded-agents/*.mdx` | Embedded agents: overview, HTTP API calling guide |
 | `product/concepts/*.mdx` | Agent, agent version, session, run, trigger, integration, LLM provider, secret |
 | `product/multi-agent/*.mdx` | Delegation: overview, parent/Sub-agent, sequential/parallel, sessions/runs, limits |
 | `product/hitl/*.mdx` | Human-in-the-loop: overview, execution mode, gating operations, approvals/runs, limits |

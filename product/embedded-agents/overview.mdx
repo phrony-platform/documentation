@@ -1,0 +1,46 @@
+---
+title: "Overview"
+description: "What embedded agents are in Phrony, why teams use them, and how this section is organized."
+---
+
+**Embedded agents** are normal **[agents](/product/concepts/agent)** you configure in the Phrony dashboard, started from **your** applications or backends instead of (or in addition to) **Test run**. Your code passes a JSON **input** payload; the **live** **[agent version](/product/concepts/agent-version)** (model, instructions, **[integrations](/product/concepts/integration)**) and **[human-in-the-loop](/product/hitl/overview)** / **[multi-agent](/product/multi-agent/overview)** behavior are unchanged.
+
+Embedding is a **calling pattern**: one agent definition, **multiple surfaces** (web app, mobile API, internal tools, jobs). Most product embeds use an **API** **[trigger](/product/concepts/trigger)** and the **[HTTP API](/api-reference/introduction)**—see **[Calling the HTTP API](/product/embedded-agents/calling-the-api)** for a concrete request example.
+
+## Why teams embed agents
+
+- **Decisions where work happens** — Users stay in your product; reasoning and actions run as Phrony **[runs](/product/concepts/run)** instead of a separate chat surface.
+- **One source of truth** — **[Sessions](/product/concepts/session)** and history live in Phrony for support, compliance, and engineering.
+- **Consistent guardrails** — Approval rules, integration scoping, and **[limits](/product/reference/platform-rules)** apply on every caller.
+
+## How invocation fits together
+
+1. **Build the agent** — Configure the **[version](/product/concepts/agent-version)**, then **deploy** the line automation should use.
+2. **Expose a start path** — Add an **API** **trigger** (at most one per agent) so your servers can start runs with a payload.
+3. **Authenticate** — Create an **API key** under **Settings**, scoped to that **agent** and **API** trigger.
+4. **Call the gateway** — `POST` to `/v1/agents/{agentId}/runs` with `X-API-Key` and an optional `input` object—details and **curl** on **[Calling the HTTP API](/product/embedded-agents/calling-the-api)**.
+
+**Sub-agent** agents are not API-started on their own; a parent invokes them. For a user-facing feature, embed the **Request** or **HITL** root agent.
+
+## Human and agent in the loop
+
+- **HITL** — **[Approval-gated operations](/product/hitl/gating-operations)** pause runs the same way for API starts; operators use **[Approvals](/product/dashboard/approvals)** or the run inspector.
+- **AITL** — **[Agent in the loop](/product/agent-in-the-loop/overview)** behavior is unchanged; **[human escalation](/product/agent-in-the-loop/human-escalation)** applies when the session root is **HITL**.
+
+## Practical constraints
+
+- Automation follows the **live** version until you **deploy** elsewhere.
+- **[Guard & anomaly](/product/dashboard/guard-anomaly)** and plan caps can **block** starts—see **[platform rules](/product/reference/platform-rules)**.
+- **API** triggers may enforce **rate limits** and **IP allowlists**—treat them as part of your external surface.
+
+## Pages in this section
+
+| Page | Topics |
+| --- | --- |
+| **[Calling the HTTP API](/product/embedded-agents/calling-the-api)** | Start a run with **curl**, auth, response shape, follow-up reads |
+
+## See also
+
+- [Workflows vs. agents](/product/workflows-vs-agents)
+- [Trigger](/product/concepts/trigger)
+- [HTTP API (reference)](/api-reference/introduction)
