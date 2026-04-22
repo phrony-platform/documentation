@@ -1,54 +1,8 @@
 ---
 title: "Dashboard home"
-description: "Metrics, token usage chart, and recent sessions on the Phrony dashboard."
+description: "Short description of the analytics home page."
 ---
 
-The **Dashboard** item in the sidebar opens your workspace **home**. It is shown for **Owner**, **Admin**, and **Developer**; **Operator** roles use **[Approvals](/product/dashboard/approvals)** instead and do not see this page in the nav. The home view summarizes activity and lists recent sessions.
+**Dashboard** in the sidebar opens **home**: period **metrics** (agents, sessions, failures, tokens, live counts), a **token usage** chart by model, and **Recent sessions** with filters and optional **Mark complete** / **Terminate session**. Shown for **Owner**, **Admin**, and **Developer** only.
 
-## Comparison period (metric cards)
-
-Above the metric cards, choose **Last 7 days** or **Last 30 days**. Each card compares the current window to the **prior** window of the same length (“vs prior 7 days” or “vs prior 30 days”), except where noted as a live snapshot.
-
-## Metric cards
-
-| Label | Meaning |
-| --- | --- |
-| **Agents** | Created in the comparison window; trend vs prior window. |
-| **Sessions** | Sessions started in the window; trend vs prior. **Click** the card to scroll to **Recent sessions** with **All statuses**. |
-| **Failed sessions** | Sessions that ended in **Failed**; trend vs prior. **Click** to filter **Recent sessions** to **Failed**. |
-| **Tokens (sessions)** | Sum of session tokens in the window; trend vs prior. |
-| **Running sessions** | Open sessions **right now** (**Live** badge; no period comparison). **Click** to filter **Recent sessions** to **Running**. |
-| **Pending user tasks** | HITL / approvals waiting (**Live** snapshot). |
-
-## Token usage chart
-
-The **Token usage** card shows session tokens attributed to each agent version’s **LLM model** (as configured on agent versions). Buckets are **day** or **week** in **UTC** depending on range.
-
-- **Range:** **Last 7 days**, **Last 30 days**, or **Last 3 months** (wider ranges use **week** buckets).
-- **View:** **Total** (one combined series) or **By model** (compare models; use **Models** to include or exclude specific models).
-- A line may list **Tenant LLM providers** when providers are configured.
-
-## Recent sessions
-
-The **Recent sessions** table supports:
-
-- **Status filter:** **All statuses**, **Running**, **Completed**, **Failed**, **Awaiting approval**, **Awaiting reply**.
-- Pagination (50 rows per page).
-- Columns include agent, how the session was triggered (**API**, **Manual**, **Scheduled**, **Event**, etc.), **Triggered by** (including named triggers or API context where available), status, tokens, and timing.
-
-### Row actions (when allowed)
-
-- **Mark complete** — available for sessions that can be completed from the dashboard.
-- **Terminate session** — opens **Terminate session?** with the note that this **fails all in-progress runs** in the session and **cannot be undone**.
-
-Opening a session’s run (when linked) takes you to **[Run inspector](/product/dashboard/run-inspector)**.
-
-## Plan compliance banner
-
-If the workspace is **over current plan limits** after a plan change, a red banner may appear at the top: **Your workspace is over the current plan limits**. It explains that **new runs are blocked** until usage is within limits, lists overages (resource vs limit), and points **billing managers** to **Plan & billing** or asks others to contact an owner or admin. See **[Limits, permissions, and plans](/product/reference/platform-rules)**.
-
-## See also
-
-- [Dashboard overview](/product/dashboard/overview)
-- [Approvals](/product/dashboard/approvals)
-- [Settings](/product/dashboard/settings)
+If the workspace exceeds plan limits after a plan change, a **plan compliance** banner may block new runs until usage is fixed—see **[Limits & plans](/product/reference/platform-rules)**.

@@ -1,31 +1,71 @@
 ---
 title: "Session"
-description: "How Phrony groups related runs, usage, and limits that span a whole conversation."
+description: "Session lifecycle, fields you see in the dashboard, limits, and operator actions."
 ---
 
-A **session** is the container for one thread of work: it ties together the **runs** (steps the model and tools took), **overall status**, **token usage** added up across the **main** run and any **child** runs created when the parent **delegates to sub-agents**, and **how the session started** (for example **Test run**, a **schedule**, or an **API** trigger). If the parent version uses **Parallel** delegation to the **same** sub-agent several times in one turn, those child runs may execute **together**; session **token** and **duration** limits still apply to the **whole** session.
+## 1. What is a session
 
-## Where you see sessions
+A **session** is the container for one thread of work: it groups the **root [run](/product/concepts/run)** and any **child runs** from **[sub-agent](/product/concepts/agent-version)** delegation, shared **status**, **total token usage**, and **how work started** (for example **Test run**, **schedule**, **API**, or **event**). You need sessions so usage, billing, and limits can apply to the **whole conversation**, not a single run.
 
-On an agent, open the **Sessions** tab. The table shows a **short session identifier**, how many **runs** belong to it, **status**, **who or what triggered it**, **start** and **end** times, **tokens**, and which **version** was used. Clicking a row opens the main **run** for that session in the **Run inspector** when one is available (rare edge cases may not link).
+Sessions are **not** a separate object you create empty—they open when a run starts.
 
-## Session-wide limits (set on the version)
+### 1.1 Field reference
 
-In **Version configuration**, under **Limits & Safety**, you can set optional caps that apply to the **whole session**, not just one model turn:
+What you see in dashboard tables (**Dashboard** home **Recent sessions**, or an agent’s **Sessions** tab) is **read-only** projection:
 
-- **Max session tokens** — total tokens across the root run **and** all sub-agent runs combined. Leave blank for **no** extra cap beyond per-run limits.
-- **Max session duration** — maximum length of the session in seconds (wall-clock). If the limit is hit, the run stops with an error that mentions the session time limit.
+| Field / column | What it is | Rules and limitations |
+| --- | --- | --- |
+| **Session** (id) | Short identifier for the row. | Stable for that session; use for support and cross-links. |
+| **Agent** | Which agent owns the session. | Shown on tenant-wide lists. |
+| **Trigger type** | **API**, **Manual**, **Scheduled**, **Event**, etc. | Derived from how the root run started. |
+| **Triggered by** | Human-readable source (trigger name, key label, etc.). | May be empty in edge cases. |
+| **Status** | **Running**, **Completed**, **Failed**, **Awaiting approval**, **Awaiting reply**, … | Maps internal states to dashboard labels. |
+| **Tokens** | Aggregate usage for the session. | Includes root and sub-agent runs where applicable. |
+| **Version** | Label of the **[agent version](/product/concepts/agent-version)** used. | Agent workspace **Sessions** can filter **This snapshot only**. |
+| **Started / Finished** | Timestamps. | **Running** sessions may have no finish time yet. |
 
-These affect **real executions**, not the editor.
+Optional **session-wide** caps (**Max session tokens**, **Max session duration**) are configured on the **version**, not on the session row.
 
-## Monthly sessions and your plan
+## 2. How to create a session
 
-When someone starts a new session, Phrony checks your **billing period** and how many sessions you have already used. If you are **over** your included **sessions per month** and your plan **does not** allow overage, starting new work fails and the dashboard or automation shows a **limit reached** / upgrade-style message. If your plan **allows** overage, the session may still start and may be **marked** in summaries so finance or reporting can treat it differently—wording depends on your plan.
+Not applicable as a manual step. A session is **created automatically** when a run starts (**Test run**, **[Trigger](/product/concepts/trigger)**, or HTTP API).
 
-The same check runs alongside other **plan inventory** limits (how many agents, connectors, or scheduled triggers you may have). See **[Limits, permissions, and plans](/product/reference/platform-rules#monthly-sessions-and-plan-inventory)**.
+## 3. How to update a session
 
-## See also
+There is no generic “edit session” form. Status changes come from **run progress**, **operator** actions (**Mark complete** where offered), or **[Approvals](/product/dashboard/approvals)** resolutions.
 
-- [Run](/product/concepts/run)
-- [Agent version](/product/concepts/agent-version)
-- [Sessions](/product/dashboard/agent-workspace#sessions) — **This snapshot only** filter, table behavior
+## 4. How to delete a session
+
+There is no “delete session” button. You can **terminate** an in-progress session from **Dashboard** home **Recent sessions** when the UI offers **Terminate session** (fails in-flight runs; cannot be undone—see **Cautions**).
+
+## 5. Permissions
+
+| Action | Owner | Admin | Developer | Operator |
+| --- |:---:|:---:|:---:|:---:|
+| View **Recent sessions** (Dashboard home) | Yes | Yes | Yes | **No** |
+| View **Sessions** on an agent | Yes | Yes | Yes | **No** |
+| **Mark complete** / **Terminate** (when shown) | Yes | Yes | Yes | **No** |
+
+Operators interact with work through **[Approvals](/product/dashboard/approvals)** links, not the full session list.
+
+## 6. Limitations
+
+- **[Agent version](/product/concepts/agent-version)** may define **Max session tokens** and **Max session duration**; exceeding them fails the run.
+- **Monthly session** allowance and **plan inventory** can block **new** sessions—see **[Limits & plans](/product/reference/platform-rules)**.
+
+## 7. Notes
+
+- Parallel child runs (same sub-agent, one parent turn) still roll up into **one** session’s token totals.
+- **Dashboard** home may show a **plan compliance** banner when the workspace is over limits after a plan change.
+
+## 8. Cautions
+
+- **Terminate session** is destructive for in-progress work; confirm you intend to fail active runs.
+
+## 9. Common errors
+
+| Symptom | Typical cause |
+| --- | --- |
+| New work will not start | Monthly session cap, inventory cap, or post–plan-change overage—see **[Limits & plans](/product/reference/platform-rules)**. |
+| Session hits token/time ceiling | Version **session** limits exceeded; raise caps or reduce work per session. |
+| Row has no link to run | Rare edge case where the UI cannot resolve a root run link. |

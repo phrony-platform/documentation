@@ -14,41 +14,24 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Overview",
-            "pages": ["index"]
-          },
-          {
-            "group": "Concepts",
+            "group": "Phrony",
             "pages": [
+              "index",
+              "product/dashboard/overview",
               "product/concepts/agent",
               "product/concepts/agent-version",
               "product/concepts/session",
               "product/concepts/run",
               "product/concepts/trigger",
+              "product/concepts/integration",
               "product/concepts/llm-provider",
-              "product/concepts/secret"
-            ]
-          },
-          {
-            "group": "Dashboard",
-            "pages": [
-              "product/dashboard/overview",
+              "product/concepts/secret",
               "product/dashboard/home",
               "product/dashboard/settings",
-              "product/dashboard/secret-manager",
-              "product/dashboard/llm-providers",
-              "product/dashboard/agents",
-              "product/dashboard/agent-workspace",
-              "product/dashboard/run-inspector",
-              "product/dashboard/integrations",
-              "product/dashboard/triggers-wizard",
               "product/dashboard/approvals",
-              "product/dashboard/guard-anomaly"
+              "product/dashboard/guard-anomaly",
+              "product/reference/platform-rules"
             ]
-          },
-          {
-            "group": "Limits & plans",
-            "pages": ["product/reference/platform-rules"]
           }
         ]
       },

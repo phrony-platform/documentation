@@ -1,52 +1,69 @@
 ---
 title: "Run"
-description: "One execution — input, trace, status, parent vs child runs, Test run vs triggers."
+description: "Single execution of a version—fields, how runs start, inspector, permissions, errors."
 ---
 
-A **run** is a **single execution** of one **agent version**’s configuration: **input**, **trace** of model and tool steps, optional **pauses** for human review, and a **status** you see in **Run inspector**.
+## 1. What is a run
 
-## Parent runs and sub-agent (child) runs
+A **run** is **one execution** of an **[agent version](/product/concepts/agent-version)** against an **input**: model steps, tool calls, optional pauses for human review, and a **final status**. Runs belong to a **[session](/product/concepts/session)**; the **root** run is what you usually open from session tables, with **child** runs for **sub-agent** delegations.
 
-A **session** can contain more than one run:
+### 1.1 Field reference
 
-- The **main** (root) run is the one you usually open from **Sessions**.
-- If the version **Can execute sub-agents** and the model delegates work, Phrony creates **child** runs for those sub-agents. They share the same **session** and roll up into **session** token totals and limits.
+In **Run inspector** (and related API views), you typically see:
 
-When a version uses **Parallel — same sub-agent, multiple calls in one turn**, multiple child runs targeting the **same** sub-agent may start **together**; the **Run inspector** may show grouping or labels that reflect that batching (wording and layout depend on your Phrony version).
+| Field / area | What it is | Rules and limitations |
+| --- | --- | --- |
+| **Status** | Running, succeeded, failed, waiting on human, etc. | Drives badges and whether actions are allowed. |
+| **Timing** | Start, end, duration. | Running runs have open-ended timing. |
+| **Tokens** | Usage attributed to this run. | Child runs have their own totals; session totals aggregate. |
+| **Agent version** | Which snapshot executed. | **Test run** uses the **selected** snapshot; **triggers** use **live** only. |
+| **Triggered by** | **Test run**, named trigger, schedule, event, etc. | Matches session list **Triggered by** context. |
+| **Input** | Payload validated against **Input schema**. | Bad input fails early with validation errors. |
+| **Trace / timeline** | Model and tool steps. | Layout follows **Settings → General → Session trace layout** (**Basic** vs **Advanced**). |
+| **Conversation / I/O** | Structured views of messages or I/O. | Depends on agent configuration. |
+| **Sub-agent sections** | Child runs when delegation occurred. | **Parallel** same-sub-agent batches may show grouped behavior by release. |
+| **Pause / review** | HITL or Guard panels. | Appears when the run waits on a person. |
 
-## Input
+## 2. How to create a run
 
-Input must match the **Input schema** on **Input & Output**. **Test run** supports **Visual** or **JSON**; an empty object is fine when the schema allows it. Bad input fails early with a validation message.
+- **Test run**: In **[Agent](/product/concepts/agent)** workspace, **Version configuration** or **Sessions**, choose **Test run**, provide **Visual** or **JSON** input, run. Uses whichever version is **selected** in the dropdown.
+- **Automation**: **[Trigger](/product/concepts/trigger)** (schedule, API, event) or HTTP API. Always uses the **live** deployed version—see §3 vs §4 consistency in **[Limits & plans](/product/reference/platform-rules)**.
 
-## Which configuration runs?
+## 3. How to update a run
 
-### Test run (from the dashboard)
+Runs are immutable execution records. “Update” in practice means **human actions** on pauses (**Approvals**, in-run prompts) or **continuing** a session from the dashboard—not editing the run log after the fact.
 
-**Test run** uses whichever version is **selected in the version dropdown** on **Version configuration** or **Sessions**—**testing** or **live**.
+## 4. How to delete a run
 
-### Triggers (schedule, API, event)
+There is no user-facing **delete run** in the dashboard; retention is governed by your Phrony deployment and policy.
 
-**Triggers always use the current live version.** If nothing is **Deploy**ed yet, automation will not start until you deploy.
+## 5. Permissions
 
-**Summary:** use **Test run** to try **draft** snapshots; **automation** follows the **live** line.
+| Action | Owner | Admin | Developer | Operator |
+| --- |:---:|:---:|:---:|:---:|
+| **Test run** | Yes | Yes | Yes | **No** |
+| Open **Run inspector** from agent workspace | Yes | Yes | Yes | **No** |
+| Open run from **Approvals** task | Yes | Yes | Yes | Yes (typical review path) |
 
-## Tool calls and your plan
+## 6. Limitations
 
-**Max tool calls** on the version is further limited by your **plan**; the **stricter** value applies during execution. The editor already clips what you can type to your plan.
+- **Max tool calls**, per-run token caps, and session caps on the **version** still apply.
+- **Plan** may further cap tool calls (stricter of plan vs version wins).
 
-## When a run refuses to start
+## 7. Notes
 
-- Agent **blocked** by Guard / Anomaly review.
-- **Monthly session** or **inventory** limits on your plan.
-- **Trigger** off or misconfigured.
-- **LLM provider** or **secret** missing / invalid.
-- **Built-in** integrations not fully set up for your organization’s hosting.
+- Child runs share the parent **session** and contribute to **session** token totals and limits.
+- **API** triggers may show rate / IP controls on the trigger—see **[Trigger](/product/concepts/trigger)**.
 
-See **[Limits, permissions, and plans](/product/reference/platform-rules)**.
+## 8. Cautions
 
-## See also
+- Assuming **Test run** uses **live** is wrong—always check the **version** dropdown.
+- **Terminate session** (from **Dashboard** home) fails **all in-progress runs** in that session.
 
-- [Session](/product/concepts/session)
-- [Agent version](/product/concepts/agent-version) — **Sequential / Parallel**, session caps
-- [Trigger](/product/concepts/trigger)
-- [Run inspector](/product/dashboard/run-inspector)
+## 9. Common errors
+
+| Symptom | Typical cause |
+| --- | --- |
+| Run will not start | Agent **blocked** by Guard, trigger **inactive**, no **live** version for automation, invalid provider/secret, or built-in integration/hosting issue—see **[Limits & plans](/product/reference/platform-rules)**. |
+| Input rejected | Does not satisfy **Input schema**. |
+| Tool cap errors | **Plan** or version **Max tool calls** exceeded. |

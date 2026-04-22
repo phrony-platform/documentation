@@ -1,45 +1,69 @@
 ---
 title: "Trigger"
-description: "Schedules, API hooks, and events that start agents without using Test run."
+description: "Schedules, API, and event starters—fields, wizard, permissions, limits."
 ---
 
-A **trigger** starts an agent automatically: on a **schedule**, through an **HTTP API** you expose, or when an **external event** fires. You set them up on the agent’s **Triggers** tab (not available for **Sub-agent** mode agents—they are only invoked by other agents).
+## 1. What is a trigger
 
-## Sub-agents do not get triggers
+A **trigger** starts an **[agent](/product/concepts/agent)** outside **Test run**: on a **cron schedule**, via an **HTTP API** surface, or when an **event** arrives from a **[built-in integration](/product/concepts/integration)**. Triggers connect automation to the **live** version line.
 
-If the agent is in **Sub-agent** mode, the **Triggers** tab is hidden and you cannot attach schedules or API hooks to it. That is intentional: parent agents call sub-agents as tools.
+### 1.1 Field reference
 
-## One API-style trigger per agent
+| Field / concept | What it is | Rules and limitations |
+| --- | --- | --- |
+| **Name** | Label in lists and **Triggered by**. | **Unique per agent**. Duplicates fail on save. |
+| **Type** | **Scheduled**, **API**, or **Event**. | **Sub-agent** agents: **Triggers** tab **hidden**—no triggers. |
+| **Active** | On/off switch. | **Off** ⇒ nothing fires; failures often cite inactive trigger. |
+| **Schedule + timezone** (scheduled) | Cron and IANA timezone. | Invalid or empty schedule rejected on save. |
+| **Payload** (scheduled) | Optional static JSON as run input. | Must be valid JSON when provided. |
+| **Rate limits, IP allowlist** (API) | Optional gateway limits. | **Only** for **API** type; wrong type + filled fields may fail validation. |
+| **Integration + event** (event) | Built-in service and event type. | Requires **connected** built-in integration; wizard steps **Integration → Event type → Event configuration**. |
+| **Concurrency / token caps** (API, when offered) | Optional throttles on API path. | See your Phrony build’s API trigger form. |
 
-For the **API** trigger type, Phrony allows **only one** per agent. If you already have one, the dashboard prevents creating a second—edit the existing trigger instead.
+**At most one** **API** trigger per agent; the type picker may show **API (already exists)** when one is present.
 
-## Triggers must be turned on
+## 2. How to create a trigger
 
-Each trigger has an **active** state. If it is **off**, nothing fires until you turn it back on. Failed or skipped runs often show that the trigger was inactive.
+1. Open the agent (**Owner**, **Admin**, **Developer**); ensure it is **not** **Sub-agent** mode.
+2. Go to **Triggers** → start **New trigger** (or equivalent).
+3. Wizard: **Name & type**, then **Schedule & payload** (scheduled), **API limits** (API), or **Integration / Event type / Event configuration** (event).
+4. Save / **Create** on the last step.
 
-## Automation always uses the live version
+## 3. How to update a trigger
 
-**Schedules**, **API** calls, and **events** always run the **currently deployed (live)** version. **Test run** is different: it can run a **testing** snapshot you select in the dropdown. If nothing is deployed yet, automated starts will fail until you **Deploy** at least once.
+Open **Triggers**, select the row, edit fields (schedule, active flag, limits, etc.), save. **API** singleton must be edited, not duplicated.
 
-## Event triggers need a connected integration
+## 4. How to delete a trigger
 
-**Event** triggers rely on a **built-in** integration with an **active connection**. Finish connecting the service in **Integrations** first; otherwise event delivery will not work and the dashboard may show connection or activation errors.
+Use the trigger row’s **delete** action (wording depends on build); confirm in the dialog. Removing a trigger does not delete historical sessions.
 
-## Scheduled triggers: schedule and timezone
+## 5. Permissions
 
-**Scheduled** triggers need a valid **cron** expression and **timezone**. Empty or invalid schedules are rejected when you save.
+| Action | Owner | Admin | Developer | Operator |
+| --- |:---:|:---:|:---:|:---:|
+| View / create / edit / delete triggers | Yes | Yes | Yes | **No** |
 
-## API triggers: rate limits and IP rules
+## 6. Limitations
 
-**Rate limits** and **IP allowlist** fields apply **only** to **API** triggers. They are not used for schedule or event types—if you fill them where they do not apply, **Save** may fail with a field hint.
+- Automation always uses the **live** **[agent version](/product/concepts/agent-version)**; if nothing is deployed, starts fail until **Deploy**.
+- **Event** triggers require a healthy **built-in** integration and correct hosting.
+- **Plan** may cap **scheduled triggers** count workspace-wide—see **[Limits & plans](/product/reference/platform-rules)**.
 
-## Trigger names
+## 7. Notes
 
-Each trigger’s **name** must be **unique on that agent**. If you duplicate a name, **Save** fails until you change it.
+- **Test run** is separate: it can run a **testing** snapshot from the dropdown.
+- Cron runs in the timezone you set on the trigger.
 
-## See also
+## 8. Cautions
 
-- [Run — which configuration runs](/product/concepts/run#which-configuration-runs)
-- [Agent workspace — Triggers](/product/dashboard/agent-workspace#triggers)
-- [Creating triggers (wizard)](/product/dashboard/triggers-wizard)
-- [Limits, permissions, and plans](/product/reference/platform-rules)
+- Rotating API keys or secrets used by event delivery may break triggers until updated.
+- IP allowlists can block legitimate callers if misconfigured.
+
+## 9. Common errors
+
+| Symptom | Typical cause |
+| --- | --- |
+| Second **API** trigger rejected | Only one API trigger allowed per agent. |
+| Event never fires | Integration disconnected, inactive trigger, or hosting/event config gap. |
+| Save fails on limits | Limits filled on non-API type or invalid numeric fields. |
+| Run starts on wrong behavior | **Live** version not what you expected—deploy the intended snapshot. |

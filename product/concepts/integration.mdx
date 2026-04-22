@@ -1,0 +1,64 @@
+---
+title: "Integration"
+description: "HTTP and built-in services, operations, and how agent versions and triggers use them."
+---
+
+## 1. What is an integration
+
+An **integration** (service) is a workspace-level **connector**: either **HTTP** (your REST APIs) or **Built-in** (managed toolkit). Each integration exposes **operations** that **[agent versions](/product/concepts/agent-version)** can enable as **tools**, and **built-in** integrations can power **[event triggers](/product/concepts/trigger)**.
+
+### 1.1 Field reference
+
+| Field / concept | What it is | Rules and limitations |
+| --- | --- | --- |
+| **Name** | Label in dashboard and operation pickers. | Shown when assigning operations to versions; use a clear name. |
+| **Integration type** | **HTTP** or **Built-in** toggle in **Add Integration**. | **HTTP**: external APIs; secrets referenced, never shown after selection. **Built-in**: toolkit + connect/sign-in flow. |
+| **HTTP connection fields** | Base URL, auth, headers, etc. | Per your Phrony HTTP connector form; may reference **[secrets](/product/concepts/secret)**. |
+| **Built-in connection** | Toolkit-specific login or API key. | Must reach **active** connection for **event** triggers. |
+| **Operations** | Actions defined per integration. | Created on the integration detail screen; versions pick from workspace operations only. |
+
+Default type in **Add Integration** is **Built-in** (switch to **HTTP** if needed).
+
+## 2. How to create an integration
+
+1. Open **Integrations** in the sidebar.
+2. **Add Integration** → set **name** and **type**.
+3. **HTTP**: fill connector fields → **Create**. **Built-in**: complete connection flow; on success you may be sent to add an **operation**.
+
+**Quick Create → New Integration** opens the same flow.
+
+## 3. How to update an integration
+
+Open the integration from the list, edit connection settings or operations as your build allows, save. Changing secrets may require selecting a new **[secret](/product/concepts/secret)**.
+
+## 4. How to delete an integration
+
+Choose **delete** on the integration; confirm **Delete integration?** The dialog warns the action **cannot be undone**, removes **all operations**, and **agent versions** that allowed those operations **lose the links**.
+
+## 5. Permissions
+
+| Action | Owner | Admin | Developer | Operator |
+| --- |:---:|:---:|:---:|:---:|
+| View / create / edit / delete integrations | Yes | Yes | Yes | **No** |
+
+## 6. Limitations
+
+- **Plan** may cap **custom connectors** (especially HTTP) or related inventory—see **[Limits & plans](/product/reference/platform-rules)**.
+- **Built-in** integrations require correct **Phrony hosting** configuration; otherwise runs can fail at **start** even when **Save** on a version succeeded.
+
+## 7. Notes
+
+- **Event** triggers require a **built-in** integration with an **active** connection.
+- Empty **Operations** tab on a version means you must define operations on the integration first.
+
+## 8. Cautions
+
+- Deleting an integration breaks **every version** that referenced its operations—audit before delete.
+
+## 9. Common errors
+
+| Symptom | Typical cause |
+| --- | --- |
+| Cannot create connector | Plan cap on custom connectors or validation error on URL/auth. |
+| Event trigger never delivers | Built-in integration not connected or inactive. |
+| Run fails at start mentioning built-in | Hosting / platform configuration gap—needs platform team. |

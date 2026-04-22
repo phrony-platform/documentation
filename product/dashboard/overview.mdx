@@ -1,59 +1,10 @@
 ---
 title: "Dashboard overview"
-description: "How the Phrony web app is organized — sidebar, roles, Quick Create, Settings."
+description: "What the Phrony dashboard is and how navigation is organized."
 ---
 
-After you sign in, the **sidebar** is your main map. What appears there depends on your **workspace role** (see **[Limits, permissions, and plans](/product/reference/platform-rules#workspace-roles-in-the-dashboard)**).
+The **Phrony dashboard** is the web app where you manage **[agents](/product/concepts/agent)**, **[integrations](/product/concepts/integration)**, **[secrets](/product/concepts/secret)**, **[LLM providers](/product/concepts/llm-provider)**, **[triggers](/product/concepts/trigger)**, and review **[sessions](/product/concepts/session)** and **[runs](/product/concepts/run)**. Most tasks are **not** available to the **Operator** role, which instead uses **[Approvals](/product/dashboard/approvals)**.
 
-**Operators** see a reduced sidebar: **Review → Approvals** and the footer links (**Settings**, **Get Help**). The main nav hides **Dashboard** (analytics home), **Secret Manager**, **LLM Providers**, **Agents**, **Integrations**, and **Guard**—those are for **Developer** and above.
+**Sidebar (typical builder):** **Dashboard** (home analytics), **Secret Manager**, **LLM Providers**, **Agents**, **Integrations**, **Guard** (when enabled), **Review → Approvals**, **Settings**, **Get Help**. **Quick Create** (**+**) jumps to new secret, provider, agent, or integration.
 
-## Quick Create
-
-At the top of the sidebar, the **+** (**Quick Create**) menu jumps straight to common tasks:
-
-- **New Secret** — opens **Secret Manager** with the add dialog ready.
-- **New LLM Provider** — opens **LLM Providers** with the create flow.
-- **New Agent** — opens **Agents** with **New Agent** ready.
-- **New Integration** — opens **Integrations** with the create flow.
-
-If your role cannot create an item, you may not see the entry or the dialog will explain that the action is not allowed.
-
-## Main sections (typical builder roles)
-
-- **Dashboard** — **[Dashboard home](/product/dashboard/home)** metrics, token chart, and **Recent sessions** (not shown to **Operator**).
-- **Secret Manager** — list, add, and remove secrets (add/remove for **Owner** / **Admin** only).
-- **LLM Providers** — list and inspect for all builders; **edit** for **Owner** / **Admin**.
-- **Agents** — list, open an agent, create, edit, delete (delete rules depend on live versions).
-- **Integrations** — HTTP and built-in services your agent versions can call.
-- **Guard** — when your workspace has it, **[Guard & anomaly control](/product/dashboard/guard-anomaly)** (may show a **Beta** label).
-
-## Review
-
-Under the **Review** group:
-
-- **Approvals** — pending sign-offs, **AITL escalations**, and **Anomaly** tasks; see **[Approvals](/product/dashboard/approvals)**. The nav item can show a pending count.
-
-## Plan compliance
-
-When the workspace exceeds plan limits after a plan change, a top-of-page alert can block new runs until usage is fixed. Details: **[Dashboard home](/product/dashboard/home#plan-compliance-banner)** and **[Limits, permissions, and plans](/product/reference/platform-rules)**.
-
-## Footer of the sidebar
-
-- **Settings** — **[Settings](/product/dashboard/settings)** tabs: **General** (appearance, session trace layout), **Workspace**, **Plan & billing** (billing roles), **API keys**.
-- **Get Help** — opens **Get help**: community (**Join Discord**) and **Email** (`support@phrony.com` in the product UI) for account, billing, or technical issues.
-
-## Integrations and API keys
-
-**Integrations** lists every **service** and its **operations** you can attach on an agent’s **Operations** tab. Creating connectors may be limited by your **plan** (maximum custom connectors, etc.).
-
-Under **Settings → API keys** (wording may vary), you create keys for **automation outside the browser**. Trigger history may show that a run started via an **API** key in plain language (for example “API” or the key’s label).
-
-## See also
-
-- [Dashboard home](/product/dashboard/home)
-- [Settings](/product/dashboard/settings)
-- [Secret Manager](/product/dashboard/secret-manager)
-- [LLM providers](/product/dashboard/llm-providers)
-- [Agents](/product/dashboard/agents)
-- [Agent workspace](/product/dashboard/agent-workspace)
-- [Approvals](/product/dashboard/approvals)
+Details: **[Limits & plans](/product/reference/platform-rules)** (roles and caps). Screen-specific blurbs: **[Dashboard home](/product/dashboard/home)**, **[Settings](/product/dashboard/settings)**, **[Approvals](/product/dashboard/approvals)**, **[Guard](/product/dashboard/guard-anomaly)**.

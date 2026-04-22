@@ -21,8 +21,9 @@
 - **Trigger** — `product/concepts/trigger.mdx`
 - **LLM provider** — `product/concepts/llm-provider.mdx`
 - **Secret** — `product/concepts/secret.mdx`
-- **Limits, permissions, plans** — `product/reference/platform-rules.mdx` (sidebar: **Limits & plans**)
-- **Dashboard guides** — `product/dashboard/*.mdx`
+- **Integration** — `product/concepts/integration.mdx`
+- **Limits, permissions, plans** — `product/reference/platform-rules.mdx`
+- **Dashboard (brief)** — `product/dashboard/*.mdx` (overview, home, settings, approvals, guard)
 
 ## Style preferences
 

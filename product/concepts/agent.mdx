@@ -1,49 +1,73 @@
 ---
 title: "Agent"
-description: "What an agent is — execution modes, how it differs from version settings, naming, and blocks."
+description: "What an agent is, its fields, dashboard actions, permissions, and pitfalls."
 ---
 
-An **agent** is the automated worker you configure in Phrony: it uses a large language model (LLM) and **versioned** snapshots for prompts, tools, and limits (see **[Agent version](/product/concepts/agent-version)**).
+## 1. What is an agent
 
-## Agent execution mode (Request, HITL, Sub-agent)
+An **agent** is the top-level unit you configure in Phrony: a named worker tied to one **[LLM provider](/product/concepts/llm-provider)** and one or more **[agent versions](/product/concepts/agent-version)** (snapshots of prompts, tools, and limits). You need agents so the platform knows **which model connection to use**, **how the agent may be started** (directly or only as a sub-agent), and **which version line is live** for automation.
 
-When you **create** or **edit** an agent from the **Agents** list, you choose **execution mode**. This is **not** the same as **Sequential / Parallel** on the **Multi-agent** tab (that only applies when a **Request** or **HITL** agent **calls** other agents).
+Agents do **not** hold the detailed behavior—that lives on **versions**. The agent row answers: *what is it called*, *Request / HITL / Sub-agent*, and *which provider*.
 
-| Mode | Purpose | Triggers tab |
-|------|---------|--------------|
-| **Request** | Standard agent: can run from **Test run**, **triggers**, and automation. | Shown |
-| **HITL** (human-in-the-loop) | Same as Request for scheduling, plus runs can **pause** for a person to approve, reject, or supply input, depending on the version. | Shown |
-| **Sub-agent** | Meant to be invoked **only as a tool** by another agent—not started on its own schedule or API trigger. | **Hidden** |
+### 1.1 Field reference
 
-Sub-agents still have their own **LLM provider** and **versions** (instructions, tools, limits). They do **not** get a **Triggers** tab.
+| Field (dashboard) | What it is | Rules and limitations |
+| --- | --- | --- |
+| **Name** | Label for lists, triggers, and sessions. | Must be **unique** in the workspace. Duplicate names are rejected on save. |
+| **Execution mode** | **Request**, **HITL**, or **Sub-agent**. | **Not** the same as **Sequential / Parallel** on **[Agent version](/product/concepts/agent-version)** → Multi-agent (that only governs sub-agent *calls*). **Sub-agent** hides the **Triggers** tab; only parent agents invoke sub-agents as tools. Switching **to** Sub-agent checks your plan’s **sub-agent agent** cap. |
+| **LLM provider** | Workspace connection used for all versions of this agent. | Exactly **one** per agent. Required at creation; change via **Edit agent**. If the provider becomes invalid, runs fail until fixed. |
 
-## Model connection (LLM provider)
+## 2. How to create an agent
 
-Every agent is linked to exactly one **[LLM provider](/product/concepts/llm-provider)**. You pick it in **New Agent** or **Edit agent**. You can change it later from the agents list; behavioral detail lives in **versions**.
+1. Open **Agents** in the sidebar (**Owner**, **Admin**, **Developer**).
+2. Choose **New Agent**.
+3. Set **name**, **execution mode**, and **LLM provider**, then save.
 
-## Where the real settings live
+**Quick Create → New Agent** opens the same flow with **New Agent** ready.
 
-**Model**, **instructions**, **schemas**, **allowed operations**, **token limits**, **Guard**, and **multi-agent** options are stored on **versions** (snapshots), not on the agent name row. The workspace shows which version is **live** versus still in **testing**.
+## 3. How to update an agent
 
-## Names must be unique in your workspace
+1. In **Agents**, use **Edit agent** on the row (or open the workspace and edit from the header).
+2. Change **name**, **mode**, or **LLM provider** as allowed; save.
 
-Duplicate agent names are rejected when you save—pick another name.
+Changing the provider affects **future** runs; existing session data still shows the version that ran.
 
-## Sub-agent mode and your plan
+## 4. How to delete an agent
 
-Turning an agent **into** a **Sub-agent** checks your plan’s **cap** on how many sub-agent agents you may have. At the limit, Phrony shows an **upgrade** or plan message. Turning a sub-agent **back** to Request or HITL does not consume an extra slot.
+1. In **Agents**, open the row’s overflow (**…**) and choose **Delete**.
+2. Confirm only if **no version is live** (deployed). If a version is still live, the UI explains that you must deploy elsewhere or roll back before delete is allowed.
 
-## When Phrony blocks all new runs (Guard / Anomaly)
+## 5. Permissions
 
-**Anomaly Control** (Guard) can mark an agent **blocked until reviewed**. While blocked, **Test run**, **triggers**, and automation refuse to start until someone with the right role **clears the block**. The UI may show a reason or incident reference.
+| Action | Owner | Admin | Developer | Operator |
+| --- |:---:|:---:|:---:|:---:|
+| View **Agents** list and open workspace | Yes | Yes | Yes | **No** |
+| Create agent | Yes | Yes | Yes | **No** |
+| Edit agent (name, mode, provider) | Yes | Yes | Yes | **No** |
+| Delete agent (when allowed) | Yes | Yes | Yes | **No** |
 
-## Deleting an agent
+Operators use **[Approvals](/product/dashboard/approvals)** and do not see the **Agents** section in the nav.
 
-**Delete** in the overflow menu works **only if no version is live**. If something is still deployed, the dialog explains what to do first.
+## 6. Limitations
 
-## See also
+- **Plan** may cap how many **Sub-agent** mode agents you can have; at the cap, switching mode shows an upgrade or capacity message.
+- **[Guard & anomaly](/product/dashboard/guard-anomaly)** can **block** an agent until reviewed; while blocked, **Test run**, **triggers**, and API starts refuse (see **[Limits & plans](/product/reference/platform-rules)**).
 
-- [Agent version](/product/concepts/agent-version) — everything on **Version configuration**, including **Sequential / Parallel** for sub-agent calls
-- [Session](/product/concepts/session)
-- [Run](/product/concepts/run)
-- [Agents](/product/dashboard/agents)
+## 7. Notes
+
+- **[Agent version](/product/concepts/agent-version)** holds model, instructions, schemas, operations, session caps, and multi-agent settings.
+- **Sub-agent** agents still have their own provider and versions; they are not scheduled or API-started on their own.
+
+## 8. Cautions
+
+- Do not confuse **execution mode** with **Execution model** (Sequential vs Parallel) on a version—both appear in docs and UI but control different things.
+- Deleting an agent is irreversible; ensure no production dependency on its live line first.
+
+## 9. Common errors
+
+| Symptom | Typical cause |
+| --- | --- |
+| **Save** fails on name | Name already used by another agent in the workspace. |
+| **Delete** unavailable or dialog blocks | A version is still **live**; deploy another version or change live line first. |
+| Cannot switch to **Sub-agent** | Plan cap on sub-agent agents, or validation error from the server. |
+| Runs never start on this agent | **[Guard](/product/dashboard/guard-anomaly)** block, plan limits, or invalid provider/secret—see **[Limits & plans](/product/reference/platform-rules)**. |
