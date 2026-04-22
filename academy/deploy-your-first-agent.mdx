@@ -1,15 +1,15 @@
 ---
 title: "Deploy your first agent"
-description: "HITL agent: Gmail event trigger, Google Calendar built-in tools, approvals, Test run, deploy live—answer availability questions from email."
+description: "HITL agent: Gmail event trigger, Google Calendar operations, approvals, Test run, deploy live—answer availability questions from email."
 ---
 
-This is your **first end-to-end agent** in the Phrony dashboard—a **HITL** (**human-in-the-loop**) agent: when **a new Gmail message** arrives and asks **what times you are free** (or similar), it uses **Google Calendar** tools to inspect **your calendar and calendars shared with you**, then produces text you can send back (or hand off to a **draft/send** tool if you enable one). Runs can **pause for approval** before gated tool calls (**[Approvals](/product/dashboard/approvals)**, **[Run](/product/concepts/run)**).
+This is your **first end-to-end agent** in the Phrony dashboard—a **HITL** (**human-in-the-loop**) agent: when **a new Gmail message** arrives and asks **what times you are free** (or similar), it uses **Google Calendar** **operations** to inspect **your calendar and calendars shared with you**, then produces text you can send back (or hand off to **draft** / **send** **operations** if you enable them). Runs can **pause for approval** before gated **operation** calls (**[Approvals](/product/dashboard/approvals)**, **[Run](/product/concepts/run)**).
 
 **Learning, not the ideal production use case:** Turning every availability question into an LLM run is often **workflow-shaped**—scheduling links, calendar assistants, or deterministic rules can solve much of this without an agent. This guide exists so you learn **built-in integrations**, **event triggers**, **HITL**, **versions**, and **deploy** in one place; see **[Workflows vs. agents](/product/workflows-vs-agents)** for when agentic execution is actually the right fit.
 
 You will practice **built-in** **[integrations](/product/concepts/integration)**, an **event** **[trigger](/product/concepts/trigger)**, **[agent version](/product/concepts/agent-version)** configuration, **Test run**, **Deploy**, and **[sessions](/product/concepts/session)**.
 
-The workspace catalog supplies **Gmail** and **Google Calendar** through managed connectors—**operation** names can vary; pick tools that **list calendars**, **read events** or **free/busy**, and optionally **draft** or **send** mail.
+The workspace catalog supplies **Gmail** and **Google Calendar** through managed connectors—**operation** names can vary; pick **operations** that **list calendars**, **read events** or **free/busy**, and optionally **draft** or **send** mail.
 
 **Who can do this:** **Owner**, **Admin**, or **Developer** for setup; anyone who resolves **[Approvals](/product/dashboard/approvals)** when a run pauses on **Require approval for this operation** (**[Integration](/product/concepts/integration)**).
 
@@ -20,10 +20,10 @@ The workspace catalog supplies **Gmail** and **Google Calendar** through managed
 | Piece | Role |
 | --- | --- |
 | **Gmail** (built-in) | **Event trigger** on **new email** → starts a **run** per message (when configured). |
-| **Google Calendar** (built-in) | **Tools** on the version → busy blocks, events, or suggested free slots across **primary and shared** calendars. |
+| **Google Calendar** (built-in) | **Operations** enabled on the version → busy blocks, events, or suggested free slots across **primary and shared** calendars. |
 | **Agent + version** | **HITL** execution mode; **instructions** + **input schema** aligned with the **trigger payload**, so the model detects **availability** questions and picks a **date range**. |
 
-**Shared calendars:** The agent only sees calendars your **connected Google user** can see. Sharing must allow at least **free/busy** (or full detail), depending on the tool.
+**Shared calendars:** The agent only sees calendars your **connected Google user** can see. Sharing must allow at least **free/busy** (or full detail), depending on the **operation**.
 
 ---
 
@@ -46,7 +46,7 @@ Create a provider your agent will use (OpenAI, Anthropic, or your workspace defa
 1. **Integrations** → **Add Integration** → **Built-in**.
 2. Choose **Gmail** (exact catalog label may vary), complete **OAuth** until the row is **connected** / **active**.
 3. You do not add raw HTTP operations for “new mail”—the **trigger** uses the managed connector.
-4. If you enable **Gmail** **draft** or **send** tools on this integration for replies, turn on **Require approval for this operation** on each risky **operation** in **Integrations** until you trust automation.
+4. If you enable **Gmail** **draft** or **send** **operations** on this integration for replies, turn on **Require approval for this operation** on each risky **operation** in **Integrations** until you trust automation.
 
 More: **[Integration](/product/concepts/integration)** → Built-in.
 
@@ -61,7 +61,7 @@ More: **[Integration](/product/concepts/integration)** → Built-in.
    - **List calendars** (including shared).
    - **Events**, **free/busy**, or **availability** in a window—match names to your catalog.
 
-These become tools on the **[agent version](/product/concepts/agent-version)** in Step 5.
+These become **allowed operations** on the **[agent version](/product/concepts/agent-version)** in Step 5.
 
 ---
 
@@ -69,14 +69,14 @@ These become tools on the **[agent version](/product/concepts/agent-version)** i
 
 1. **Agents** → **New Agent**.
 2. **Name** (e.g. `Availability assistant`).
-3. **Execution mode:** **HITL** — runs can pause for **[Approvals](/product/dashboard/approvals)** or **Run** review before tool calls that have **Require approval for this operation** (for example Gmail **send** / **draft** in Step 2). **HITL** is required for that pause behavior (**[Agent](/product/concepts/agent)**).
+3. **Execution mode:** **HITL** — runs can pause for **[Approvals](/product/dashboard/approvals)** or **Run** review before **operation** calls that have **Require approval for this operation** (for example Gmail **send** / **draft** in Step 2). **HITL** is required for that pause behavior (**[Agent](/product/concepts/agent)**).
 4. **LLM provider** → your Step 1 row → save.
 
 ---
 
 ## Step 5 — Agent version: model, prompt, schemas, operations
 
-An **[agent version](/product/concepts/agent-version)** is the saved snapshot (model, instructions, tools, schemas) you **test** and later **deploy** as **live**. Configure it on a **testing** line—not **live** (live is read-only in the UI).
+An **[agent version](/product/concepts/agent-version)** is the saved snapshot (model, instructions, allowed **operations**, schemas) you **test** and later **deploy** as **live**. Configure it on a **testing** line—not **live** (live is read-only in the UI).
 
 1. Open the agent from **Agents** → **Version configuration**.
 
@@ -86,30 +86,30 @@ An **[agent version](/product/concepts/agent-version)** is the saved snapshot (m
 3. **Model & Prompt** tab — **LLM model and generation**
 
    - **LLM model** — choose a **model id** from the list. The list comes from the agent’s **LLM provider** (Step 1); pick one your key/plan supports (for example a current general model from that vendor).
-   - **Temperature** — try `0.2`–`0.4` for more predictable tool use.
-   - **Max tool calls** — set high enough for several calendar reads (for example at least `8`).
+   - **Temperature** — try `0.2`–`0.4` for more predictable **operation** use.
+   - **Max operation calls** — set high enough for several calendar reads (for example at least `8`). (Dashboard may say **Max tool calls**.)
    - **Max iterations** / **Max tokens per run** — leave at defaults unless a run stops early; raise if the model hits caps.
 
-4. **Model & Prompt** tab — **Instructions** (paste and adapt tool names / timezone):
+4. **Model & Prompt** tab — **Instructions** (paste and adapt **operation** names / timezone):
 
 ```text
 You help with emails that ask for meeting times or availability.
 
 When the run input contains email fields from the trigger (subject, body, sender, etc.):
-1. Decide if the message is really about availability or scheduling. If not, do not call calendar tools.
+1. Decide if the message is really about availability or scheduling. If not, do not call calendar **operations**.
 2. Infer the date range (“next week”, a specific day, etc.). If ambiguous, use the next 5 business days in the user’s timezone.
-3. Use Google Calendar tools for the primary calendar and any shared calendars that matter.
+3. Use Google Calendar **operations** for the primary calendar and any shared calendars that matter.
 4. Summarize free slots or busy blocks in plain language for an email (times + timezone).
-5. Use Gmail send/draft tools only if enabled and policy allows; otherwise output reply text for a human to paste.
+5. Use Gmail send/draft **operations** only if enabled and policy allows; otherwise output reply text for a human to paste.
 
-Never invent calendar data—only tool results.
+Never invent calendar data—only **operation** results.
 ```
 
 5. **Input & Output** → **Input schema**
 
    Payload keys come from the **Gmail** event. Until you have a real payload, use a permissive schema or the illustrative keys in **Step 6**; after the first **live** run, open **[Run](/product/concepts/run)** → **Input** and tighten **properties** to match.
 
-6. **Operations** — enable **Google Calendar** tools from Step 3. Optionally enable **Gmail** draft/send (use **Require approval for this operation** on those operations in Step 2 so **HITL** can gate them).
+6. **Operations** — enable **Google Calendar** **operations** from Step 3. Optionally enable **Gmail** draft/send (use **Require approval for this operation** on those **operations** in Step 2 so **HITL** can gate them).
 
 7. **Limits & Safety** — leave **Anomaly control (L1)** off for this walkthrough unless you already use it on another snapshot (**[Agent version](/product/concepts/agent-version)** → **Limits & Safety**).
 
@@ -136,7 +136,7 @@ Validate the **testing** snapshot **before** you wire the **event** trigger.
 }
 ```
 
-3. Run. You should see **Google Calendar** tool calls and a sensible availability summary. If a tool has **Require approval**, finish the pending step in **[Approvals](/product/dashboard/approvals)** or **Run** detail so the run can complete.
+3. Run. You should see **Google Calendar** **operation** calls and a sensible availability summary. If an **operation** has **Require approval**, finish the pending step in **[Approvals](/product/dashboard/approvals)** or **Run** detail so the run can complete.
 
 4. Fix **instructions**, **operations**, or **schema**, then **Save** and re-test until this pass looks right.
 
@@ -159,7 +159,7 @@ Automation uses the agent’s **live** version line—see **[Agent version](/pro
 ## Step 8 — Deploy and verify with real mail
 
 1. **Deploy** the testing snapshot you validated in Step 6 to **live** so the trigger can start runs.
-2. Send yourself a real message such as *“What’s your availability next Tuesday afternoon?”* and confirm a **session** with the expected tool usage and answer.
+2. Send yourself a real message such as *“What’s your availability next Tuesday afternoon?”* and confirm a **session** with the expected **operation** usage and answer.
 3. If the **live** run’s **Input** JSON differs from your mock, update the **Input schema** on the version, **Save**, **Deploy** again, and re-test.
 4. Inspect **Sessions** on the agent for history and token usage.
 
@@ -168,8 +168,8 @@ Automation uses the agent’s **live** version line—see **[Agent version](/pro
 ## Operational notes
 
 - **Noise:** Tighten Gmail filters + trigger config so routine mail does not spawn runs.
-- **Shared calendars:** Confirm **Google Calendar** sharing and that tools query the right **calendar IDs**.
-- **Outbound mail:** Prefer **draft** and **Require approval for this operation** on send/draft tools until you trust replies; this guide’s agent is **HITL** so those pauses work.
+- **Shared calendars:** Confirm **Google Calendar** sharing and that **operations** query the right **calendar IDs**.
+- **Outbound mail:** Prefer **draft** and **Require approval for this operation** on send/draft **operations** until you trust replies; this guide’s agent is **HITL** so those pauses work.
 
 ---
 
@@ -178,4 +178,5 @@ Automation uses the agent’s **live** version line—see **[Agent version](/pro
 - **[Agent version](/product/concepts/agent-version)** — version lifecycle, every tab, deploy rules
 - **[Trigger](/product/concepts/trigger)**
 - **[Integration](/product/concepts/integration)**
-- **[Multi-agent](/academy/multi-agent)**
+- **[Multi-agent overview](/product/multi-agent/overview)** — delegation concepts
+- **[Academy: multi-agent](/academy/multi-agent)** — hands-on delegation

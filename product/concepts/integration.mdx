@@ -5,7 +5,7 @@ description: "HTTP and built-in services, operations, authentication, and how ag
 
 ## 1. What is an integration
 
-An **integration** (service) is a workspace-level **connector**: either **HTTP** (your REST APIs) or **Built-in** (managed toolkit). Each integration exposes **operations** that **[agent versions](/product/concepts/agent-version)** can enable as **tools**, and **built-in** integrations can power **[event triggers](/product/concepts/trigger)**.
+An **integration** (service) is a workspace-level **connector**: either **HTTP** (your REST APIs) or **Built-in** (managed toolkit). Each integration exposes **operations** that **[agent versions](/product/concepts/agent-version)** can enable as **allowed operations** on a version, and **built-in** integrations can power **[event triggers](/product/concepts/trigger)**.
 
 ### 1.1 Field reference
 
@@ -31,7 +31,7 @@ An **HTTP** integration is a **template for outbound HTTPS calls** to an API you
 - How **authentication** is applied on every request (or **none** for public endpoints).
 - Optional **default headers** and **default query** parameters merged into each operation.
 
-You then define **operations**: HTTP method, path (relative to the base URL), headers/query/body templates, and a tool **arguments** schema so the model knows what parameters to pass. At run time, Phrony performs the HTTP request on behalf of the agent when the model selects that tool.
+You then define **operations**: HTTP method, path (relative to the base URL), headers/query/body templates, and an **operation arguments** schema (the editor may show **Tool arguments schema**) so the model knows what parameters to pass. At run time, Phrony performs the HTTP request on behalf of the agent when the model selects that **operation**.
 
 Use HTTP when the capability you need is already exposed as a **REST API** you control or a **third-party API** (CRM, payments, market data, internal microservice, etc.).
 
@@ -62,9 +62,9 @@ The HTTP connector’s **Authentication** setting controls how credentials are a
 
 **Important:** You choose an existing **secret** from **Secret Manager**; the UI does **not** display the secret value after you save. Rotate by creating a new secret and editing the integration to point at it.
 
-**Human approval (HITL):** Turn on **Require approval for this operation** on each **operation** you add under **Integrations** (HTTP **and** built-in) when that **tool** should pause until someone approves in **[Approvals](/product/dashboard/approvals)** or **Run** detail. The **agent** must be in **HITL** **[execution mode](/product/concepts/agent)** for those pauses to take effect; in **Request** mode, approval-gated calls are not executed the same way.
+**Human approval (HITL):** Turn on **Require approval for this operation** on each **operation** you add under **Integrations** (HTTP **and** built-in) when that **operation** should pause until someone approves in **[Approvals](/product/dashboard/approvals)** or **Run** detail. The **agent** must be in **HITL** **[execution mode](/product/concepts/agent)** for those pauses to take effect; in **Request** mode, approval-gated calls are not executed the same way.
 
-Prefer **per-operation** approval so harmless read-only tools stay unattended and only sensitive calls (payments, sends, deletes) wait on a human. Optionally, **Always require approval** on the **HTTP integration** itself applies a default gate to **every** operation on that connector—use sparingly when you truly want all calls reviewed.
+Prefer **per-operation** approval so harmless read-only **operations** stay unattended and only sensitive calls (payments, sends, deletes) wait on a human. Optionally, **Always require approval** on the **HTTP integration** itself applies a default gate to **every** operation on that connector—use sparingly when you truly want all calls reviewed.
 
 You can still add **default headers** (static name/value pairs) for non-secret metadata (for example `Accept: application/json`). Use **secrets** or header templates for anything sensitive.
 
@@ -84,7 +84,7 @@ Until the built-in shows a **good** connection, **[event](/product/concepts/trig
 
 ## Example: HTTP integration for a public crypto API (CoinGecko)
 
-This example uses **[CoinGecko’s](https://www.coingecko.com/en/api)** public REST API (third-party terms and rate limits apply)—a compact pattern for **HTTP** tool definitions.
+This example uses **[CoinGecko’s](https://www.coingecko.com/en/api)** public REST API (third-party terms and rate limits apply)—a compact pattern for **HTTP** operation definitions.
 
 **1. Create the integration**
 
@@ -97,7 +97,7 @@ This example uses **[CoinGecko’s](https://www.coingecko.com/en/api)** public R
 
 **2. Add an operation**
 
-Use **`{{parameterName}}`** in **path**, **query values**, **headers**, or **body** so tool arguments fill the request at run time.
+Use **`{{parameterName}}`** in **path**, **query values**, **headers**, or **body** so **operation** arguments fill the request at run time.
 
 | Field | Example |
 | --- | --- |
@@ -106,9 +106,9 @@ Use **`{{parameterName}}`** in **path**, **query values**, **headers**, or **bod
 | **Path** | `/simple/price` |
 | **Query** | `ids` → `{{ids}}`, `vs_currencies` → `{{vs_currencies}}` |
 | **Require approval for this operation** | **On** with a **HITL** agent if every price lookup should pause for **[Approvals](/product/dashboard/approvals)**; **Off** for unattended **Request** agents |
-| **Tool arguments schema** | `ids` and `vs_currencies` strings (JSON below) |
+| **Operation arguments schema** | `ids` and `vs_currencies` strings (JSON below); UI may say **Tool arguments schema** |
 
-**Tool arguments schema** (paste into the editor):
+**Operation arguments schema** (paste into the editor):
 
 ```json
 {
@@ -179,4 +179,4 @@ Choose **delete** on the integration; confirm **Delete integration?** The dialog
 | Cannot create connector | Plan cap on custom connectors or validation error on URL/auth. |
 | Event trigger never delivers | Built-in integration not connected or inactive. |
 | Run fails at start mentioning built-in | Hosting / platform configuration gap—needs platform team. |
-| HTTP tool returns 401/403 | Wrong auth mode, expired secret, or missing header name for the vendor. |
+| HTTP operation returns 401/403 | Wrong auth mode, expired secret, or missing header name for the vendor. |

@@ -1,0 +1,43 @@
+---
+title: "Sequential and Parallel"
+description: "How the parent execution model batches sub-agent operation calls in a single model turn."
+---
+
+**Execution model** appears on the parent’s **Version configuration → Multi-agent** tab when **Can execute sub-agents** is on. It only affects how **sub-agent delegations** may be invoked **within one parent model turn**—it does **not** replace **Request / HITL** on the agent row.
+
+## Sequential — one sub-agent per turn
+
+- At most **one** sub-agent **operation** call per **parent** model turn.
+- Use when you want simpler traces, strict ordering, or models that should not fan out multiple children at once.
+
+## Parallel — same sub-agent, multiple calls in one turn
+
+- The parent model may emit **several** sub-agent **operation** calls **in the same** assistant message **only if** every call targets the **same** allow-listed **Sub-agent** and uses **different** inputs.
+- Those child **runs** may execute **concurrently**.
+- If the model mixes **different** Sub-agents in the same message, Phrony **serializes** those calls (one after another)—**Parallel** does not run different children in parallel in that turn.
+
+This matches the product rule: parallelization is scoped to **one** child agent identity with **multiple** payloads, not arbitrary multi-operation fan-out across different agents.
+
+## Comparison
+
+| Situation | Sequential | Parallel (same sub-agent) |
+| --- | --- | --- |
+| One call to Sub-agent A | Allowed | Allowed |
+| Two calls to Sub-agent A with different inputs in one turn | Second call waits for a **later** parent turn (only one per turn) | Both calls may run **together** |
+| Call to A and call to B in one turn | One per turn overall | **Serialized** (not parallel across A vs B) |
+
+## Prompting parents for Parallel
+
+To benefit from **Parallel**, parent **instructions** should ask the model to issue **one sub-agent operation call per logical item** (per ticket, per row, per company) to the **same** Sub-agent, instead of batching multiple items into a single child input. Copy-paste patterns and **Test run** JSON live in **[Academy: Use multi-agent delegation](/academy/multi-agent)**.
+
+## UI and live snapshots
+
+**Execution model** is edited on **testing** snapshots; it may be **disabled** or read-only on **live** lines per your build. Deploy after you change it.
+
+---
+
+## See also
+
+- **[Overview](/product/multi-agent/overview)**
+- **[Parent and Sub-agent](/product/multi-agent/parent-and-sub-agent)**
+- **[Limits, permissions, and plans](/product/reference/platform-rules)** → Sub-agent delegation

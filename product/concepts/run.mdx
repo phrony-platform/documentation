@@ -5,7 +5,7 @@ description: "Single execution of a version—fields, how runs start, inspector,
 
 ## 1. What is a run
 
-A **run** is **one execution** of an **[agent version](/product/concepts/agent-version)** against an **input**: model steps, tool calls, optional pauses for human review, and a **final status**. Runs belong to a **[session](/product/concepts/session)**; the **root** run is what you usually open from session tables, with **child** runs for **sub-agent** delegations.
+A **run** is **one execution** of an **[agent version](/product/concepts/agent-version)** against an **input**: model steps, **operation** calls, optional pauses for human review, and a **final status**. Runs belong to a **[session](/product/concepts/session)**; the **root** run is what you usually open from session tables, with **child** runs for **sub-agent** delegations.
 
 ### 1.1 Field reference
 
@@ -19,7 +19,7 @@ In **Run inspector** (and related API views), you typically see:
 | **Agent version** | Which snapshot executed. | **Test run** uses the **selected** snapshot; **triggers** use **live** only. |
 | **Triggered by** | **Test run**, named trigger, schedule, event, etc. | Matches session list **Triggered by** context. |
 | **Input** | Payload validated against **Input schema**. | Bad input fails early with validation errors. |
-| **Trace / timeline** | Model and tool steps. | Layout follows **Settings → General → Session trace layout** (**Basic** vs **Advanced**). |
+| **Trace / timeline** | Model and **operation** steps. | Layout follows **Settings → General → Session trace layout** (**Basic** vs **Advanced**). |
 | **Conversation / I/O** | Structured views of messages or I/O. | Depends on agent configuration. |
 | **Sub-agent sections** | Child runs when delegation occurred. | **Parallel** same-sub-agent batches may show grouped behavior by release. |
 | **Pause / review** | HITL or Guard panels. | Appears when the run waits on a person. |
@@ -47,8 +47,8 @@ There is no user-facing **delete run** in the dashboard; retention is governed b
 
 ## 6. Limitations
 
-- **Max tool calls**, per-run token caps, and session caps on the **version** still apply.
-- **Plan** may further cap tool calls (stricter of plan vs version wins).
+- **Max operation calls**, per-run token caps, and session caps on the **version** still apply.
+- **Plan** may further cap operation calls (stricter of plan vs version wins).
 
 ## 7. Notes
 
@@ -66,4 +66,4 @@ There is no user-facing **delete run** in the dashboard; retention is governed b
 | --- | --- |
 | Run will not start | Agent **blocked** by Guard, trigger **inactive**, no **live** version for automation, invalid provider/secret, or built-in integration/hosting issue—see **[Limits & plans](/product/reference/platform-rules)**. |
 | Input rejected | Does not satisfy **Input schema**. |
-| Tool cap errors | **Plan** or version **Max tool calls** exceeded. |
+| Operation cap errors | **Plan** or version **Max operation calls** exceeded. |

@@ -7,7 +7,7 @@
 ## About this project
 
 - Phrony **customer-facing** documentation on [Mintlify](https://mintlify.com)
-- Pages are MDX under `index.mdx`, `academy/`, `product/concepts/`, `product/dashboard/`, `product/reference/`, and `api-reference/`
+- Pages are MDX under `index.mdx`, `academy/`, `product/concepts/`, `product/multi-agent/`, `product/dashboard/`, `product/reference/`, and `api-reference/`
 - Navigation lives in `docs.json` (**Documentation**, **Academy**, and **API** tabs)
 - Run `mint dev` to preview locally; `mint broken-links` to check links
 - **Voice**: say **Phrony**, **Phrony dashboard**, **API** — do **not** use internal code names (e.g. Cockpit, control-plane) in user-visible MDX
@@ -18,6 +18,7 @@
 - **Academy** — `academy/*.mdx` (deploy your first agent: HITL, Gmail + Calendar; multi-agent)
 - **Agent** — `product/concepts/agent.mdx`
 - **Agent version** — `product/concepts/agent-version.mdx`
+- **Multi-agent** — `product/multi-agent/*.mdx` (overview, parent/Sub-agent, sequential/parallel, sessions/runs, limits)
 - **Session** — `product/concepts/session.mdx`
 - **Run** — `product/concepts/run.mdx`
 - **Trigger** — `product/concepts/trigger.mdx`

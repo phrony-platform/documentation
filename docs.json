@@ -32,6 +32,16 @@
               "product/dashboard/guard-anomaly",
               "product/reference/platform-rules"
             ]
+          },
+          {
+            "group": "Multi-agent",
+            "pages": [
+              "product/multi-agent/overview",
+              "product/multi-agent/parent-and-sub-agent",
+              "product/multi-agent/sequential-and-parallel",
+              "product/multi-agent/sessions-and-runs",
+              "product/multi-agent/limits-and-troubleshooting"
+            ]
           }
         ]
       },

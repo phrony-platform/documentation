@@ -5,7 +5,7 @@ description: "What an agent is, its fields, dashboard actions, permissions, and 
 
 ## 1. What is an agent
 
-An **agent** is the top-level unit you configure in Phrony: a named worker tied to one **[LLM provider](/product/concepts/llm-provider)** and one or more **[agent versions](/product/concepts/agent-version)** (snapshots of prompts, tools, and limits). You need agents so the platform knows **which model connection to use**, **how the agent may be started** (directly or only as a sub-agent), and **which version line is live** for automation.
+An **agent** is the top-level unit you configure in Phrony: a named worker tied to one **[LLM provider](/product/concepts/llm-provider)** and one or more **[agent versions](/product/concepts/agent-version)** (snapshots of prompts, allowed **operations**, and limits). You need agents so the platform knows **which model connection to use**, **how the agent may be started** (directly or only as a sub-agent), and **which version line is live** for automation.
 
 Agents do **not** hold the detailed behavior—that lives on **versions**. The agent row answers: *what is it called*, *Request / HITL / Sub-agent*, and *which provider*.
 
@@ -14,7 +14,7 @@ Agents do **not** hold the detailed behavior—that lives on **versions**. The a
 | Field (dashboard) | What it is | Rules and limitations |
 | --- | --- | --- |
 | **Name** | Label for lists, triggers, and sessions. | Must be **unique** in the workspace. Duplicate names are rejected on save. |
-| **Execution mode** | **Request**, **HITL**, or **Sub-agent**. | **Not** the same as **Sequential / Parallel** on **[Agent version](/product/concepts/agent-version)** → Multi-agent (that only governs sub-agent *calls*). **Sub-agent** hides the **Triggers** tab; only parent agents invoke sub-agents as tools. Switching **to** Sub-agent checks your plan’s **sub-agent agent** cap. |
+| **Execution mode** | **Request**, **HITL**, or **Sub-agent**. | **Not** the same as **Sequential / Parallel** on **[Agent version](/product/concepts/agent-version)** → Multi-agent (that only governs sub-agent *calls*). **Sub-agent** hides the **Triggers** tab; only parent agents invoke sub-agents as delegated **operations**. Switching **to** Sub-agent checks your plan’s **sub-agent agent** cap. |
 | **LLM provider** | Workspace connection used for all versions of this agent. | Exactly **one** per agent. Required at creation; change via **Edit agent**. If the provider becomes invalid, runs fail until fixed. |
 
 ## 2. How to create an agent
@@ -58,7 +58,7 @@ Operators use **[Approvals](/product/dashboard/approvals)** and do not see the *
 ## 7. Notes
 
 - **[Agent version](/product/concepts/agent-version)** holds model, instructions, schemas, operations, session caps, and multi-agent settings.
-- **Sub-agent** agents still have their own provider and versions; they are not scheduled or API-started on their own.
+- **Sub-agent** agents still have their own provider and versions; they are not scheduled or API-started on their own. Conceptual guides: **[Multi-agent](/product/multi-agent/overview)**.
 
 ## 8. Cautions
 

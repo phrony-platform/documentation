@@ -3,7 +3,7 @@ title: "Use multi-agent delegation"
 description: "Step-by-step: Sub-agent agents, parent configuration, Sequential vs Parallel, test and deploy."
 ---
 
-This guide sets up one **parent** **[agent](/product/concepts/agent)** (**Request** or **HITL** mode) that can delegate to other agents running in **Sub-agent** mode. For conceptual detail and limits, see **[Agent version](/product/concepts/agent-version)** → **Multi-agent**.
+This guide sets up one **parent** **[agent](/product/concepts/agent)** (**Request** or **HITL** mode) that can delegate to other agents running in **Sub-agent** mode. Read the **[Multi-agent](/product/multi-agent/overview)** documentation section for concepts; field tables remain on **[Agent version](/product/concepts/agent-version)** → **Multi-agent**.
 
 **Prerequisites**
 
@@ -17,11 +17,11 @@ This guide sets up one **parent** **[agent](/product/concepts/agent)** (**Reques
 1. **Agents** → **New Agent** → set **execution mode** to **Sub-agent**.
 2. Attach an **[LLM provider](/product/concepts/llm-provider)** (same as any agent).
 3. Open **Version configuration** on a **testing** snapshot.
-4. **Model & Prompt:** fill **instructions** and, for **Sub-agent** mode, the required **description** (short tool blurb for parent agents).
+4. **Model & Prompt:** fill **instructions** and, for **Sub-agent** mode, the required **description** (short summary for parent agents).
 5. Configure **Operations**, schemas, and limits as needed for the child’s job.
 6. **Save**.
 
-Sub-agents **do not** show a **Triggers** tab; parents invoke them as tools. More: **[Agent](/product/concepts/agent)**.
+Sub-agents **do not** show a **Triggers** tab; parents invoke them as delegated **operations**. More: **[Agent](/product/concepts/agent)**.
 
 ---
 
@@ -56,7 +56,7 @@ More: **[Agent version](/product/concepts/agent-version)** → **Multi-agent**.
 
 **1. Sub-agent (e.g. name `Company brief`)**
 
-- **Description** (required for Sub-agent; parents see this as the tool summary):
+- **Description** (required for Sub-agent; parents see this as the delegation summary):
 
 ```text
 Given `company` and `focus`, returns a tight factual paragraph (max ~4 sentences). One company per call.
@@ -97,7 +97,7 @@ Enable whatever **operations** or defaults the child needs; **Save** and **Deplo
 ```text
 You are a research coordinator. The user supplies `companies` (comma-separated names) and `focus`.
 
-You must delegate to the Company brief sub-agent: exactly one tool call per company name, each with input `{ "company": "<single name>", "focus": "<user's focus>" }`. Do not merge multiple companies into one call—that breaks Parallel fan-out.
+You must delegate to the Company brief sub-agent: exactly one **operation** call per company name, each with input `{ "company": "<single name>", "focus": "<user's focus>" }`. Do not merge multiple companies into one call—that breaks Parallel fan-out.
 
 After all sub-agent results are back in this turn, reply with a markdown table:
 
@@ -133,7 +133,7 @@ Use one row per company, using only the sub-agent text for that row.
 }
 ```
 
-You should see **three** child runs under one parent **[session](/product/concepts/session)** when the model issues three sub-agent tool calls in parallel (names in the UI may match your Sub-agent label). If you only see one child call, check **Execution model** is **Parallel** and the instructions forbid batching companies into a single payload.
+You should see **three** child runs under one parent **[session](/product/concepts/session)** when the model issues three sub-agent **operation** calls in parallel (names in the UI may match your Sub-agent label). If you only see one child call, check **Execution model** is **Parallel** and the instructions forbid batching companies into a single payload.
 
 ---
 
@@ -164,5 +164,6 @@ You should see **three** child runs under one parent **[session](/product/concep
 
 ## See also
 
-- **[Deploy your first agent](/academy/deploy-your-first-agent)** — tools via integrations on a single agent
+- **[Multi-agent overview](/product/multi-agent/overview)** — concepts and section map
+- **[Deploy your first agent](/academy/deploy-your-first-agent)** — **operations** via integrations on a single agent
 - **[Limits & plans](/product/reference/platform-rules)** — roles and caps

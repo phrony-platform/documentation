@@ -5,7 +5,7 @@ description: "Version snapshots, every configurable field, deploy rules, permiss
 
 ## 1. What is an agent version
 
-An **agent version** is one **saved snapshot** of behavior for an agent: model, instructions, schemas, allowed **operations** (tools), safety limits, and optional multi-agent delegation. You need versions so you can **edit and test** without immediately changing production, then **Deploy** exactly one line as **live** for **triggers** and default automation.
+An **agent version** is one **saved snapshot** of behavior for an agent: model, instructions, schemas, allowed **operations**, safety limits, and optional multi-agent delegation. You need versions so you can **edit and test** without immediately changing production, then **Deploy** exactly one line as **live** for **triggers** and default automation.
 
 ### 1.1 Field reference
 
@@ -20,29 +20,29 @@ Settings are grouped in **Version configuration** sub-tabs. Live versions are **
 | **Temperature** | Randomness of completions. | Valid numeric range for the model. |
 | **Max iterations** | Cap on model turns in a run. | Enforced at run time. |
 | **Max tokens per run** | Token ceiling for the run. | Enforced at run time. |
-| **Max tool calls** | Cap on tool invocations per run. | Also limited by **plan**; the editor **clips** to the stricter ceiling on save. |
-| **Description** (Sub-agent mode only) | Short text parents see when this agent is a **tool**. | **Required** for Sub-agent agents; empty blocks **Save**. |
+| **Max operation calls** | Cap on **operation** invocations per run. | Also limited by **plan**; the editor **clips** to the stricter ceiling on save. The dashboard control may appear as **Max tool calls**. |
+| **Description** (Sub-agent mode only) | Short text parents see when this Sub-agent is **delegated**. | **Required** for Sub-agent agents; empty blocks **Save**. |
 
 #### Input & Output
 
 | Field | What it is | Rules and limitations |
 | --- | --- | --- |
 | **Input schema** | Expected input shape (e.g. JSON Schema). | **Test run** and production validate input when runs execute. |
-| **Output schema** | Expected output shape. | Used for validation / tooling expectations per your configuration. |
+| **Output schema** | Expected output shape. | Used for validation expectations per your configuration. |
 
 #### Operations
 
 | Field | What it is | Rules and limitations |
 | --- | --- | --- |
-| **Allowed operations** | Checkboxes of **[Integration](/product/concepts/integration)** operations exposed as tools. | Only operations in **your workspace** appear. Empty state directs you to create integrations and operations first. |
+| **Allowed operations** | Checkboxes of **[Integration](/product/concepts/integration)** operations enabled on this version. | Only operations in **your workspace** appear. Empty state directs you to create integrations and operations first. |
 
-![Version configuration — Operations tab, selecting allowed tools](/images/agents-operations-tab.png)
+![Version configuration — Operations tab, selecting allowed operations](/images/agents-operations-tab.png)
 
 #### Limits & Safety
 
 | Field | What it is | Rules and limitations |
 | --- | --- | --- |
-| **Anomaly control (L1)** | Toggle for Guard tooling rules on this snapshot. | When on, configure **Rules** (review / block / allow) per tool call; when off, rules UI is hidden. |
+| **Anomaly control (L1)** | Toggle for Guard rules on this snapshot. | When on, configure **Rules** (review / block / allow) per **operation** call; when off, rules UI is hidden. |
 | **Max session tokens** | Optional cap on **total** tokens (root + all sub-agent runs) in one **session**. | Blank = no session-wide cap beyond per-run limits. |
 | **Max session duration (sec)** | Wall-clock limit from session start. | Exceeding it fails the run with a session duration error. |
 
@@ -55,6 +55,8 @@ Settings are grouped in **Version configuration** sub-tabs. Live versions are **
 | **Execution model** | **Sequential** (one sub-agent call per turn) vs **Parallel** (multiple calls to the **same** sub-agent in one turn). | **Parallel** only parallelizes calls to the **same** sub-agent with different inputs; different sub-agents in one message are serialized. Disabled when delegation is off or snapshot is **live**. |
 
 ![Version configuration — Multi-agent tab](/images/agent-multi-agent-tab.png)
+
+For narrative guides (parent vs Sub-agent, Parallel vs Sequential, sessions, limits), see the **[Multi-agent](/product/multi-agent/overview)** section.
 
 #### Version metadata
 
@@ -91,7 +93,7 @@ From the version menu, **delete** only snapshots that are **not** live. The **li
 
 ## 6. Limitations
 
-- **Plan**: sub-agent **depth**, **multi-agent** feature flag, and **max tool calls** cap what you can save or run.
+- **Plan**: sub-agent **depth**, **multi-agent** feature flag, and **max operation calls** cap what you can save or run.
 - **Live** line is unique; automation always uses **live** for triggers (see **[Run](/product/concepts/run)**).
 
 ## 7. Notes
@@ -111,4 +113,4 @@ From the version menu, **delete** only snapshots that are **not** live. The **li
 | **Save** fails on label | Duplicate **version label** for this agent. |
 | Fields greyed out | You are on the **live** snapshot; switch to **testing** or deploy a new line. |
 | Cannot add sub-agent | Target not in **Sub-agent** mode, self-reference, over plan count, or multi-agent not on plan. |
-| Runs hit tool cap sooner than field | **Plan** tool-call cap is stricter than the number in the form. |
+| Runs hit operation cap sooner than field | **Plan** operation-call cap is stricter than the number in the form. |
