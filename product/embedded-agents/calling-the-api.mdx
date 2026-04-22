@@ -56,6 +56,16 @@ From your backend you can drive or observe the same run the dashboard would show
 | Stream updates (SSE) | `GET https://api.phrony.com/v1/runs/{runId}/stream` |
 | Send user input into a waiting run | `POST https://api.phrony.com/v1/runs/{runId}/input` (body per your contract; **`/messages`** is an equivalent path on the gateway) |
 
+### Conversation: root run, child runs, and `runs`
+
+**`GET …/v1/runs/{runId}/conversation`** returns a **session-level** payload, not only the single run you put in the path. The gateway resolves that **`runId`** to its **[session](/product/concepts/session)** (root or **[child run](/product/multi-agent/sessions-and-runs)**—either works).
+
+- **`runs`** — Every **[run](/product/concepts/run)** in the session (root and **Sub-agent** children), with **`parentRunId`**, **`depth`**, **status**, and timing. Use this list to discover child run ids and which run is waiting.
+- **`items`** — Merged timeline of steps; each item includes **`runId`**. Sub-agent delegation steps may include a child run id inside **`content`** (for example `child_run_id` / `childRunId`), depending on step shape.
+- **`session`** — Session metadata for the same thread.
+
+**`GET …/v1/runs/{runId}/stream`** is also scoped to that **session** (real-time updates for the whole thread). For follow-up **`POST …/input`**, target the **`runId`** of the run that is actually waiting (often the root).
+
 Paths and bodies for **`/v1/runs/...`** are also summarized on the **API** trigger detail view in the dashboard (for copy/paste). Listing sessions remains **`GET /v1/agents/{agentId}/sessions`** only—see **Runs on the gateway** above.
 
 ## Errors to expect
@@ -71,5 +81,5 @@ Paths and bodies for **`/v1/runs/...`** are also summarized on the **API** trigg
 
 - [Overview](/product/embedded-agents/overview)
 - [Trigger](/product/concepts/trigger)
-- [Run](/product/concepts/run) and [Session](/product/concepts/session)
+- [Run](/product/concepts/run), [Session](/product/concepts/session), and [Sessions and runs](/product/multi-agent/sessions-and-runs)
 - [HTTP API (reference)](/api-reference/introduction)
