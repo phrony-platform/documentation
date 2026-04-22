@@ -1,0 +1,37 @@
+---
+title: "Overview"
+description: "Agent-in-the-loop (AITL)—how parent and Sub-agent agents coordinate when a child needs the parent’s input mid-run."
+---
+
+**Agent-in-the-loop** (**AITL**) is Phrony’s pattern for **parent ↔ Sub-agent** coordination: when a **child** run needs clarification or data only the **parent** (or, in some setups, a **human**) can supply, the runtime **pauses** the child, surfaces a structured **question** to the parent model, and requires a **resolution** before work continues.
+
+## Prerequisites
+
+AITL only applies when **[multi-agent delegation](/product/multi-agent/overview)** is in use: a **Request** or **HITL** **parent** and at least one **Sub-agent** child on the allow-list. There is no separate “AITL toggle”—behavior is part of the **sub-agent** execution path.
+
+## AITL vs HITL (human-in-the-loop)
+
+| Concept | Who acts | Typical trigger |
+| --- | --- | --- |
+| **HITL** | **Human** approves or rejects **[integration](/product/concepts/integration)** **operations** before they run. | **Require approval for this operation**, **HITL** **execution mode** on the agent. See **[Human in the loop](/product/hitl/overview)**. |
+| **AITL** | **Parent agent** (and optionally **human** if the session root is **HITL**) answers a **child Sub-agent** that paused with a question. | Sub-agent needs missing context; runtime delivers a **pending** question to the parent. |
+
+A single **session** can use **both**: for example a **HITL** parent may hit **Approvals** for a gated HTTP **operation** while also resolving an **AITL** question from a child.
+
+## Who sees what
+
+- **Parent** **[run](/product/concepts/run)** trace shows when a child is **waiting for parent** (or human escalation) and the steps to **respond**.
+- **Child** run may show **Waiting for parent** / similar until the parent resolves the request.
+- **[Approvals](/product/dashboard/approvals)** may list **AITL escalations** when the parent escalates to a **human** (only when the **session root** is **HITL**).
+
+## Pages in this section
+
+| Page | Topics |
+| --- | --- |
+| **[How coordination works](/product/agent-in-the-loop/how-coordination-works)** | Child questions, parent resolution, contract rules |
+| **[HITL and Request session roots](/product/agent-in-the-loop/hitl-and-request-roots)** | When a human can be in the loop for AITL |
+| **[Human escalation](/product/agent-in-the-loop/human-escalation)** | Escalate-to-user flow, Approvals, vs **operation** approval |
+| **[Sessions and Approvals](/product/agent-in-the-loop/sessions-and-approvals)** | Statuses, queue kinds |
+| **[Limits and troubleshooting](/product/agent-in-the-loop/limits-and-troubleshooting)** | Stuck runs, common mistakes |
+
+Hands-on delegation (without AITL-only lab) lives in **[Use multi-agent delegation](/academy/multi-agent)**.

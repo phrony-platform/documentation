@@ -1,0 +1,30 @@
+---
+title: "How coordination works"
+description: "Sub-agent asks parent, parent responds or escalates—AITL coordination in plain language."
+---
+
+## Why AITL exists
+
+A **Sub-agent** is specialized: it may lack full **session** context, policy detail, or user intent that lives in the **parent** run. If the child’s model would otherwise **guess** or **stall**, Phrony instead **pauses** the child and asks the **parent** model to supply an answer (or to **escalate** to a human when allowed).
+
+## Child (Sub-agent) side
+
+- The child’s **instructions** should treat **ask the parent** as the correct path when input is **missing**, **ambiguous**, or **insufficient** to finish the delegated task—rather than emitting a clarifying question as a **final** assistant message (that breaks the sub-agent contract).
+- When the child triggers an **ask-parent** flow, the runtime records an **AITL request** (question + context) tied to that child **run**.
+
+## Parent side
+
+- When a child returns a result that still contains a **pending** parent question, the **parent** model receives that payload in the trace (often inside the sub-agent result).
+- On the **next** parent turn, the parent must **resolve** the pending item: answer from existing context, or—if the **session root** is **HITL**—**escalate to user** so a human supplies the answer linked back to the waiting child.
+- The parent must **not** ignore a pending child question by answering with unrelated **operations** or plain text that skips resolution— that can leave the child **stuck** and fail the run.
+
+## Parallel and sequential parents
+
+**[Sequential and Parallel](/product/multi-agent/sequential-and-parallel)** only affects how many **sub-agent** invocations occur in one turn; it does **not** replace AITL rules. If multiple children pause, the parent **instructions** and runtime ordering still require each **pending** AITL to be cleared in a valid way.
+
+---
+
+## See also
+
+- **[Overview](/product/agent-in-the-loop/overview)**
+- **[HITL and Request session roots](/product/agent-in-the-loop/hitl-and-request-roots)**

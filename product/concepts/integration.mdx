@@ -66,6 +66,8 @@ The HTTP connector’s **Authentication** setting controls how credentials are a
 
 Prefer **per-operation** approval so harmless read-only **operations** stay unattended and only sensitive calls (payments, sends, deletes) wait on a human. Optionally, **Always require approval** on the **HTTP integration** itself applies a default gate to **every** operation on that connector—use sparingly when you truly want all calls reviewed.
 
+Narrative guides: **[Human in the loop](/product/hitl/overview)**.
+
 You can still add **default headers** (static name/value pairs) for non-secret metadata (for example `Accept: application/json`). Use **secrets** or header templates for anything sensitive.
 
 ---

@@ -1,0 +1,33 @@
+---
+title: "Limits and troubleshooting"
+description: "Why approval pauses never appear, runs fail, or operators cannot see work—HITL checklist."
+---
+
+## Configuration checklist
+
+| Goal | Check |
+| --- | --- |
+| Run should **pause** on an integration call | **[Agent](/product/concepts/agent)** is **HITL**, not **Request**. |
+| Pause on **specific** calls only | **Require approval for this operation** is **On** for those **operations** under **Integrations**; others **Off**. |
+| Operators can act | Role can access **[Approvals](/product/dashboard/approvals)** or **Run** links—see **[Limits, permissions, and plans](/product/reference/platform-rules)**. |
+| Production path | **Deploy** the **[agent version](/product/concepts/agent-version)** you tested; **triggers** use **live** only. |
+
+## Common symptoms
+
+| Symptom | What to check |
+| --- | --- |
+| No pause; operation fails or is skipped | **Request** mode instead of **HITL**; approval not enabled on the **operation**; wrong integration or operation enabled on the version. |
+| Pause never completes | **Approvals** backlog; user lacks permission; browser session / task link stale—open **Run** from the agent workspace. |
+| **Save** fails on integration | Validation on HTTP fields or schemas; fix form errors first. |
+| Child run stuck | **Sub-agent** parent/child **HITL** and delegation rules—see **[Multi-agent](/product/multi-agent/sessions-and-runs)**. |
+
+## Guard and anomaly
+
+**[Guard & anomaly](/product/dashboard/guard-anomaly)** and **Anomaly control (L1)** on a version can add **review** or **block** behavior that also surfaces in approval-like flows. Those are **policy** paths, not a substitute for picking **HITL** on the agent row—see **[Agent version](/product/concepts/agent-version)** → Limits & Safety.
+
+---
+
+## See also
+
+- **[Overview](/product/hitl/overview)**
+- **[Gating operations](/product/hitl/gating-operations)**

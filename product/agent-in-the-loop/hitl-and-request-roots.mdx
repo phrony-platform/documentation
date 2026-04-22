@@ -1,0 +1,31 @@
+---
+title: "HITL and Request session roots"
+description: "When AITL can escalate to a human versus parent-only resolution."
+---
+
+AITL behavior depends on the **execution mode** of the **session root** **[agent](/product/concepts/agent)** (the **parent** that started the **session**). For the full **escalate-to-user** flow and how it differs from **HITL** **operation** approval, see **[Human escalation](/product/agent-in-the-loop/human-escalation)**.
+
+## Request root (parent in Request mode)
+
+- The **parent** must resolve child **AITL** questions **itself**: gather data with its own **operations**, then **respond** to the child through the runtime’s parent-side **resolution** path.
+- **Escalate to user** (human in the loop for that question) is **not** available on **Request** roots—the session is not **HITL**, so there is no human AITL queue for that escalation path.
+
+Use **Request** when every AITL question should be answerable by the **parent model** (or is out of scope for human involvement).
+
+## HITL root (parent in HITL mode)
+
+- The **parent** may still **respond** to the child directly when it already knows the answer.
+- If only a **human** can answer (policy, PII, product choice), the parent can **escalate to user**. That creates work that can appear under **[Approvals](/product/dashboard/approvals)** as **AITL escalations** (wording per your build), linking back to the **[run](/product/concepts/run)**.
+
+Use **HITL** on the **parent** when sub-agents sometimes need **human** judgment mid-flight, not only **integration** approval gates—see **[Human in the loop](/product/hitl/overview)**.
+
+## Sub-agent mode agents
+
+**Sub-agent** children do not choose **Request** vs **HITL** for “AITL escalation” in the same way the **root** does; the **root parent’s** mode governs whether human escalation exists for **AITL**.
+
+---
+
+## See also
+
+- **[Human in the loop](/product/hitl/execution-mode)**
+- **[Approvals and runs](/product/agent-in-the-loop/sessions-and-approvals)**

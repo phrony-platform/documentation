@@ -1,0 +1,33 @@
+---
+title: "Limits and troubleshooting"
+description: "Stuck AITL, failed parent turns, and configuration checks."
+---
+
+## Checklist
+
+| Check | Detail |
+| --- | --- |
+| Delegation enabled | Parent **version** has **Can execute sub-agents** and the child is allow-listed. **[Multi-agent](/product/multi-agent/parent-and-sub-agent)**. |
+| Child **live** line | Child **Sub-agent** has a **deployed** version for production paths. |
+| Root mode | **Request** vs **HITL** on the **parent** agent sets whether **human AITL escalation** exists. **[HITL and Request session roots](/product/agent-in-the-loop/hitl-and-request-roots)**. |
+| Instructions | Child should **ask parent** when blocked; parent should **resolve pending** items on the next turn, not skip them. |
+
+## Common symptoms
+
+| Symptom | Likely cause |
+| --- | --- |
+| Run **fails** after sub-agent returns | Parent answered with plain text or unrelated **operations** instead of **resolving** the pending AITL item. |
+| Child “asks” in final message | Sub-agent **instructions** should use the **ask-parent** path, not a user-facing final question. |
+| Human never sees escalation | Parent is **Request**, not **HITL**; escalation is disabled for that session root. See **[Human escalation](/product/agent-in-the-loop/human-escalation)**. |
+| Session stuck **Waiting** | Unresolved AITL chain; open **parent** **Run** inspector and **Approvals**. |
+
+## Plan and depth
+
+**[Multi-agent](/product/multi-agent/limits-and-troubleshooting)** limits (depth, allow-list size) still apply; deep chains of Sub-agents can make AITL harder to reason about—keep delegation shallow while iterating.
+
+---
+
+## See also
+
+- **[How coordination works](/product/agent-in-the-loop/how-coordination-works)**
+- **[Multi-agent limits and troubleshooting](/product/multi-agent/limits-and-troubleshooting)**

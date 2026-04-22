@@ -1,0 +1,35 @@
+---
+title: "Approvals and runs"
+description: "Where pending human steps appear, how to resolve them, and what you see in sessions."
+---
+
+When a **HITL** run hits an **operation** that **requires approval**, the **[run](/product/concepts/run)** enters a **waiting** state (the dashboard may show labels such as **Awaiting approval**). Someone with the right role must **approve** or **reject** so execution can continue or fail cleanly.
+
+## Approvals
+
+**[Review → Approvals](/product/dashboard/approvals)** lists tasks that need sign-off (**Pending** / **Completed**), filterable by kind. Rows often link into **Run** detail when the platform can resolve the association.
+
+**Operators** typically work from **Approvals** rather than browsing the full **Agents** list—see **[Limits, permissions, and plans](/product/reference/platform-rules)**.
+
+## Run inspector
+
+From the **agent** workspace, open the run in **Run** inspector:
+
+- **Pause / review** surfaces **HITL** or **Guard**-related panels when the run waits on a person.
+- After you **approve**, the runtime can execute the gated **operation** and the model may continue the same **session**.
+
+**Test run** uses whichever **[agent version](/product/concepts/agent-version)** is **selected** in the dropdown; automation uses **live** only—see **[Limits & plans](/product/reference/platform-rules)** → Test run vs triggers.
+
+## Sessions
+
+The **[session](/product/concepts/session)** row may show **Awaiting approval** (or similar) while the root or a child run is paused. **Tokens** and **status** update as runs complete.
+
+**Terminate session** (where offered on **Dashboard** home) fails in-flight work—use with care.
+
+---
+
+## See also
+
+- **[Run](/product/concepts/run)**
+- **[Session](/product/concepts/session)**
+- **[Overview](/product/hitl/overview)**

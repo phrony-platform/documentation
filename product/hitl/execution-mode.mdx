@@ -1,0 +1,36 @@
+---
+title: "Execution mode"
+description: "HITL vs Request vs Sub-agent—how execution mode enables pauses for human approval."
+---
+
+**Execution mode** is set on the **[agent](/product/concepts/agent)** row (**New Agent** / **Edit agent**). It answers **who may start** the agent and **whether** runs rooted in that agent can **pause for human approval** on gated **integration operations**.
+
+## Request
+
+- **Triggers**, **Test run**, and API starts behave as **unattended** roots for that agent: the model may call **operations** that do **not** require approval without pausing for a person.
+- If an **operation** has **Require approval for this operation** enabled, **Request** mode does **not** pause the run for that approval path the way **HITL** does—those calls are not executed as HITL approval steps (the runtime does not wait in **Approvals** for them in the same way).
+
+Use **Request** when you do not need humans in the loop for **integration** calls, or when no sensitive **operations** use per-operation approval.
+
+## HITL (human-in-the-loop)
+
+- Runs can **pause** when the model attempts an **operation** that **requires approval**, until someone acts in **[Approvals](/product/dashboard/approvals)** or **Run** detail.
+- Required for the **pause-and-approve** behavior customers associate with “governed” outbound actions (payments, sends, destructive HTTP calls, etc.).
+
+Use **HITL** when at least some **operations** intentionally require a person before the HTTP or built-in call runs.
+
+## Sub-agent
+
+- **Sub-agent** mode agents are **not** directly triggered; parents invoke them as **delegated operations**.
+- **Sub-agent** is an execution mode for **children**, not a substitute for **HITL** on the parent. A **HITL** parent can still pause on its own integration **operations**; a **Sub-agent** child can have its own provider, version, and approval settings where applicable.
+
+## Changing mode
+
+Edit the agent → **Execution mode** → save. Existing **session** history remains tied to the versions that ran; new runs use the updated mode.
+
+---
+
+## See also
+
+- **[Overview](/product/hitl/overview)**
+- **[Gating operations](/product/hitl/gating-operations)**

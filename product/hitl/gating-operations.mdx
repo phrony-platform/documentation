@@ -1,0 +1,36 @@
+---
+title: "Gating operations"
+description: "Require approval per operation, HTTP integration defaults, and how gating interacts with HITL."
+---
+
+Pauses for humans are tied to **integration operations**—the concrete actions defined under **Integrations** and enabled on an **[agent version](/product/concepts/agent-version)** → **Operations**.
+
+## Require approval for this operation
+
+On each **operation** (HTTP or built-in), the dashboard offers **Require approval for this operation** (wording may match your build).
+
+- **On** — when the model selects this **operation**, the run can **pause** until someone approves in **[Approvals](/product/dashboard/approvals)** or **Run** detail—**if** the **[agent](/product/concepts/agent)** is in **HITL** **execution mode**.
+- **Off** — the operation runs without that human gate (subject to **[Guard](/product/dashboard/guard-anomaly)** and other limits).
+
+Prefer **per-operation** gating: keep read-only or low-risk **operations** ungated; turn on approval only for sends, payments, deletes, or other high-impact calls.
+
+Full connector context: **[Integration](/product/concepts/integration)** → Human approval (HITL).
+
+## HTTP: Always require approval
+
+On **HTTP** integrations, **Always require approval** applies a **default** gate to **every** **operation** on that connector unless an **operation** overrides it. Use sparingly when **all** outbound calls from that integration should be reviewed.
+
+## Built-in integrations
+
+Built-in **operations** follow the same pattern: enable or disable **Require approval for this operation** on each **operation** as your risk model requires.
+
+## Sub-agents and parents
+
+A **HITL** **parent** may pause on its own integration **operations**. A **Sub-agent** **child** run may also pause if the child’s **operations** require approval and the child agent is **HITL**—see **[Multi-agent](/product/multi-agent/parent-and-sub-agent)**.
+
+---
+
+## See also
+
+- **[Execution mode](/product/hitl/execution-mode)**
+- **[Approvals and runs](/product/hitl/approvals-and-runs)**

@@ -18,6 +18,7 @@
             "pages": [
               "index",
               "product/workflows-vs-agents",
+              "product/embedded-agents",
               "product/concepts/agent",
               "product/concepts/agent-version",
               "product/concepts/session",
@@ -41,6 +42,27 @@
               "product/multi-agent/sequential-and-parallel",
               "product/multi-agent/sessions-and-runs",
               "product/multi-agent/limits-and-troubleshooting"
+            ]
+          },
+          {
+            "group": "Human in the loop",
+            "pages": [
+              "product/hitl/overview",
+              "product/hitl/execution-mode",
+              "product/hitl/gating-operations",
+              "product/hitl/approvals-and-runs",
+              "product/hitl/limits-and-troubleshooting"
+            ]
+          },
+          {
+            "group": "Agent in the loop",
+            "pages": [
+              "product/agent-in-the-loop/overview",
+              "product/agent-in-the-loop/how-coordination-works",
+              "product/agent-in-the-loop/hitl-and-request-roots",
+              "product/agent-in-the-loop/human-escalation",
+              "product/agent-in-the-loop/sessions-and-approvals",
+              "product/agent-in-the-loop/limits-and-troubleshooting"
             ]
           }
         ]

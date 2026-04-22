@@ -1,0 +1,49 @@
+---
+title: "Human escalation"
+description: "When a Sub-agent’s question is routed to a person via the parent—AITL escalate-to-user and Approvals."
+---
+
+**Human escalation** in **agent-in-the-loop** (**AITL**) means the **parent** model does **not** answer the child’s question itself—it hands the question to a **human**, who replies through **[Approvals](/product/dashboard/approvals)** or **Run** review. The runtime links that answer back to the **waiting Sub-agent** run so execution can continue.
+
+## When it is available
+
+Human escalation exists **only** if the **session root** **[agent](/product/concepts/agent)** is in **HITL** **execution mode**.
+
+- **Request** parents must resolve every **AITL** item **without** a human escalation path—see **[HITL and Request session roots](/product/agent-in-the-loop/hitl-and-request-roots)**.
+- **HITL** parents may **respond** to the child directly *or* **escalate to user** when a person must decide (policy, sensitive data, account-specific facts, product selection, and so on).
+
+There is no separate product switch for “AITL escalation”: it is part of **multi-agent** + **HITL** on the **parent**.
+
+## End-to-end flow (conceptual)
+
+1. **Sub-agent** hits missing or ambiguous context and uses the **ask-parent** path (see **[How coordination works](/product/agent-in-the-loop/how-coordination-works)**).
+2. **Parent** receives the structured question in the **sub-agent** result.
+3. Parent model chooses **escalate to user** (wording in the UI may vary) instead of **respond** with its own text.
+4. A task appears for humans—often under **[Approvals](/product/dashboard/approvals)** as **AITL escalations** (filter labels follow your build).
+5. The **operator** supplies an answer (or declines, per product behavior); the runtime delivers it to the **child** run and the **session** proceeds.
+
+## Not the same as HITL operation approval
+
+| Mechanism | What pauses | What the human does |
+| --- | --- | --- |
+| **HITL + Require approval** on an **integration** **[operation](/product/concepts/integration)** | Outbound **operation** (HTTP / built-in) before it runs | **Approve** or **reject** that call |
+| **AITL human escalation** | **Sub-agent** waiting on an answer the parent escalated | **Answer** the child’s question (or resolve the task per UI) |
+
+Both can appear in **[Approvals](/product/dashboard/approvals)** with different **kinds**; **[Human in the loop](/product/hitl/overview)** documents **operation** gating, while this page documents **AITL** escalation.
+
+## Prompting and governance
+
+- Parent **instructions** should say **when** to escalate (e.g. unknown customer tier, legal wording, spend above a threshold) vs when to **respond** from context.
+- **Operators** need clear runbooks: what constitutes a valid answer, when to **decline**, and who owns follow-up if the child still cannot proceed.
+
+## Permissions
+
+**[Limits, permissions, and plans](/product/reference/platform-rules)** defines who sees **Agents** vs **Approvals**. Escalations are usually handled by roles that already review **HITL** work—not necessarily the same people who **build** parent **versions**.
+
+---
+
+## See also
+
+- **[Sessions and Approvals](/product/agent-in-the-loop/sessions-and-approvals)**
+- **[Human in the loop](/product/hitl/gating-operations)** — approval on **operations**
+- **[Overview](/product/agent-in-the-loop/overview)**
