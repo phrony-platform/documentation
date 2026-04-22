@@ -5,6 +5,13 @@ description: "Start an embedded agent run with curl: API trigger, X-API-Key, POS
 
 The Phrony HTTP API gateway is **`https://api.phrony.com`**. Use that host for the examples below unless your workspace uses a **dedicated API host** (your **API** trigger screen and admin will match your environment). Replace **`AGENT_UUID`** and the API key with values from the Phrony dashboard.
 
+## Runs on the gateway (not session URLs)
+
+On **`api.phrony.com`**, **starting** automation is always **`POST /v1/agents/{agentId}/runs`**. There is no public **`POST .../sessions`** on that host for kicking off work.
+
+- **`GET /v1/agents/{agentId}/sessions`** — optional **list** of **[sessions](/product/concepts/session)** (pagination query params), not a start endpoint.
+- **`/v1/runs/{runId}/...`** — status, stream, conversation, and follow-up **input** are all keyed by **`runId`** after the start response.
+
 ## Before you call
 
 1. **Agent** — Not **Sub-agent** mode; a **live** **[agent version](/product/concepts/agent-version)** is **deployed**.
@@ -36,7 +43,7 @@ curl -sS -X POST 'https://api.phrony.com/v1/agents/AGENT_UUID/runs' \
   }'
 ```
 
-Typical success response is **`202 Accepted`** with JSON that includes **`runId`** and **`sessionId`** (and related fields such as **status**). Your integration should persist **`runId`** if you poll status or open the run in the dashboard.
+Typical success response is **`202 Accepted`** with JSON that includes **`runId`** (and often **`sessionId`** for dashboard correlation). Treat **`runId`** as the handle for **`GET /POST https://api.phrony.com/v1/runs/{runId}/...`**; do not switch to session-scoped paths for the public gateway.
 
 ## After the run starts
 
@@ -47,9 +54,9 @@ From your backend you can drive or observe the same run the dashboard would show
 | Run status | `GET https://api.phrony.com/v1/runs/{runId}` |
 | Conversation / trace payload | `GET https://api.phrony.com/v1/runs/{runId}/conversation` |
 | Stream updates (SSE) | `GET https://api.phrony.com/v1/runs/{runId}/stream` |
-| Send user input into a waiting run | `POST https://api.phrony.com/v1/runs/{runId}/input` (body per your contract) |
+| Send user input into a waiting run | `POST https://api.phrony.com/v1/runs/{runId}/input` (body per your contract; **`/messages`** is an equivalent path on the gateway) |
 
-Paths and bodies for **`/v1/runs/...`** are also summarized on the **API** trigger detail view in the dashboard (for copy/paste).
+Paths and bodies for **`/v1/runs/...`** are also summarized on the **API** trigger detail view in the dashboard (for copy/paste). Listing sessions remains **`GET /v1/agents/{agentId}/sessions`** only—see **Runs on the gateway** above.
 
 ## Errors to expect
 
