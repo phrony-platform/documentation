@@ -6,16 +6,23 @@
 
 ## About this project
 
-- This is a documentation site built on [Mintlify](https://mintlify.com)
-- Pages are MDX files with YAML frontmatter
-- Configuration lives in `docs.json`
-- Run `mint dev` to preview locally
-- Run `mint broken-links` to check links
+- Phrony **customer-facing** documentation on [Mintlify](https://mintlify.com)
+- Pages are MDX under `index.mdx`, `product/concepts/`, `product/dashboard/`, `product/reference/`, and `api-reference/`
+- Navigation lives in `docs.json`
+- Run `mint dev` to preview locally; `mint broken-links` to check links
+- **Voice**: say **Phrony**, **Phrony dashboard**, **API** — do **not** use internal code names (e.g. Cockpit, control-plane) in user-visible MDX
 
 ## Terminology
 
-{/* Add product-specific terms and preferred usage */}
-{/* Example: Use "workspace" not "project", "member" not "user" */}
+- **Agent** — `product/concepts/agent.mdx`
+- **Agent version** — `product/concepts/agent-version.mdx`
+- **Session** — `product/concepts/session.mdx`
+- **Run** — `product/concepts/run.mdx`
+- **Trigger** — `product/concepts/trigger.mdx`
+- **LLM provider** — `product/concepts/llm-provider.mdx`
+- **Secret** — `product/concepts/secret.mdx`
+- **Limits, permissions, plans** — `product/reference/platform-rules.mdx` (sidebar: **Limits & plans**)
+- **Dashboard guides** — `product/dashboard/*.mdx`
 
 ## Style preferences
 

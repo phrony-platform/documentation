@@ -1,0 +1,77 @@
+---
+title: "Agent workspace"
+description: "The agent detail screen — versions, Version configuration, Sessions, Triggers, Test run, Deploy."
+---
+
+From **Agents**, click a row to open that agent’s **workspace** (detail page). Everything below assumes you are on that screen.
+
+## Top of the page
+
+You see the **agent name**, **execution mode** (**Request**, **HITL**, or **Sub-agent**), and actions such as **Edit agent** (name, mode, LLM provider) and **Delete agent** in the overflow (**…**) menu. **Delete** is only available when **no** version is **live**; otherwise the confirmation explains that you must address the live version first.
+
+**Note:** **Execution mode** here is **not** the same as **Sequential / Parallel** under **Multi-agent**. The latter only appears for **Request** / **HITL** agents and controls how **sub-agent tools** are batched per model turn.
+
+## Tabs across the top
+
+Three main tabs (two if the agent is a **Sub-agent**):
+
+1. **Version configuration** — edit snapshots, **Save**, **Deploy**, **Rollback**, **Test run**.
+2. **Sessions** — history table for this agent; filter by snapshot; second **Test run** button.
+3. **Triggers** — schedules, API, events (**hidden** for **Sub-agent** agents).
+
+## Version configuration
+
+### Version dropdown
+
+Pick which snapshot you are viewing. **Live** snapshots are **read-only** (greyed out) on every sub-tab. **Testing** snapshots are editable; **Save** writes changes.
+
+### Sub-tabs (what appears where)
+
+- **Model & Prompt** — **LLM model**, **Instructions**, **Temperature**, **Max iterations**, **Max tokens per run**, **Max tool calls**, and for **Sub-agent** agents the required **description** (tool blurb for parents).
+- **Input & Output** — **Input schema** and **Output schema** editors.
+- **Operations** — checkboxes of **connector operations** this version may use as tools, grouped by **integration**. Empty state links you to **Integrations** to define operations first.
+- **Limits & Safety** — **Anomaly control (L1)** switch; when on, the **Rules** builder for tool-level review/block/allow; **Max session tokens** and **Max session duration (sec)**; if your plan has a **sub-agent depth** cap, explanatory text appears on this tab or under **Multi-agent**.
+- **Multi-agent** — (when your plan supports it; for **Request** and **HITL** agents that should delegate to **Sub-agent** agents.) Contains:
+  - **Can execute sub-agents** checkbox and help text (“Turn on so this agent can delegate…”).
+  - **Allowed sub-agents** list (only agents in **Sub-agent** mode; plan may show “up to **N** per version”).
+  - **Execution model** radio buttons:
+    - **Sequential — one sub-agent per turn**
+    - **Parallel — same sub-agent, multiple calls in one turn**  
+    Helper text explains that **Parallel** only parallelizes multiple calls to the **same** sub-agent in one message; different sub-agents in one message are serialized. Options are disabled when **Can execute sub-agents** is off or the snapshot is live.
+
+If **Save** fails, use the message shown (duplicate version label, invalid rules, sub-agent list, plan / upgrade, etc.).
+
+### Deploy and Rollback
+
+- **Deploy** makes the selected **testing** snapshot **live**; the previous live version returns to **testing**.
+- **Rollback** deploys the **older** snapshot you are viewing so it becomes live again.
+- Buttons show a **loading** state while deployment runs.
+
+### Test run
+
+Opens a dialog with **Visual** and **JSON** input. **Run** uses the snapshot **currently selected** in the version dropdown (testing or live). On success, Phrony often opens **Run inspector**; errors show as toasts or detail panels.
+
+### Delete a testing version
+
+From the version menu, delete snapshots that are **not** live. The **live** snapshot cannot be deleted here.
+
+## Sessions
+
+Typical columns: short **session** identifier, **Runs** count, **Status**, **Triggered by**, **Started** / **Finished**, **Tokens**, **Version** label.
+
+**This snapshot only** — filters to the version selected on **Version configuration**; disabled until you pick a version.
+
+**Test run** is available here too. Empty state suggests **Test run** or **triggers**.
+
+Click a row to open **Run inspector** when a link exists.
+
+## Triggers
+
+For **Request** and **HITL** agents: **scheduled**, **API**, and **event** automations. The **New trigger** flow is a short wizard (**Name & type**, then **Schedule & payload**, **API limits**, or **Integration → Event type → Event configuration** for events). See **[Creating triggers (wizard)](/product/dashboard/triggers-wizard)** and **[Trigger](/product/concepts/trigger)** for rules (one API trigger per agent, **live** snapshot for API starts, etc.).
+
+## See also
+
+- [Agent version](/product/concepts/agent-version) — full conceptual detail including **Sequential / Parallel**
+- [Run](/product/concepts/run)
+- [Integrations](/product/dashboard/integrations)
+- [Limits, permissions, and plans](/product/reference/platform-rules)

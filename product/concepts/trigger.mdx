@@ -1,0 +1,45 @@
+---
+title: "Trigger"
+description: "Schedules, API hooks, and events that start agents without using Test run."
+---
+
+A **trigger** starts an agent automatically: on a **schedule**, through an **HTTP API** you expose, or when an **external event** fires. You set them up on the agent’s **Triggers** tab (not available for **Sub-agent** mode agents—they are only invoked by other agents).
+
+## Sub-agents do not get triggers
+
+If the agent is in **Sub-agent** mode, the **Triggers** tab is hidden and you cannot attach schedules or API hooks to it. That is intentional: parent agents call sub-agents as tools.
+
+## One API-style trigger per agent
+
+For the **API** trigger type, Phrony allows **only one** per agent. If you already have one, the dashboard prevents creating a second—edit the existing trigger instead.
+
+## Triggers must be turned on
+
+Each trigger has an **active** state. If it is **off**, nothing fires until you turn it back on. Failed or skipped runs often show that the trigger was inactive.
+
+## Automation always uses the live version
+
+**Schedules**, **API** calls, and **events** always run the **currently deployed (live)** version. **Test run** is different: it can run a **testing** snapshot you select in the dropdown. If nothing is deployed yet, automated starts will fail until you **Deploy** at least once.
+
+## Event triggers need a connected integration
+
+**Event** triggers rely on a **built-in** integration with an **active connection**. Finish connecting the service in **Integrations** first; otherwise event delivery will not work and the dashboard may show connection or activation errors.
+
+## Scheduled triggers: schedule and timezone
+
+**Scheduled** triggers need a valid **cron** expression and **timezone**. Empty or invalid schedules are rejected when you save.
+
+## API triggers: rate limits and IP rules
+
+**Rate limits** and **IP allowlist** fields apply **only** to **API** triggers. They are not used for schedule or event types—if you fill them where they do not apply, **Save** may fail with a field hint.
+
+## Trigger names
+
+Each trigger’s **name** must be **unique on that agent**. If you duplicate a name, **Save** fails until you change it.
+
+## See also
+
+- [Run — which configuration runs](/product/concepts/run#which-configuration-runs)
+- [Agent workspace — Triggers](/product/dashboard/agent-workspace#triggers)
+- [Creating triggers (wizard)](/product/dashboard/triggers-wizard)
+- [Limits, permissions, and plans](/product/reference/platform-rules)

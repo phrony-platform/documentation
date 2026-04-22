@@ -1,0 +1,29 @@
+---
+title: "LLM provider"
+description: "Connecting OpenAI, Azure, Anthropic, or a self-hosted compatible endpoint to your agents."
+---
+
+An **LLM provider** is the **named connection** Phrony uses to call models: **OpenAI**, **Azure OpenAI**, **Anthropic**, or **Self-hosted** (OpenAI-compatible servers). You create providers under **LLM Providers** and pick one for each agent when you create or edit the agent.
+
+## What you fill in
+
+- **Name** — how you recognize it in lists (must be **unique** in the workspace).
+- **Provider type** — drives default endpoints; **Self-hosted** always needs your server **base URL**.
+- **API key secret** — choose a **[secret](/product/concepts/secret)** you already created in **Secret Manager** (the raw key is never shown again after secret creation).
+- **Base URL** — required for **Self-hosted**; optional overrides for other types if your organization routes traffic through a proxy or gateway.
+
+If required fields are missing or the URL does not work for the type, **Save** fails with a short explanation—often about the **base URL** for self-hosted setups.
+
+## Link to agents
+
+Every agent must reference **one** provider. If you **delete** a secret that a provider still uses, or remove the provider while agents still point at it, **Test run** and live traffic can fail until you **edit the agent** or **LLM provider** to fix the connection.
+
+## Changing a provider
+
+**Owner** and **Admin** can open a provider from the list, choose **Edit**, and update name, type, secret, or URL. Each **Save** re-checks that the combination is valid for the selected type.
+
+## See also
+
+- [Secret](/product/concepts/secret)
+- [LLM providers](/product/dashboard/llm-providers)
+- [Limits, permissions, and plans](/product/reference/platform-rules#secrets-and-providers)

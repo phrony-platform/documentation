@@ -1,55 +1,29 @@
-# Mintlify Starter Kit
+# Phrony documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+Product documentation for Phrony, built with [Mintlify](https://mintlify.com).
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Preview locally
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+1. Install the Mintlify CLI: `npm i -g mint` (or use `npx mint dev` from the docs root).
+2. From this directory (where `docs.json` lives), run:
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+   ```bash
+   mint dev
+   ```
 
-## AI-assisted writing
+3. Open `http://localhost:3000`.
 
-Set up your AI coding tool to work with Mintlify:
+## Structure
 
-```bash
-npx skills add https://mintlify.com/docs
-```
+| Path | Purpose |
+|------|---------|
+| `index.mdx` | Introduction |
+| `product/concepts/*.mdx` | Agent, agent version, session, run, trigger, LLM provider, secret |
+| `product/dashboard/*.mdx` | Phrony web app how-tos |
+| `product/reference/platform-rules.mdx` | Limits, permissions, plans (user-facing) |
+| `api-reference/introduction.mdx` | HTTP API overview |
+| `docs.json` | Navigation and site config |
 
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
+## Contributing
 
-See the [AI tools guides](/ai-tools) for tool-specific setup.
-
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
-npm i -g mint
-```
-
-Run the following command at the root of your documentation, where your `docs.json` is located:
-
-```
-mint dev
-```
-
-View your local preview at `http://localhost:3000`.
-
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+See [CONTRIBUTING.md](./CONTRIBUTING.md).

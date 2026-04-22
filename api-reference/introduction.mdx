@@ -1,33 +1,19 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "HTTP API (reference)"
+description: "For automation outside the Phrony dashboard — coming soon in this docs site."
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
-
-## Welcome
-
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+Most day-to-day work happens in the **[Phrony dashboard](/product/dashboard/overview)**. Some teams also drive agents, triggers, and workspace objects from **their own systems** using Phrony’s **HTTP API**.
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+Automation typically uses **API keys** you create under **Settings** in the dashboard. Your organization’s deployment defines the exact headers or tokens.
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+## Reference docs
+
+Interactive **OpenAPI** documentation will be linked here for your environment once it is published. Until then, use the dashboard for setup and rely on your admin or support channel for integration details.
+
+## Related (dashboard)
+
+- [Limits, permissions, and plans](/product/reference/platform-rules)
+- [Agent](/product/concepts/agent) and [Agent version](/product/concepts/agent-version)

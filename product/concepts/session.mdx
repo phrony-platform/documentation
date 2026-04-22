@@ -1,0 +1,31 @@
+---
+title: "Session"
+description: "How Phrony groups related runs, usage, and limits that span a whole conversation."
+---
+
+A **session** is the container for one thread of work: it ties together the **runs** (steps the model and tools took), **overall status**, **token usage** added up across the **main** run and any **child** runs created when the parent **delegates to sub-agents**, and **how the session started** (for example **Test run**, a **schedule**, or an **API** trigger). If the parent version uses **Parallel** delegation to the **same** sub-agent several times in one turn, those child runs may execute **together**; session **token** and **duration** limits still apply to the **whole** session.
+
+## Where you see sessions
+
+On an agent, open the **Sessions** tab. The table shows a **short session identifier**, how many **runs** belong to it, **status**, **who or what triggered it**, **start** and **end** times, **tokens**, and which **version** was used. Clicking a row opens the main **run** for that session in the **Run inspector** when one is available (rare edge cases may not link).
+
+## Session-wide limits (set on the version)
+
+In **Version configuration**, under **Limits & Safety**, you can set optional caps that apply to the **whole session**, not just one model turn:
+
+- **Max session tokens** — total tokens across the root run **and** all sub-agent runs combined. Leave blank for **no** extra cap beyond per-run limits.
+- **Max session duration** — maximum length of the session in seconds (wall-clock). If the limit is hit, the run stops with an error that mentions the session time limit.
+
+These affect **real executions**, not the editor.
+
+## Monthly sessions and your plan
+
+When someone starts a new session, Phrony checks your **billing period** and how many sessions you have already used. If you are **over** your included **sessions per month** and your plan **does not** allow overage, starting new work fails and the dashboard or automation shows a **limit reached** / upgrade-style message. If your plan **allows** overage, the session may still start and may be **marked** in summaries so finance or reporting can treat it differently—wording depends on your plan.
+
+The same check runs alongside other **plan inventory** limits (how many agents, connectors, or scheduled triggers you may have). See **[Limits, permissions, and plans](/product/reference/platform-rules#monthly-sessions-and-plan-inventory)**.
+
+## See also
+
+- [Run](/product/concepts/run)
+- [Agent version](/product/concepts/agent-version)
+- [Sessions](/product/dashboard/agent-workspace#sessions) — **This snapshot only** filter, table behavior

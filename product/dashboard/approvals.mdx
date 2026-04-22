@@ -1,0 +1,36 @@
+---
+title: "Approvals"
+description: "Review pending sign-offs, AITL escalations, and anomaly tasks from the Phrony dashboard."
+---
+
+In the sidebar, under the **Review** group, open **Approvals**. The page explains:
+
+> Runs that need your sign-off before continuing show up here—typically when an integration or operation is set to require approval. HITL-style flows may instead ask questions in the assistant text on the run, without creating a separate task in this list.
+
+## Filters
+
+**Status**
+
+- **Pending**
+- **Completed**
+
+**Kind**
+
+- **All kinds**
+- **Approvals** — approval and HITL-style tasks
+- **AITL escalations**
+- **Anomaly** — anomaly review or alert tasks
+
+Empty states depend on filters (for example *No pending approvals.*, *No pending approval or HITL tasks.*, *No pending anomaly review or alert tasks.*).
+
+## List and detail
+
+Each row can link to the **[Run inspector](/product/dashboard/run-inspector)** for that run (with the task in context when applicable). For **Completed** items, the list may show **Approved by**, **Rejected by**, or **Completed by** with the resolver’s email.
+
+The sidebar label **Approvals** may include a pending count (for example `Approvals · 3 pending`).
+
+## See also
+
+- [Run inspector](/product/dashboard/run-inspector)
+- [Guard & anomaly control](/product/dashboard/guard-anomaly)
+- [Integrations](/product/dashboard/integrations)

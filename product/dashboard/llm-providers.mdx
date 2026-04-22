@@ -1,0 +1,34 @@
+---
+title: "LLM providers"
+description: "Create and edit model connections — types, secrets, base URL, permissions."
+---
+
+1. Open **LLM Providers** (or **Quick Create → New LLM Provider**).
+2. Click **Add** (or equivalent) and fill in:
+   - **Name** — unique in the workspace.
+   - **Type** — **OpenAI**, **Azure OpenAI**, **Anthropic**, or **Self-hosted**.
+   - **API key secret** — choose a secret from **Secret Manager** (create the secret first).
+   - **Base URL** — **required** for **Self-hosted**; optional for other types if your network needs a custom endpoint.
+3. Click a row to open **details** (read-only summary of effective URL and bindings).
+4. **Edit** ( **Owner** / **Admin** ) lets you change any field; **Save** re-validates, especially **base URL** rules for **Self-hosted**.
+
+## Permissions
+
+- **Developer** — browse and open details.
+- **Owner** / **Admin** — create and edit.
+
+## Before creating agents
+
+The **New Agent** dialog needs at least one provider in the dropdown. If the list is empty, create a provider (and its secret) first.
+
+## Common save errors
+
+- **Duplicate name** — choose another **Name**.
+- **Missing or wrong secret** — pick a valid secret from the list.
+- **Base URL** problems — most common for **Self-hosted**; the message hints what to fix.
+
+## See also
+
+- [LLM provider (concept)](/product/concepts/llm-provider)
+- [Secret Manager](/product/dashboard/secret-manager)
+- [Dashboard overview](/product/dashboard/overview)

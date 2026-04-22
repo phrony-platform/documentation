@@ -1,0 +1,30 @@
+---
+title: "Run inspector"
+description: "Read a run end-to-end — trace, conversation, sub-agents, pauses, status."
+---
+
+When you open a run—usually by clicking a row on **Sessions** or after **Test run**—you land on the **Run inspector**. Layout varies by release, but you typically get:
+
+- **Header** area with **status**, **timing**, **tokens**, and which **agent version** ran.
+- **Trace** or **timeline** of steps (model, tools, sub-agent calls). The density and layout follow your **[Settings → General → Session trace layout](/product/dashboard/settings#general)** preference (**Basic mode** vs **Advanced mode**).
+- **Conversation** or structured **input/output** views.
+- **Sub-agent** sections when child agents participated.
+- **Pause** or **review** panels when HITL or Guard stopped the run for a person.
+
+## Triggered by
+
+The screen usually states **how** the run started: **Test run**, a **named trigger**, a **schedule**, an **event**, or similar. That matches the **Triggered by** column on **Sessions**.
+
+## Status badges
+
+Use the **status** badge to see whether the run **succeeded**, is still **running**, **failed**, or is **waiting** on a human. **Paused** states tie to **HITL** or **Guard** review.
+
+## Plan / overage hints
+
+If your organization uses **session overage** or special billing labels, extra text or badges may appear on the run or session—wording depends on your Phrony version and plan.
+
+## See also
+
+- [Run (concept)](/product/concepts/run)
+- [Sessions](/product/dashboard/agent-workspace#sessions)
+- [Limits, permissions, and plans](/product/reference/platform-rules)

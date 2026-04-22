@@ -1,97 +1,52 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Phrony — agents, sessions, and the web dashboard."
 ---
 
-## Setting up
+Phrony is a platform for **LLM-backed agents**. You configure everything in the **Phrony dashboard**: versions of prompts and tools, **secrets** and **LLM providers**, **sessions** and **runs**, and optional **triggers** for automation.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
+<Card title="Limits, permissions, and plans" icon="shield-check" href="/product/reference/platform-rules" horizontal>
+  Who can change what in the dashboard, plan caps (sessions, agents, connectors), and common blockers—explained without jargon.
 </Card>
 
-## Make it yours
+## Concepts
 
-Design a docs site that looks great and empowers your users.
+<CardGroup cols={2}>
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+<Card title="Agent" icon="bot" href="/product/concepts/agent" />
+<Card title="Agent version" icon="git-branch" href="/product/concepts/agent-version" />
+<Card title="Session" icon="layers" href="/product/concepts/session" />
+<Card title="Run" href="/product/concepts/run" />
+<Card title="Trigger" icon="zap" href="/product/concepts/trigger" />
+<Card title="LLM provider" icon="sparkles" href="/product/concepts/llm-provider" />
+<Card title="Secret" icon="key" href="/product/concepts/secret" />
 
-## Create beautiful pages
+</CardGroup>
 
-Everything you need to create world-class documentation.
+## Using the dashboard
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Card title="Dashboard overview" icon="layout-dashboard" href="/product/dashboard/overview" horizontal>
+  Sidebar, workspace roles, **Quick Create**, **Review**, and where to find **Settings** and **Get Help**.
+</Card>
 
-## Need inspiration?
+<CardGroup cols={2}>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
+<Card title="Dashboard home" href="/product/dashboard/home" />
+<Card title="Settings" href="/product/dashboard/settings" />
+<Card title="Secret Manager" href="/product/dashboard/secret-manager" />
+<Card title="LLM providers" href="/product/dashboard/llm-providers" />
+<Card title="Agents" href="/product/dashboard/agents" />
+<Card title="Agent workspace" href="/product/dashboard/agent-workspace" />
+<Card title="Run inspector" href="/product/dashboard/run-inspector" />
+<Card title="Integrations" href="/product/dashboard/integrations" />
+<Card title="Approvals" href="/product/dashboard/approvals" />
+<Card title="Guard & anomaly" href="/product/dashboard/guard-anomaly" />
+<Card title="Triggers wizard" href="/product/dashboard/triggers-wizard" />
+
+</CardGroup>
+
+## Automation outside the browser
+
+<Card title="HTTP API (reference)" icon="terminal" href="/api-reference/introduction" horizontal>
+  For teams connecting other systems to Phrony; day-to-day setup stays in the dashboard.
 </Card>

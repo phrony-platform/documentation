@@ -1,0 +1,52 @@
+---
+title: "Run"
+description: "One execution — input, trace, status, parent vs child runs, Test run vs triggers."
+---
+
+A **run** is a **single execution** of one **agent version**’s configuration: **input**, **trace** of model and tool steps, optional **pauses** for human review, and a **status** you see in **Run inspector**.
+
+## Parent runs and sub-agent (child) runs
+
+A **session** can contain more than one run:
+
+- The **main** (root) run is the one you usually open from **Sessions**.
+- If the version **Can execute sub-agents** and the model delegates work, Phrony creates **child** runs for those sub-agents. They share the same **session** and roll up into **session** token totals and limits.
+
+When a version uses **Parallel — same sub-agent, multiple calls in one turn**, multiple child runs targeting the **same** sub-agent may start **together**; the **Run inspector** may show grouping or labels that reflect that batching (wording and layout depend on your Phrony version).
+
+## Input
+
+Input must match the **Input schema** on **Input & Output**. **Test run** supports **Visual** or **JSON**; an empty object is fine when the schema allows it. Bad input fails early with a validation message.
+
+## Which configuration runs?
+
+### Test run (from the dashboard)
+
+**Test run** uses whichever version is **selected in the version dropdown** on **Version configuration** or **Sessions**—**testing** or **live**.
+
+### Triggers (schedule, API, event)
+
+**Triggers always use the current live version.** If nothing is **Deploy**ed yet, automation will not start until you deploy.
+
+**Summary:** use **Test run** to try **draft** snapshots; **automation** follows the **live** line.
+
+## Tool calls and your plan
+
+**Max tool calls** on the version is further limited by your **plan**; the **stricter** value applies during execution. The editor already clips what you can type to your plan.
+
+## When a run refuses to start
+
+- Agent **blocked** by Guard / Anomaly review.
+- **Monthly session** or **inventory** limits on your plan.
+- **Trigger** off or misconfigured.
+- **LLM provider** or **secret** missing / invalid.
+- **Built-in** integrations not fully set up for your organization’s hosting.
+
+See **[Limits, permissions, and plans](/product/reference/platform-rules)**.
+
+## See also
+
+- [Session](/product/concepts/session)
+- [Agent version](/product/concepts/agent-version) — **Sequential / Parallel**, session caps
+- [Trigger](/product/concepts/trigger)
+- [Run inspector](/product/dashboard/run-inspector)

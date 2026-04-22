@@ -1,0 +1,50 @@
+---
+title: "Creating triggers (wizard)"
+description: "Step-by-step trigger creation in the agent workspace — scheduled, API, and event."
+---
+
+On **[Agent workspace](/product/dashboard/agent-workspace) → Triggers**, **New trigger** opens a guided flow. Step labels and descriptions match the dashboard.
+
+## Step 1 — Name & type (all types)
+
+**Title:** Name & type  
+
+**Description:** *Choose a name and how this trigger starts the agent. Type-specific options come next.*
+
+Pick **Scheduled**, **API**, or **Event**. Only **one API trigger** is allowed per agent; if one already exists, the type may show as **API (already exists)**.
+
+## Scheduled (2 steps total)
+
+**Step 2 — Schedule & payload**
+
+**Description:** *Runs on a cron schedule in the selected timezone. Optional static JSON is passed as run input.*
+
+## API (2 steps total)
+
+**Step 2 — API limits**
+
+**Description:** *Starts the deployed snapshot via the gateway. At most one API trigger per agent. Optional limits apply to API-key-authenticated requests.*
+
+(API triggers use the **live** deployed version; see **[Trigger](/product/concepts/trigger)** for conceptual rules.)
+
+## Event (4 steps total)
+
+**Step 2 — Integration**
+
+**Description:** *Pick a built-in integration with an active connection so it can emit events.*
+
+**Step 3 — Event type**
+
+**Description:** *Choose which event from the integration should start a run.*
+
+**Step 4 — Event configuration**
+
+**Description:** *Configure options required for this event type.*
+
+Event triggers require a **[built-in integration](/product/dashboard/integrations)** in good standing.
+
+## See also
+
+- [Trigger (concept)](/product/concepts/trigger)
+- [Agent workspace](/product/dashboard/agent-workspace)
+- [Integrations](/product/dashboard/integrations)

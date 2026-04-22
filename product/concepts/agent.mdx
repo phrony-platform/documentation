@@ -1,0 +1,49 @@
+---
+title: "Agent"
+description: "What an agent is — execution modes, how it differs from version settings, naming, and blocks."
+---
+
+An **agent** is the automated worker you configure in Phrony: it uses a large language model (LLM) and **versioned** snapshots for prompts, tools, and limits (see **[Agent version](/product/concepts/agent-version)**).
+
+## Agent execution mode (Request, HITL, Sub-agent)
+
+When you **create** or **edit** an agent from the **Agents** list, you choose **execution mode**. This is **not** the same as **Sequential / Parallel** on the **Multi-agent** tab (that only applies when a **Request** or **HITL** agent **calls** other agents).
+
+| Mode | Purpose | Triggers tab |
+|------|---------|--------------|
+| **Request** | Standard agent: can run from **Test run**, **triggers**, and automation. | Shown |
+| **HITL** (human-in-the-loop) | Same as Request for scheduling, plus runs can **pause** for a person to approve, reject, or supply input, depending on the version. | Shown |
+| **Sub-agent** | Meant to be invoked **only as a tool** by another agent—not started on its own schedule or API trigger. | **Hidden** |
+
+Sub-agents still have their own **LLM provider** and **versions** (instructions, tools, limits). They do **not** get a **Triggers** tab.
+
+## Model connection (LLM provider)
+
+Every agent is linked to exactly one **[LLM provider](/product/concepts/llm-provider)**. You pick it in **New Agent** or **Edit agent**. You can change it later from the agents list; behavioral detail lives in **versions**.
+
+## Where the real settings live
+
+**Model**, **instructions**, **schemas**, **allowed operations**, **token limits**, **Guard**, and **multi-agent** options are stored on **versions** (snapshots), not on the agent name row. The workspace shows which version is **live** versus still in **testing**.
+
+## Names must be unique in your workspace
+
+Duplicate agent names are rejected when you save—pick another name.
+
+## Sub-agent mode and your plan
+
+Turning an agent **into** a **Sub-agent** checks your plan’s **cap** on how many sub-agent agents you may have. At the limit, Phrony shows an **upgrade** or plan message. Turning a sub-agent **back** to Request or HITL does not consume an extra slot.
+
+## When Phrony blocks all new runs (Guard / Anomaly)
+
+**Anomaly Control** (Guard) can mark an agent **blocked until reviewed**. While blocked, **Test run**, **triggers**, and automation refuse to start until someone with the right role **clears the block**. The UI may show a reason or incident reference.
+
+## Deleting an agent
+
+**Delete** in the overflow menu works **only if no version is live**. If something is still deployed, the dialog explains what to do first.
+
+## See also
+
+- [Agent version](/product/concepts/agent-version) — everything on **Version configuration**, including **Sequential / Parallel** for sub-agent calls
+- [Session](/product/concepts/session)
+- [Run](/product/concepts/run)
+- [Agents](/product/dashboard/agents)

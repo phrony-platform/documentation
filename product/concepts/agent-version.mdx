@@ -1,0 +1,93 @@
+---
+title: "Agent version"
+description: "One saved snapshot — tabs, limits, Guard, multi-agent, sequential vs parallel delegation."
+---
+
+An **agent version** is one **saved snapshot** of how that agent behaves. You edit versions on the agent’s **Version configuration** tab, then **Deploy** one to make it **live** for triggers and default automation. **Test run** can use either a **testing** or **live** snapshot, depending on what you selected in the version dropdown.
+
+## Testing vs live (deployed)
+
+- **Testing** — editable; **Save** applies changes; **Test run** can target this snapshot.
+- **Live** — **frozen**: fields are **greyed out** until you switch to another snapshot or deploy a new one. Only one version is **live** per agent at a time.
+
+To change production: edit a **testing** snapshot → **Save** → **Deploy**. **Rollback** deploys an **older** snapshot you are viewing so it becomes live again.
+
+You can **delete** **testing** versions from the version menu; you **cannot** delete the **live** snapshot without deploying something else first.
+
+## Version labels
+
+Each snapshot has a **label** (for example `v1.2`). Labels must be **unique for that agent**. Duplicates fail on **Save**.
+
+---
+
+## Version configuration sub-tabs
+
+The dashboard groups settings into **Model & Prompt**, **Input & Output**, **Operations**, **Limits & Safety**, and **Multi-agent** (the last appears only when your plan includes multi-agent).
+
+### Model & Prompt
+
+- **LLM model** — which model this snapshot calls through the agent’s **LLM provider**.
+- **Instructions** — main system / task instructions for the model.
+- **Temperature** — randomness of completions.
+- **Max iterations**, **Max tokens per run**, **Max tool calls** — per-run ceilings. **Max tool calls** is also capped by your **plan**; the editor clips values to what your plan allows.
+- For agents whose **execution mode** is **Sub-agent**: a **description** is **required**. It is the short summary parent agents show when this agent appears as a **tool** (not the full instructions). Empty descriptions block **Save**.
+
+### Input & Output
+
+- **Input schema** and **Output schema** — structured JSON Schema (or equivalent) expectations. **Test run** and live traffic validate input against the **input** schema when runs execute.
+
+### Operations
+
+- Lists **connector operations** this version may expose as **tools** (grouped by integration). If nothing appears, create **Integrations** first. Only operations in **your workspace** can be selected.
+
+### Limits & Safety
+
+- **Anomaly control (L1)** — toggle for Guard / anomaly behavior on this snapshot. When on, you can add **Rules** that check each tool call (require review, block, or allow). With the toggle off, the rules section is hidden.
+- **Max session tokens** (optional) — total tokens across the **main** run and **all** sub-agent runs in the same **session**. Leave blank for no session-wide token cap (per-run limits still apply).
+- **Max session duration (sec)** (optional) — wall-clock limit from session start. Exceeding it ends the run with an error about the **session duration** limit.
+
+If your plan defines a **maximum sub-agent depth** (how many levels of delegation), the **Multi-agent** tab shows that limit: deeper chains are **rejected** when Phrony tries to start a child run.
+
+### Multi-agent (calling other agents)
+
+This tab applies to **Request** and **HITL** agents whose plan includes **multi-agent**. It controls whether **this version** may **delegate** work to other agents that are in **Sub-agent** mode.
+
+1. **Can execute sub-agents** — master switch. Off means this version runs **alone**; the allow-list must be empty.
+2. **Allowed sub-agents** — checklist of **Sub-agent** agents in your workspace (search when the list is long). Only **Sub-agent** agents appear. Your plan may cap **how many** you can select per version; the UI states the limit (for example “up to **N** per version”). You cannot add **this same agent** to its own list.
+
+#### Execution model (Sequential vs Parallel)
+
+Under **Execution model**, you choose how the **parent** model is allowed to call sub-agents in a **single assistant turn**. This is separate from the agent’s **Request / HITL / Sub-agent** mode—it only matters when **Can execute sub-agents** is on.
+
+- **Sequential — one sub-agent per turn**  
+  In each model turn, at most **one** sub-agent tool call is allowed. The model finishes that delegation before it can invoke another sub-agent in the same turn.
+
+- **Parallel — same sub-agent, multiple calls in one turn**  
+  The model may issue **several** sub-agent calls **in one message** only when **every** call targets the **same** allowed sub-agent (with **different** inputs). Phrony runs those child runs **at the same time**. If the model tries to call **different** sub-agent identities in the same message, those calls are **run one after another** (serialized), not in parallel. The model still decides **when** to delegate each turn.
+
+**Execution model** is disabled when **Can execute sub-agents** is off or when the snapshot is **live** (read-only).
+
+#### Plan depth cap
+
+If your plan includes a **depth** limit, the **Multi-agent** tab shows it (for example that child runs beyond that depth are **rejected**). That is independent of **Sequential** vs **Parallel**.
+
+---
+
+## Defaults on new versions
+
+New snapshots get sensible defaults (temperature, iteration and token limits, tool-call ceiling aligned with your plan, **Anomaly control** off, **Can execute sub-agents** off, **Sequential** execution model unless you change it). Adjust before **Save**.
+
+## Validation highlights
+
+- **Sub-agent** agents: **description** required on every version.
+- **Guard rules**: invalid rule sets fail on **Save** with messages from the builder.
+- **Allowed operations**: only workspace operations; no duplicate selections.
+- **Multi-agent**: plan must allow the feature; allow-list empty when **Can execute sub-agents** is off; only **Sub-agent** targets; count within plan; invalid delegation graphs may still **fail at run time** (depth / cycles) even if **Save** succeeded.
+
+## See also
+
+- [Agent](/product/concepts/agent) — **Request / HITL / Sub-agent** vs **Sequential / Parallel**
+- [Run](/product/concepts/run#which-configuration-runs)
+- [Session](/product/concepts/session)
+- [Agent workspace](/product/dashboard/agent-workspace)
+- [Limits, permissions, and plans](/product/reference/platform-rules)

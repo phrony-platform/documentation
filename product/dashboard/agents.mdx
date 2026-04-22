@@ -1,0 +1,25 @@
+---
+title: "Agents"
+description: "List, create, edit, and delete agents — modes, provider, and delete rules."
+---
+
+1. In the sidebar, open **Agents**.
+2. **Create agent**: click **Add**, or **Quick Create → New Agent**. The dialog asks for:
+   - **Name** (must be unique in the workspace),
+   - **Execution mode** — **Request**, **HITL**, or **Sub-agent**,
+   - **LLM provider** — pick an existing entry (create one under **LLM Providers** first if the list is empty).
+3. After you create an agent, Phrony opens its **agent workspace** so you can add a version, **Save**, and **Deploy**.
+4. **Edit** an agent from the row menu to change **name**, **mode**, or **provider**. Switching **to** **Sub-agent** may hit your plan’s **sub-agent count** limit; the dialog or a toast explains if so.
+5. **Delete** from the **…** menu works **only when no version is deployed as live**. If something is still live, the confirmation tells you that deletion is blocked until you handle the live version.
+
+## Modes at a glance
+
+- **Sub-agent** — no **Triggers** tab; meant to be called by other agents. Plan limits apply to how many sub-agents you may have.
+- **HITL** — runs may **pause** for human steps depending on version settings.
+- **Request** — default autonomous style (still subject to your version’s tools and limits).
+
+## See also
+
+- [Agent (concept)](/product/concepts/agent)
+- [Agent version](/product/concepts/agent-version)
+- [Agent workspace](/product/dashboard/agent-workspace)
