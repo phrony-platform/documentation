@@ -38,17 +38,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "API",
-        "groups": [
-          {
-            "group": "HTTP API",
-            "pages": [
-              "index"
-            ]
-          }
-        ]
       }
     ]
   },
