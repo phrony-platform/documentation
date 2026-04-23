@@ -1,8 +1,128 @@
 ---
 title: "Multi-agent systems"
-description: "Parent agents delegating to sub-agents, scheduling models, and how work composes in Phrony."
+description: "Why to compose agents, one session for the run tree, sub-agent mode, AITL, safety, and runtime instruction addenda."
 ---
 
-In a **multi-agent** setup, a **parent** [agent](/concepts/agent) is configured to call other agents that are in **Sub-agent** [execution mode](/concepts/agent#execution-mode). The parent’s version controls **whether** delegation is allowed, **which** sub-agents are in scope, and **how** child runs are scheduled (for example sequential vs parallel) — see the **Multi-agent** section on the [agent](/concepts/agent) page.
+**Multi-agent** is Phrony’s model for composing **specialized** [agents](/concepts/agent) into one **coordinated** execution. Instead of one monolithic agent, you split work: a **parent** orchestrates, and **sub-agents** handle focused parts with their own model, instructions, and [integration](/concepts/integration) tools.
 
-Child runs still execute as governed agent work with their own [sessions](/concepts/session), [integrations](/concepts/integration), and limits, while the platform ties the tree together for auditing and [agent in the loop](/techniques/agent-in-the-loop) behavior where applicable.
+The whole tree—root run and every child run—lives in a **single** [session](/concepts/session). The session is the top-level, user-facing unit of work: history, status, and limits roll up from the root, while the trace shows how parent and child runs interleave.
+
+## Sub-agent execution mode
+
+Agents in **Sub-agent** [execution mode](/concepts/agent#execution-mode) are the building blocks of multi-agent. They are not standalone entry points.
+
+| | |
+| --- | --- |
+| **Triggerable by Scheduled or API triggers?** | No — you do not start them with [triggers](/concepts/agent#triggers) or the [embedded API](/techniques/embedded-agents). |
+| **Callable by a parent?** | Yes — when a parent [version](/concepts/agent#version-snapshots) allowlists them, they appear as **tools** the parent model can call. |
+| **Own configuration?** | Yes — full **version** config: model, instructions, [operations](/concepts/agent#operations), limits, anomaly control, and so on. |
+| **Agent in the loop (AITL)?** | Yes — always, as [below](#aitl-agent-in-the-loop). Sub-agents talk **up** to the parent, not to end users, when they need help mid-run. That behavior is part of the platform; you do not turn it on or off. |
+
+## Parent configuration
+
+On a parent agent’s **version** (not Sub-agent mode), the **Multi-agent** block—when your [workspace](/concepts/workspace) plan supports it—controls delegation. The same area is documented on the [agent](/concepts/agent#multi-agent) page; here is the behavioral summary.
+
+| Field | What it does |
+| --- | --- |
+| **Can execute sub-agents** | If off, this version never dispatches child agents, regardless of the allowlist. |
+| **Allowed sub-agents** | Which Sub-agent–mode agents this version may call. The model only sees and may invoke agents **listed here**; there is no open discovery. |
+| **Sub-agent execution model** | **Sequential** or **Parallel** (see [below](#sub-agent-execution-models)). Shapes *how* multiple sub-agent invocations are run once the model requests them. |
+
+Sub-agent **execution model** does not tell the model *when* to call a sub-agent — that remains the model’s decision. It controls whether child work is serialized or can run in a controlled parallel pattern (see the [agent](/concepts/agent#multi-agent) page for how Phrony constrains **parallel** batches for predictability).
+
+### Sub-agent execution models
+
+**Sequential** — After a sub-agent call, the parent waits for that child run to finish before it may issue the **next** sub-agent call. Results from one call are available before the next starts.
+
+**Parallel** — The parent may request **multiple** sub-agent invocations in one batch; the platform runs the corresponding child runs in parallel and the parent only continues after **all** of them in that batch complete, with their results available together.
+
+> Sequential vs parallel do not decide *whether* a sub-agent runs. They define how **ordered vs batched** execution is when the model asks for more than one dispatch in a compatible way.
+
+## Run tree
+
+Each sub-agent dispatch creates a **child** run. All runs in the tree share the **same** session. The initial trigger (for example a schedule, API, or event [trigger](/concepts/agent#triggers)) still roots at the **parent** run at depth 0.
+
+<Frame caption="One **session** holds the **root** run (parent agent) and **child** runs (sub-agents) in a single coordinated tree.">
+  <img
+    src="/images/multi-agent-system.png"
+    alt="Diagram: Phrony multi-agent system—parent and sub-agent runs in one session"
+  />
+</Frame>
+
+```
+Session
+└── Root run  (parent agent, depth 0)
+    ├── Step: tool call
+    ├── Step: sub-agent call  ────────────► Child run A  (sub-agent, depth 1)
+    │                                        ├── …
+    │                                        └── …
+    ├── Step: sub-agent result  ◄────────── (A’s output)
+    └── Step: output
+```
+
+**Parallel batch (conceptual):** calls that belong to the same parallel **group** start together; the parent gets their results in one combined step when all children in the group have finished.
+
+## Step types in the trace
+
+Multi-agent runs add step kinds you will see in the session timeline (names may vary slightly in the product UI):
+
+| Step (concept) | Where | Meaning |
+| --- | --- | --- |
+| **Sub-agent call** | Parent | The parent started a sub-agent; records which agent, the input, the child run id, and (for parallel) a **group** id. |
+| **Sub-agent result** | Parent | The child run finished; the parent’s trace records the result and how long the child took. |
+| **AITL request** | Child | The sub-agent paused and asked the parent a question. |
+| **AITL response** | Child | The parent’s answer was applied; the sub-agent can continue. |
+| **AITL received** | Parent | The parent’s model saw a question from a child. |
+| **AITL resolved** | Parent | The parent answered (or escalated); the child can proceed. |
+
+For **parallel** groups, all **call** steps that share a group start together; the matching **result** steps appear after **every** run in the group has completed.
+
+## AITL (agent in the loop)
+
+[AITL](/techniques/agent-in-the-loop) is how a **sub-agent** can pause and get input from its **parent**—the analogue of a human in the loop for root agents, but **agent-to-agent**: the parent’s model (and, if needed, a human in **HITL** mode) supplies the answer.
+
+- Sub-agents do **not** talk to your end users directly; they only communicate with the parent. If a human is needed, the **root** [execution mode](/concepts/agent#execution-mode) and [user tasks](/concepts/user-task) path applies from the parent’s side of the house.
+- The parent may answer from its own context or **escalate** so a person answers via a user task, depending on mode and what the product allows in that session.
+- **Request-** and **HITL-** mode parents can both handle AITL from children; AITL is about **in-tree** agent coordination, not the same as external human gating (which mode still governs for the *root* agent).
+
+A structured **AITL request** in the product generally carries: what is being asked, optional **context** from the child run, which **child run** is waiting, the **answer** once resolved, and whether the case was **escalated** to a person and linked to a **user task**.
+
+## Safety
+
+**Cycle detection** — Before a sub-agent call, Phrony checks the chain of ancestors. If the target would create a **loop** (an agent re-entering a chain it already lives in), the call is **rejected** and the current run does not proceed with that dispatch.
+
+**Maximum depth** — A platform limit caps how **deep** the tree can go (default **5** levels below the root: depth 0 is the parent run, each nested sub-agent call adds one). At the limit, a run cannot start another sub-agent.
+
+**Access control** — The parent model can only call sub-agents that appear in the **allowed** list on its **version**. Anything not allowlisted is invisible as a sub-agent tool.
+
+**Limits** — Per-run caps (for example max iterations, tokens, tool calls) still apply **per run** on each version. The **root** version can also set **session-level** token and duration limits that apply across the **whole** session (parent + all nested runs). Hitting any enforced limit ends execution according to the product rules; session caps and per-run caps are independent checks.
+
+## Runtime guidance (what Phrony adds to instructions)
+
+Phrony may **append** extra instructions after **your** version **system** text so that parent and sub-agent handoffs stay reliable, even if your own prompts are short. **Your** instructions always come **first**; the platform addendum comes **second**.
+
+### When it applies
+
+- **Sub-agent** runs: additional rules always apply, because every sub-agent invocation is expected to follow the same coordination pattern.
+- **Parent** runs (root or a nested “orchestrator” that can also delegate): additional rules apply **only** when that version can **execute** sub-agents and has **at least one** allowed, reachable sub-agent. Versions with delegation turned off, or with an empty allowlist, do not get the parent addendum.
+- **Structured output** — If your version defines an **output** JSON schema and the run uses tools, Phrony may add a **reminder** that the final answer (when the model is done with tools) must be **raw JSON** matching that schema, without extra markup.
+
+The blocks are labeled in the system prompt (for example as execution contracts enforced by the runtime) so you can recognize them in exports or support cases.
+
+### Sub-agent rules (behavior)
+
+- If input is **missing or ambiguous**, the model must **ask the parent** through the AITL path instead of **pretending the task is done** with a clarifying *final* answer in plain text.
+- If the sub-agent’s version has **integration (operation) tools** configured, the model is expected to **accomplish the task using those tools** when that is what the work requires. **Finishing** with a final structured answer **without** using any of those operation tools, when the run was supposed to use them, is treated as a **violation** and the run can **fail** at completion time. Asking a parent for clarification, or other non-operation tools, do not substitute for the **operation** work the version was set up to perform.
+- If there are **no** operation tools, the model should only finish when it can answer from what it has, or else ask the parent.
+
+### Parent rules (behavior)
+
+- When a sub-agent’s result still includes a **pending** question to the parent (agent-in-the-loop), the **parent** model must **resolve** that on the **next** turn using the AITL **tools** (answer itself or escalate to a person where that tool exists) — not with unrelated tools first, and not with **plain text** that bypasses the AITL tools. Skipping that leaves the child stuck; Phrony may **fail** the parent run in those cases.
+- In **HITL**-mode **root** parents, a separate line in the addendum can remind the model: **mid-task** input that originated from a sub-agent should go through **escalation to the user** when a human is required, not only a free-text pause to the operator, so answers wire back to the right child. **Nested** parents that are themselves sub-agents but can delegate further use the same **parent** contract with **stricter** rules around human escalation, because a sub-agent is not a full HITL root session.
+
+## Session completion
+
+- A session is only considered **completed in the end-user sense** when the **root** run finishes successfully. **Child** run completions by themselves do **not** end the session while the parent is still working or waiting to resolve AITL.
+- **Session-level failure** is generally driven by the **root** run’s outcome. A **child** run can fail; the **parent** sees that in the sub-agent result and can react. A child failure does **not** automatically end the parent session in every case—behavior depends on how the parent’s model and configuration proceed.
+
+For version-level dials (allowlists, max session tokens, sub-agent model), see the **Multi-agent** and **Limits & Safety** sections on the [agent](/concepts/agent) page.
