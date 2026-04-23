@@ -34,7 +34,9 @@ You edit a **Testing** snapshot freely, then **Deploy** it so new work uses that
 | ------------- | ----------------------------- | -------------------------- | -------------------------------------------------------------------- |
 | **Request**   | ✅ Scheduled, API             | ❌                         | ❌ Runs autonomously to completion                                   |
 | **HITL**      | ✅ Scheduled, API             | ❌                         | ✅ May pause and present [user tasks](/concepts/user-task) to humans |
-| **Sub-agent** | ❌ Not externally triggerable | ✅ Only by parent agents   | — Communicates via AITL (see [Multi-agent](#multi-agent))            |
+| **Sub-agent** | ❌ Not externally triggerable | ✅ Only by parent agents   | — [AITL](/techniques/agent-in-the-loop) to parent (see [Multi-agent](/techniques/multi-agent-systems#aitl-agent-in-the-loop))            |
+
+For how HITL pauses, [user tasks](/concepts/user-task), and [triggers](/concepts/agent#triggers) work together in the product, see [Human in the loop (HITL)](/techniques/human-in-the-loop).
 
 Changing mode later can strand or relax integrations with other product areas; treat it as a structural choice, not a cosmetic label.
 

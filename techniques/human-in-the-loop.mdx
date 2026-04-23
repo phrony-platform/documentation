@@ -1,8 +1,88 @@
 ---
 title: "Human in the loop (HITL)"
-description: "Agents that can pause for human input, approvals, and operator work during a run."
+description: "HITL execution mode, approvals, user tasks, and how humans sit on the main run path."
 ---
 
-**Human in the loop (HITL)** is an [execution mode](/concepts/agent#execution-mode) for [agents](/concepts/agent) that are expected to need **people** in the normal lifecycle of a run — not only when something breaks.
+**Human in the loop (HITL)** is an [execution mode](/concepts/agent#execution-mode) for [agents](/concepts/agent) that are **expected** to need people during normal work—not only when something goes wrong. You choose it when your design, risk, or compliance requires **real human decisions** on the path a run takes.
 
-Runs may **pause** and surface **[user tasks](/concepts/user-task)** so a human can approve, answer, or review before the agent continues. Phrony records these pauses in the [session](/concepts/session) so you can audit *what* was asked, *what* a person decided, and *how* the run resumed. Use HITL when governance, compliance, or product design requires explicit human decisions on the main run path.
+<Frame caption="**HITL** on the agent: the [execution mode](/concepts/agent#execution-mode) is set on the agent (not a single version), because it changes sessions, [triggers](/concepts/agent#triggers), and how pauses are handled across runs.">
+  <img
+    src="/images/agent-details-page.png"
+    alt="Phrony agent detail: name, HITL execution mode, and version area"
+  />
+</Frame>
+
+HITL runs can **pause** and surface **[user tasks](/concepts/user-task)**—approvals, forms, and reviews—so an operator or subject-matter expert acts **before** the run continues. Phrony records what was asked, what a person did, and how the [session](/concepts/session) resumed, so you can **audit** the path, not just the final output.
+
+## Why use HITL
+
+| Situation | What HITL gives you |
+| --- | --- |
+| **Regulated or high-stakes tools** | A person **approves or rejects** specific tool calls (for example money movement, data export, or production changes). |
+| **Missing or sensitive inputs** | The run **stops in a known state** until someone **supplies** a value, **chooses** an option, or **confirms** context. |
+| **Clear accountability** | Work is not “the model said so”—there is a **record** of human consent or rejection tied to the run. |
+| **Anomaly (L1) + review** | [Anomaly control (L1)](/concepts/agent#limits-safety) **rules** on tool attempts can **pause** a call for a person ([`anomaly_review`](/concepts/user-task#kinds) and related tasks), separate from a fixed “approve every time” on the operation. |
+
+[Request](/concepts/agent#execution-mode)-mode agents are better when every run can finish without a person on the **critical** path. HITL is for when that path **must** include people. **L1** can still create **user tasks** on any [version](/concepts/agent#version-snapshots) where you enable it; the new section [below](#anomaly-control-l1-and-hitl) ties that to HITL-style queues.
+
+## How pauses become work
+
+When a HITL run needs a person, Phrony creates a **[user task](/concepts/user-task)** and typically moves the session into a **waiting** state until the task is **completed** (including **rejection** on an approval, which records a deliberate no-go).
+
+Tasks show up in **Review** (for example **Approvals**), in lists you can filter by kind, and **in context** on the run or session. There is no separate “HITL document” to author: tasks are **emitted** by the run. See [User task](/concepts/user-task) for **kinds** (approvals, text/number prompts, **L1** anomaly **review** and **alerts**, and how **AITL escalations** from [multi-agent](/techniques/multi-agent-systems) appear in the same queues with a different role).
+
+## Anomaly control (L1) and HITL
+
+**Anomaly control (L1)** is configured on a **version** (under [Limits & safety](/concepts/agent#limits-safety) on the [agent](/concepts/agent) page), not on the HITL flag alone. When it is on, you can define **rules** on **tool** attempts (only for [operations](/concepts/agent#operations) already on that version’s allowlist). A rule can **block** a call, **allow** it, or **pause** it for **human review** before the call proceeds.
+
+Those **pauses** surface the same way as other human steps: a **[user task](/concepts/user-task)** in **Review**—commonly the **`anomaly_review`** kind (approve or reject the call). **Async** anomaly signals may also show up as informational **`anomaly_alert`** work (acknowledgment-style), depending on your setup. See [User task — kinds](/concepts/user-task#kinds).
+
+HITL **execution mode** and **L1** are complementary: you might use HITL for **static** [operation](/concepts/integration)-level “approve every time,” and L1 for **pattern-based** gating (for example by argument shape or call frequency) on top of the same or other tools.
+
+## Gating a tool call (operation-level)
+
+For [integrations](/concepts/integration), you can require **HITL before** a specific **operation** runs. When the model tries to call that tool, the run **pauses** and a user task asks someone to **approve** or **reject** the call. You configure this in the **Edit Operation** flow for that integration (HTTP and built-in connectors both support operation-level flags; the exact label is **Require approval** / **Require approval (HITL) before execution** depending on the connector). Connector-wide defaults and per-operation overrides are described under [Operation level](/concepts/integration#operation-level-http-and-built-in) on the [integration](/concepts/integration) page.
+
+<Frame caption="**Operation-level** HITL: turn on approval for the specific [operation](/concepts/integration) the model is allowed to call, so a human must clear each sensitive invocation.">
+  <img
+    src="/images/operation-level-approval.png"
+    alt="Phrony Edit Operation: require approval (HITL) before execution"
+  />
+</Frame>
+
+## Where operators work
+
+**Review → Approvals** (and related **Review** views) is the primary **queue** of pending and completed human steps across the workspace, with filters for task kind. From here you open the **user task** and act with the buttons or fields on the card.
+
+<Frame caption="**Review** → **Approvals**: scan **Pending** and **Completed** work; filter by **kind** when the list is busy.">
+  <img
+    src="/images/approvals-page.png"
+    alt="Phrony Approvals page with Pending, Completed, and kind filters"
+  />
+</Frame>
+
+<Frame caption="A **user task** card: the run stays paused until you **approve**, **reject**, or **submit** the information the run asked for.">
+  <img
+    src="/images/user-task-view.png"
+    alt="Phrony user task or approval card with Approve, Reject, and context"
+  />
+</Frame>
+
+## In the session
+
+The [session](/concepts/session) (or run) view shows the **step timeline** next to the **same** work: you can see **where** the run stopped and open the **user task** in context. After you complete the task, the run **resumes** and new steps continue on the trace.
+
+<Frame caption="A **HITL** [session](/concepts/session) / run: status, timeline, and the human step in one place.">
+  <img
+    src="/images/session-view.png"
+    alt="Phrony session or run view with step timeline and run details"
+  />
+</Frame>
+
+Plain-text “chat” from the **user** in the run (when the product allows **waiting for a user message**) is a **different** pause style from **HITL user tasks** (approvals and forms). Both can appear in HITL agents depending on the flow; the session makes clear **which** kind of input is required.
+
+## Triggers, API, and sub-agents
+
+- **HITL** agents are still [triggerable](/concepts/agent#triggers) the same way as **Request** agents where the product offers **Schedule**, **API**, and (where applicable) **Event** [triggers](/concepts/agent#triggers)—**Sub-agent** mode does **not** use those entry points. See the [execution mode](/concepts/agent#execution-mode) table.
+- [Embedded API](/techniques/embedded-agents) runs for a HITL agent can still **pause** for user tasks: your backend must not assume “fire and forget” if operations or flows require a person.
+- In [multi-agent](/techniques/multi-agent-systems) trees, the **root** run’s mode governs **external** HITL (user tasks that surface to your operators and **Review**). **[Agent in the loop (AITL)](/techniques/agent-in-the-loop)** is **in-tree** parent–sub-agent communication: read that guide for asks, **escalation**, and how it connects to the **run tree**. It is not a substitute for HITL on the root; both can appear in one session with different [user task](/concepts/user-task) kinds.

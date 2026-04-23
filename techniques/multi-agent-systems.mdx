@@ -79,7 +79,9 @@ For **parallel** groups, all **call** steps that share a group start together; t
 
 ## AITL (agent in the loop)
 
-[AITL](/techniques/agent-in-the-loop) is how a **sub-agent** can pause and get input from its **parent**—the analogue of a human in the loop for root agents, but **agent-to-agent**: the parent’s model (and, if needed, a human in **HITL** mode) supplies the answer.
+**[Agent in the loop (AITL)](/techniques/agent-in-the-loop)** is the dedicated guide: how **escalation** to people works, how **AITL** differs from **[HITL](/techniques/human-in-the-loop)**, and what the **parent** and **sub-agent** each must do. The following fits AITL into the **multi-agent** picture (same [session](/concepts/session), [run tree](#run-tree), and [steps](#step-types-in-the-trace)).
+
+AITL is how a **sub-agent** can pause and get input from its **parent**—the analogue of a human in the loop for root agents, but **agent-to-agent**: the parent’s model (and, if needed, a human in **HITL** mode) supplies the answer.
 
 - Sub-agents do **not** talk to your end users directly; they only communicate with the parent. If a human is needed, the **root** [execution mode](/concepts/agent#execution-mode) and [user tasks](/concepts/user-task) path applies from the parent’s side of the house.
 - The parent may answer from its own context or **escalate** so a person answers via a user task, depending on mode and what the product allows in that session.

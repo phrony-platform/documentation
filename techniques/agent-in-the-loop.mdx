@@ -1,8 +1,63 @@
 ---
 title: "Agent in the loop (AITL)"
-description: "How a parent agent and delegation interact during execution — coordination without replacing human oversight (HITL)."
+description: "Sub-agents that ask the parent for input—escalation, user tasks, and how AITL fits the run tree."
 ---
 
-**Agent in the loop (AITL)** describes the coordination path where a **parent** [agent](/concepts/agent) invokes **sub-agents** as part of a single run’s reasoning — for example to specialize work or to call out to a governed tool surface that lives in another agent configuration. The full model (sub-agent mode, run tree, step types, and safety) is in [Multi-agent systems](/techniques/multi-agent-systems). AITL is the multi-agent complement to the **human** path ([Human in the loop](/techniques/human-in-the-loop)); both can appear in a complex [session](/concepts/session) depending on your version settings and [integration](/concepts/integration) design.
+**Agent in the loop (AITL)** is how a **sub-agent** run can **pause** and get an answer from its **parent** agent’s model **inside** the same [session](/concepts/session). It is the **in-tree** coordination path: the sub-agent does **not** call your [triggers](/concepts/agent#triggers) or the [embedded API](/techniques/embedded-agents) for help, and it does **not** talk to your **end users** the way a root [HITL](/techniques/human-in-the-loop) flow does. The parent may answer directly—or **escalate** so a **person** answers through a [user task](/concepts/user-task) when the **root** run is set up for that.
 
-The parent run stays responsible for orchestration, while sub-agent calls execute under their own version rules and limits, with the platform stitching together traces for [debugging and observability](/when-to-use-phrony#debugging).
+AITL only applies when you use **[multi-agent systems](/techniques/multi-agent-systems)**: a **Sub-agent** [execution mode](/concepts/agent#execution-mode) agent, invoked by a parent that has [delegation](/concepts/agent#multi-agent) turned on. If you have not read that page yet, start there for the **run tree**, **step types**, **safety** limits, and how **one session** wraps parent and child runs.
+
+<Frame caption="An **escalation** in the [session](/concepts/session) or run view: the parent run pauses in a way that can surface a **user task** so an **operator** answers the sub-agent’s question, then the tree resumes. (Exact labels depend on your workspace and task kind.)">
+  <img
+    src="/images/aitl-escalation-in-session-view.png"
+    alt="Phrony session view: AITL escalated question with a field to answer and continue the run"
+  />
+</Frame>
+
+## AITL and HITL: different roles
+
+| | **AITL** (this page) | **[Human in the loop (HITL)](/techniques/human-in-the-loop)** |
+| --- | --- | --- |
+| **Who is in the “loop”** | The **parent** agent (its model) must respond to a **sub-agent**; optionally a **human** via the parent. | A **person** is on the **root** run path (approvals, forms, and so on). |
+| **Where it applies** | **Child** runs (sub-agents) asking **up**; **parent** runs receiving and **resolving** those asks. | **Root** (and the entry **trigger** you chose for the HITL agent). |
+| **User tasks** | May appear for **`aitl_escalation`** when the **parent** escalates to a human. See [User task — kinds](/concepts/user-task#kinds). | Approvals, HITL prompts, and other kinds that block the **root** run directly. |
+
+Both can show up in one **long-running [session](/concepts/session)**: a HITL root can still **orchestrate** sub-agents, and a sub-agent can force an **escalation** that becomes a [Review](/concepts/user-task#how-to-create-edit-and-delete) item for an operator.
+
+## What each side does
+
+**Sub-agent**
+
+- Receives a **task** from the parent (via the sub-agent “tool” call). It runs with its own **version** (model, [operations](/concepts/agent#operations), limits).
+- If the task is **unclear** or it cannot complete work without a decision from above, it must use the **ask-parent** path built into the platform—**not** a fake “final” answer that is really a clarifying question in disguise.
+- It **never** routes questions to your customers; it only sees the parent’s answer (or the outcome after escalation) and continues.
+
+**Parent**
+
+- Sees a **pending question** from a child in the **result** of the sub-agent call. On the **next** turn, it should **resolve** that ask using the **AITL** actions the product provides (answer from context, or escalate to a person when the tool exists). Skipping that resolution can **strand** a child and fail the parent run, because the tree is still mid-flight.
+- For **HITL**-mode **root** parents, expect **stricter** product rules around when **plain** user chat is allowed versus an **escalation** to a [user task](/concepts/user-task), so answers get wired back to the right **child** run. Nested “orchestrator” sub-agents that also delegate are **not** full HITL sessions; escalation options differ from the **root**. Details stay aligned with the **parent** and **sub-agent** behavior described under [Runtime guidance](/techniques/multi-agent-systems#runtime-guidance-what-phony-adds-to-instructions) on the [Multi-agent systems](/techniques/multi-agent-systems) page.
+
+## When a human is involved
+
+Sub-agents do **not** open **HITL** dialogues on their own. If a **person** must answer, the **root**’s [execution mode](/concepts/agent#execution-mode) and the **parent**’s **escalation** path create a [user task](/concepts/user-task) (commonly an **`aitl_escalation`** kind). The **session** can show **Waiting for** states that make clear an **operator** must act. After the task **completes**, the sub-agent run **resumes** with the result—same as other cross-run coordination in the [run tree](/techniques/multi-agent-systems#run-tree). Use **Review** / **Approvals** the same way as other [user tasks](/concepts/user-task#how-to-create-edit-and-delete).
+
+<Frame caption="**Review** / **user task** surfaces (varies by screen): an escalation tied to a child run is still one queue among **approvals** and other human steps.">
+  <img
+    src="/images/user-task-view.png"
+    alt="Phrony user task or review list with Approve, Reject, and context for a pending item"
+  />
+</Frame>
+
+## Trace and the dedicated multi-agent guide
+
+The session **timeline** records **sub-agent call**, **sub-agent result**, and **AITL**-like steps on the **parent** and **child** runs. The full list of **step** concepts, **parallel** behavior, and **safety** (cycles, max depth, allowlists) lives on **[Multi-agent systems](/techniques/multi-agent-systems)** so we do not duplicate it here.
+
+- **Run tree and steps:** [Run tree](/techniques/multi-agent-systems#run-tree), [Step types in the trace](/techniques/multi-agent-systems#step-types-in-the-trace)  
+- **Deeper AITL context in the tree:** [AITL in multi-agent (same session)](/techniques/multi-agent-systems#aitl-agent-in-the-loop)  
+- **What Phrony adds to prompts:** [Runtime guidance](/techniques/multi-agent-systems#runtime-guidance-what-phrony-adds-to-instructions) (sub-agent and parent “contracts” in **behavioral** form)
+
+## Session completion and debugging
+
+- The **root** run still **defines** when the [session](/concepts/session) reaches a terminal success from a product perspective. **Child** runs finishing alone do **not** end the story if the parent is still **orchestrating** or **waiting** on AITL.
+- A **child** can **fail**; the **parent** sees that in the **result** and decides how to continue. A child failure is **not** always the same as a whole-session failure.  
+- If something looks stuck, check **Review**, the **root** run’s **HITL** / **escalation** state, and the **sub-agent** run that issued the last ask. For a broader view of observability, see [Debugging](/when-to-use-phrony#debugging) under *When to use Phrony*.
