@@ -1,0 +1,50 @@
+---
+title: "Tradeoffs"
+description: "What you gain and give up with Phrony's agentic execution model: predictability, debugging, reproducibility, and operations."
+---
+
+Adopting Phrony means accepting a different execution model. The benefits of flexibility and adaptability come with clear trade-offs.
+
+---
+
+## Predictability
+
+Workflows are deterministic by design. Given the same inputs, they tend to produce the same outputs.
+
+Agentic systems powered by LLMs do not offer the same guarantees. Behavior can vary across runs due to differences in context, intermediate results, or model reasoning.
+
+Phrony **constrains but does not eliminate** this variability. By governing how decisions are executed, how tools are accessed, and how state evolves, it reduces the surface area of unpredictability and makes system behavior more consistent.
+
+## Debugging
+
+In a workflow, failures trace to a specific step in a predefined path. In an agentic system, the path itself is constructed during execution.
+
+Phrony addresses this by making execution **observable**: capturing the reasoning flow, recording all tool interactions, and enabling inspection of how and why decisions were made. While debugging remains more complex than in deterministic systems, it becomes tractable.
+
+## Reproducibility
+
+Agentic systems may not produce identical outcomes across runs, particularly when external data or probabilistic reasoning is involved.
+
+Phrony mitigates this through structured logging, traceability, and replay mechanisms — allowing executions to be analyzed and, to a reasonable extent, reconstructed.
+
+## Operational complexity
+
+Delegating decisions to runtime introduces inherent complexity. Without proper controls, agentic systems can behave unpredictably, access unintended resources, or produce unsafe outcomes.
+
+Phrony’s guardrails — operation allowlists, approval requirements, anomaly detection, and execution limits — exist to close this gap.
+
+---
+
+## Design shift
+
+Adopting Phrony requires a shift in how systems are designed:
+
+| Traditional workflow | Phrony (agentic)         |
+| -------------------- | ------------------------ |
+| Encode decisions upfront | Define constraints and boundaries |
+| Fixed execution path     | Execution path emerges at runtime |
+| Deterministic output     | Governed, observable output       |
+| Easy to debug (predefined steps) | Requires execution tracing  |
+| Predictable              | Flexible                 |
+
+> **The guiding principle:** Phrony brings agentic systems closer to the reliability of traditional workflows, without removing their flexibility.

@@ -18,6 +18,7 @@
             "pages": [
               "index",
               "when-to-use-phrony",
+              "tradeoffs",
               "concepts/workspace",
               "concepts/secret",
               "concepts/llm-provider",
