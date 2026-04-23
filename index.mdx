@@ -29,36 +29,38 @@ This includes:
 - Introducing structure around inherently dynamic processes without forcing them into fixed flows
 - Providing guardrails around agent behavior — enforcing boundaries around what can be accessed, how actions are executed, and how data is handled
 
-## Workflows vs. Agents
+If you are choosing between a workflow and an agent, or whether Phrony matches your use case, read **[When to use Phrony](/when-to-use-phrony)**.
 
-Not every problem requires an agent. In many cases, what is described as an “agent” is in fact automation — a system where both the objective and the execution steps are known in advance.
+## Concepts
 
-A **workflow** is a program with a known path. It encodes decisions ahead of time and produces a predictable outcome. The inclusion of an LLM does not change this: if both the goal and the method are already specified, the system is not acting autonomously; it is following instructions.
+<CardGroup cols={2}>
 
-An **[agent](/concepts/agent)** is a system that determines its next action *during* execution, operating under uncertainty in pursuit of a goal. Instead of prescribing a fixed path, the system is given an environment, a set of capabilities, and an objective. The sequence of actions emerges at runtime.
+<Card title="Workspace" href="/concepts/workspace">
+  An isolated scope for your organization: members, resources, and billing in Phrony.
+</Card>
 
-Agents operate in a continuous loop of **perception → reasoning → action → adaptation**.
+<Card title="Secret" href="/concepts/secret">
+  Securely stored credentials and sensitive values for your workspace.
+</Card>
 
----
+<Card title="LLM provider" href="/concepts/llm-provider">
+  A saved connection from your workspace to a language model vendor or a custom endpoint.
+</Card>
 
-## When to Use Phrony
+<Card title="Agent" href="/concepts/agent">
+  What an agent is, how versions work, and what each configuration area controls.
+</Card>
 
-Phrony is not intended for every problem. If a system can be expressed as a fixed sequence of steps, it should be. Deterministic workflows are easier to reason about, cheaper to operate, and significantly more predictable.
+<Card title="Session" href="/concepts/session">
+  One continuous piece of work for an agent: status, history, and controls.
+</Card>
 
-Phrony becomes relevant when the path to the outcome is **not known in advance** and cannot be reasonably encoded upfront. This typically occurs in four scenarios:
+<Card title="Integration" href="/concepts/integration">
+  HTTP and built-in connectors whose operations become tools for your agents.
+</Card>
 
-### 1. Uncertainty in Decision-Making
+<Card title="User task" href="/concepts/user-task">
+  Something a person must do so a run can continue—approvals, answers, and reviews.
+</Card>
 
-The number of possible paths grows combinatorially, making upfront encoding impractical. Not all relevant possibilities can be known in advance. Each new conditional branch adds complexity and maintenance cost until the system becomes a dense graph of edge cases.
-
-### 2. Dynamic Information Discovery
-
-Workflows assume all required inputs are available at the start of execution. In many real-world problems this is not true. The system must decide what information is missing and how to obtain it — by querying external systems, asking follow-up questions, or exploring alternative sources — before it can proceed.
-
-### 3. Non-Trivial Tool Interaction
-
-In workflows, tool usage is predefined: which tool to call, in what order, and under which conditions. This breaks down when tool selection depends on context that evolves during execution. The system must decide not only how to use tools, but which tools to use and why.
-
-### 4. Iterative Reasoning
-
-Some problems require multiple passes to reach a conclusion. The system must form hypotheses, test them, revise assumptions, and converge over time. Intermediate results influence future decisions, creating a feedback loop that cannot be modeled as a static flow.
+</CardGroup>
