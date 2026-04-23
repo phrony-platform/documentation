@@ -1,0 +1,8 @@
+---
+title: "Human in the loop (HITL)"
+description: "Agents that can pause for human input, approvals, and operator work during a run."
+---
+
+**Human in the loop (HITL)** is an [execution mode](/concepts/agent#execution-mode) for [agents](/concepts/agent) that are expected to need **people** in the normal lifecycle of a run — not only when something breaks.
+
+Runs may **pause** and surface **[user tasks](/concepts/user-task)** so a human can approve, answer, or review before the agent continues. Phrony records these pauses in the [session](/concepts/session) so you can audit *what* was asked, *what* a person decided, and *how* the run resumed. Use HITL when governance, compliance, or product design requires explicit human decisions on the main run path.

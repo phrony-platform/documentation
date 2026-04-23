@@ -11,11 +11,11 @@ In your [workspace](/concepts/workspace), that identity is a long-lived record: 
 
 ## Agent fields
 
-| Field            | Description                                                    |
-| ---------------- | -------------------------------------------------------------- |
-| **Name**         | A human-readable identifier for the agent                      |
-| **Execution mode** | How the agent interacts with humans during a run            |
-| **LLM provider**   | The language model backend this agent uses                  |
+| Field              | Description                                      |
+| ------------------ | ------------------------------------------------ |
+| **Name**           | A human-readable identifier for the agent        |
+| **Execution mode** | How the agent interacts with humans during a run |
+| **LLM provider**   | The language model backend this agent uses       |
 
 An agent holds one or more **agent versions**—each a **version snapshot** with a distinct, versioned configuration.
 
@@ -30,11 +30,11 @@ You edit a **Testing** snapshot freely, then **Deploy** it so new work uses that
 
 **Execution mode** is set on the **agent** (not per version) and defines, among other things, who can invoke the agent and whether human input is permitted during a run. It also changes product behavior (sessions, triggers, delegation) in broad ways, which is why it is not a per-version field.
 
-| Mode          | Triggerable externally?     | Callable by parent agents? | Human input?                                              |
-| ------------- | ----------------------------- | -------------------------- | --------------------------------------------------------- |
-| **Request**   | ✅ Scheduled, API             | ❌                         | ❌ Runs autonomously to completion                        |
+| Mode          | Triggerable externally?       | Callable by parent agents? | Human input?                                                         |
+| ------------- | ----------------------------- | -------------------------- | -------------------------------------------------------------------- |
+| **Request**   | ✅ Scheduled, API             | ❌                         | ❌ Runs autonomously to completion                                   |
 | **HITL**      | ✅ Scheduled, API             | ❌                         | ✅ May pause and present [user tasks](/concepts/user-task) to humans |
-| **Sub-agent** | ❌ Not externally triggerable | ✅ Only by parent agents   | — Communicates via AITL (see [Multi-agent](#multi-agent))  |
+| **Sub-agent** | ❌ Not externally triggerable | ✅ Only by parent agents   | — Communicates via AITL (see [Multi-agent](#multi-agent))            |
 
 Changing mode later can strand or relax integrations with other product areas; treat it as a structural choice, not a cosmetic label.
 
@@ -63,7 +63,33 @@ An **agent version** is a versioned configuration of an agent. When an agent is 
 | **Execution mode**   | Shown next to the name; see [Execution mode](#execution-mode).                                                                                                                                                                       |
 | **LLM provider**     | The **default credential bundle** (vendor keys, optional base URL) used for this agent’s model calls. Each version still picks a concrete **model id**; that id must exist for the chosen provider.                                  |
 | **Version switcher** | Lets you pick which snapshot you are viewing or editing. The **deployed** one is the live default for new runs. You can open full history, create a new snapshot from the current line, or jump back to the latest or deployed view. |
-| **Main tabs**        | **Version Configuration** (sub-tabs below), **Sessions**, and **Triggers** when the agent is not a sub-agent.                                                                                                                        |
+| **Main tabs**        | **Version Configuration** (sub-tabs below), **Sessions**, and **[Triggers](#triggers)** when the agent is not a sub-agent.                                                                                                           |
+
+## Triggers
+
+A **trigger** is a named record on an [agent](/concepts/agent) that defines _how_ new work is allowed to enter the system: which **kind of entry point** you use (schedule, HTTP API, or an integration event), and what **limits and policies** apply. Triggers do **not** store model instructions, tool allowlists, or input/output schemas—that lives in **version snapshots** on the agent.
+
+When a trigger starts a run, Phrony resolves the agent’s **deployed** snapshot and executes against that line (not a Testing line). [Sessions](/concepts/session) and runs record which trigger and version were used for auditing.
+
+**Sub-agent** mode agents **cannot** have triggers: they are only invoked by a parent agent. The **Triggers** tab appears for **Request** and **HITL** agents only.
+
+### Types
+
+| Type          | What starts a run                                                                               | Main configuration                                                                                                                                                                                                                                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scheduled** | A **cron** expression in a specific **timezone**                                                | Optional static JSON **input payload** merged into run input. While **active**, the job is registered with Phrony’s scheduler.                                                                                                                                                                                                                                   |
+| **API**       | Your app calling the **gateway** over HTTP (see [Embedded agents](/techniques/embedded-agents)) | **At most one API trigger per agent.** Optional **rate limits** (e.g. requests per minute / day, max concurrent runs, max input tokens), **IP allowlist** for gateway requests, and **Expose step timeline to API clients** (when off, external `conversation` / `stream` calls surface completion-level data; the Phrony dashboard still shows the full trace). |
+| **Event**     | A **built-in** [integration](/concepts/integration) service emitting an event                   | Choose the **service** (integration connection must be **active**), **event** type, and provider **settings**. You cannot duplicate the same service + event pair on one agent. Phrony registers a provider subscription; the event payload supplies run input.                                                                                                  |
+
+Trigger **names** are unique per agent. Each trigger has a stable **id** (UUID) used in API key **scopes** and in the **Access** tab for API triggers.
+
+**Active** / **inactive**: Inactive **scheduled** triggers do not fire. For **API** triggers, inactivity is part of how you stop new run starts from that entry point. **Event** triggers are tied to a provider registration; change them carefully if you need a different integration or event type (often by removing and recreating the trigger so the product can re-register the subscription).
+
+`lastFiredAt` on a trigger is an operational signal for when a run was last started through that trigger.
+
+### API keys and trigger scope
+
+**API keys** (prefix `phk_…`) are created in **Settings** in the Phrony dashboard, separate from the [Secret](/concepts/secret) manager used for LLM and integration credentials. Each key lists **trigger scopes** as `(agentId, triggerId)` pairs. Starting a run with `POST /v1/agents/{agentId}/runs` requires a key whose scope includes that **agent** and the **API** trigger you intend, so the platform can apply the right rate limits and identity. The example flow is documented under [Embedded agents](/techniques/embedded-agents).
 
 ## Version snapshots
 

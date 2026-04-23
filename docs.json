@@ -18,7 +18,6 @@
             "pages": [
               "index",
               "when-to-use-phrony",
-              "tradeoffs",
               "concepts/workspace",
               "concepts/secret",
               "concepts/llm-provider",
@@ -26,6 +25,15 @@
               "concepts/session",
               "concepts/integration",
               "concepts/user-task"
+            ]
+          },
+          {
+            "group": "Techniques",
+            "pages": [
+              "techniques/embedded-agents",
+              "techniques/multi-agent-systems",
+              "techniques/human-in-the-loop",
+              "techniques/agent-in-the-loop"
             ]
           }
         ]

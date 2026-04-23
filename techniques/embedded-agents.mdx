@@ -1,0 +1,115 @@
+---
+title: "Embedded agents"
+description: "Run Phrony agents from your product over HTTP: deploy, API trigger, API key, and start runs."
+---
+
+**Embedded agents** are [agents](/concepts/agent) you invoke from your own application or backend through Phrony’s public **gateway** API — the same [workspace](/concepts/workspace)-scoped execution, [LLM provider](/concepts/llm-provider) credentials, [integrations](/concepts/integration), and policies as a dashboard [session](/concepts/session), with your product owning the user journey. That path depends on an **[API trigger](/concepts/agent#triggers)** on the agent (and an API key scoped to that agent + trigger).
+
+## How you wire it up
+
+1. **Deploy a version** of the agent in the Phrony dashboard so a **deployed** snapshot is what the platform runs for this line of work.
+2. **Create an [API trigger](/concepts/agent#triggers)** on that agent. Only **API** triggers get HTTP start URLs; each row carries limits, optional IP allowlists, and the **trigger id** you bind into API key scopes.
+3. **Create an API key in Settings** and give it a scope that includes that **agent** and that **API** trigger. The key is a single secret (prefix `phk_`) you send on every call.
+4. **Call the gateway** at **https://api.phrony.com** (Phrony Cloud’s public API host). The agent’s **Access** tab shows the same base URL plus your `agentId` and `triggerId` for scoping the API key.
+
+The gateway enforces the key: for `POST /v1/agents/{agentId}/runs` the key must match the `agentId` in the path and the trigger encoded in the key’s scope. For `GET /v1/runs/{runId}` and optional conversation or stream paths, the same key must still authorize access to that run.
+
+## API surface (embedded)
+
+| Step | Method | Path | Purpose |
+| --- | --- | --- | --- |
+| Start a run | `POST` | `/v1/agents/{agentId}/runs` | Body: `{ "input": { ... } }` (`input` is optional). Returns **202** with `sessionId`, `runId`, and status. |
+| Poll status / result | `GET` | `/v1/runs/{runId}` | Status, `output`, optional `error`. |
+| List sessions (optional) | `GET` | `/v1/agents/{agentId}/sessions?skip=0&take=10` | Paginated [sessions](/concepts/session) for the agent. |
+| Conversation / stream (optional) | `GET` | `/v1/runs/{runId}/conversation`, `/v1/runs/{runId}/stream` | Timeline and SSE; same `X-API-Key` as above. |
+
+All of these (except the browser) send the header `X-API-Key: <your phk_ key>`. The host is **https://api.phrony.com** with **no** extra path prefix before `v1` (for example `https://api.phrony.com/v1/agents/…`).
+
+## Examples
+
+Use **https://api.phrony.com** as the gateway host (or override with `GATEWAY_BASE_URL` in your app if you are pointed at a different environment). Get `AGENT_ID` and the trigger to scope your key from the agent’s **API trigger → Access** tab; create `PHRONY_API_KEY` under **Settings**. After you start a run, take `runId` from the JSON response to poll. Each tab shows the same flow: start a run, then poll by `runId`.
+
+<CodeGroup>
+
+```bash cURL
+# 1) Start a run (empty object if your input schema has no required fields)
+curl -sS -X POST "https://api.phrony.com/v1/agents/${AGENT_ID}/runs" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: ${PHRONY_API_KEY}" \
+  -d '{"input":{}}'
+
+# 2) Poll until the run finishes (use runId from the JSON body of step 1)
+curl -sS "https://api.phrony.com/v1/runs/${RUN_ID}" \
+  -H "X-API-Key: ${PHRONY_API_KEY}"
+```
+
+```typescript TypeScript
+const gateway = process.env.GATEWAY_BASE_URL ?? "https://api.phrony.com";
+const agentId = process.env.AGENT_ID ?? "";
+const apiKey = process.env.PHRONY_API_KEY ?? "";
+
+const started = await fetch(`${gateway}/v1/agents/${agentId}/runs`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": apiKey,
+  },
+  body: JSON.stringify({ input: { /* your run payload */ } }),
+});
+
+if (!started.ok) {
+  throw new Error(`start run failed: ${started.status} ${await started.text()}`);
+}
+
+const { runId, sessionId, status } = (await started.json()) as {
+  runId: string;
+  sessionId: string;
+  status: string;
+};
+
+// Poll run status
+const st = await fetch(`${gateway}/v1/runs/${runId}`, {
+  headers: { "X-API-Key": apiKey },
+});
+const run = await st.json();
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.request
+
+GATEWAY = os.environ.get("GATEWAY_BASE_URL", "https://api.phrony.com").rstrip("/")
+AGENT_ID = os.environ["AGENT_ID"]
+API_KEY = os.environ["PHRONY_API_KEY"]
+
+def start_run(input_obj: dict) -> dict:
+    req = urllib.request.Request(
+        f"{GATEWAY}/v1/agents/{AGENT_ID}/runs",
+        data=json.dumps({"input": input_obj}).encode("utf-8"),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
+        },
+    )
+    with urllib.request.urlopen(req) as res:
+        return json.load(res)
+
+def get_run(run_id: str) -> dict:
+    req = urllib.request.Request(
+        f"{GATEWAY}/v1/runs/{run_id}",
+        headers={"X-API-Key": API_KEY},
+    )
+    with urllib.request.urlopen(req) as res:
+        return json.load(res)
+
+# Example
+body = start_run({})
+run_id = body["runId"]
+status_payload = get_run(run_id)
+```
+
+</CodeGroup>
+
+The start-run body is an optional JSON object `input` (plain object) — match the shape to your **deployed** [agent version](/concepts/agent) **input** contract (schema or ad hoc keys).

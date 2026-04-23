@@ -1,0 +1,8 @@
+---
+title: "Multi-agent systems"
+description: "Parent agents delegating to sub-agents, scheduling models, and how work composes in Phrony."
+---
+
+In a **multi-agent** setup, a **parent** [agent](/concepts/agent) is configured to call other agents that are in **Sub-agent** [execution mode](/concepts/agent#execution-mode). The parent’s version controls **whether** delegation is allowed, **which** sub-agents are in scope, and **how** child runs are scheduled (for example sequential vs parallel) — see the **Multi-agent** section on the [agent](/concepts/agent) page.
+
+Child runs still execute as governed agent work with their own [sessions](/concepts/session), [integrations](/concepts/integration), and limits, while the platform ties the tree together for auditing and [agent in the loop](/techniques/agent-in-the-loop) behavior where applicable.
