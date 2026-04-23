@@ -16,5 +16,5 @@
 
 - Use active voice and address the reader as **you**.
 - Prefer one idea per sentence; lead with the goal of the section.
-- Use terminology from [AGENTS.md](./AGENTS.md) and `product/concepts/` consistently.
+- Use terminology from [AGENTS.md](./AGENTS.md) consistently.
 - Do not add Mintlify starter or third-party template pages unless they describe Phrony.

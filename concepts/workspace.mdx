@@ -1,0 +1,41 @@
+---
+title: "Workspace"
+description: "An isolated scope for your organization: members, resources, and billing in Phrony."
+---
+
+## Description
+
+A **workspace** is the boundary for your team’s data and settings in Phrony. [Agents](/concepts/agent), [secrets](/concepts/secret), [LLM providers](/concepts/llm-provider), [sessions](/concepts/session), and [integrations](/concepts/integration) each belong to **one** workspace so your work stays isolated from other customers.
+
+| Role of a workspace    | Details                                                         |
+| ---------------------- | --------------------------------------------------------------- |
+| **What you switch**    | The workspace switcher picks which team environment you are in. |
+| **Membership**         | Where you **invite** people and assign **roles**.               |
+| **Billing and limits** | **Subscription**, usage, and caps apply **per workspace**.      |
+
+## Properties
+
+What defines a workspace in the product:
+
+| What you see       | Description                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| **Name**           | The label for your team or environment (shown in the switcher and settings).                              |
+| **Status**         | Whether the workspace is active and available, or limited (for example, suspended) based on your account. |
+| **Members**        | People who can sign in, each with a **role** that controls what they can do.                              |
+| **Plan and usage** | Your current subscription tier and how much of the included capacity you are using.                       |
+
+#### Roles (typical)
+
+| Role (examples)      | Usually can                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Owner**, **Admin** | Billing, members, sensitive configuration.                                                            |
+| **Developer**        | Design [agents](/concepts/agent), [integrations](/concepts/integration), [secrets](/concepts/secret). |
+| **Operator**         | Run and review work without full design access.                                                       |
+
+Exact names and permissions follow what your Phrony dashboard shows for your org.
+
+## Notes
+
+- While you are signed in, the Phrony dashboard is scoped to **one** active workspace at a time; use the workspace switcher to change it.
+- Usage and limits ([agents](/concepts/agent), [LLM providers](/concepts/llm-provider), [session](/concepts/session) volume) are **per workspace**, based on your plan and add-ons.
+- One person can be a member of **multiple** workspaces; switch between them from the account menu.

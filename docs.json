@@ -14,61 +14,19 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Phrony",
-            "pages": [
-              "index",
-              "product/workflows-vs-agents",
-              "product/concepts/agent",
-              "product/concepts/agent-version",
-              "product/concepts/session",
-              "product/concepts/run",
-              "product/concepts/trigger",
-              "product/concepts/integration",
-              "product/concepts/llm-provider",
-              "product/concepts/secret",
-              "product/dashboard/home",
-              "product/dashboard/settings",
-              "product/dashboard/approvals",
-              "product/dashboard/guard-anomaly",
-              "product/reference/platform-rules"
-            ]
+            "group": "Overview",
+            "pages": ["index"]
           },
           {
-            "group": "Multi-agent",
+            "group": "Concepts",
             "pages": [
-              "product/multi-agent/overview",
-              "product/multi-agent/parent-and-sub-agent",
-              "product/multi-agent/sequential-and-parallel",
-              "product/multi-agent/sessions-and-runs",
-              "product/multi-agent/limits-and-troubleshooting"
-            ]
-          },
-          {
-            "group": "Human in the loop",
-            "pages": [
-              "product/hitl/overview",
-              "product/hitl/execution-mode",
-              "product/hitl/gating-operations",
-              "product/hitl/approvals-and-runs",
-              "product/hitl/limits-and-troubleshooting"
-            ]
-          },
-          {
-            "group": "Agent in the loop",
-            "pages": [
-              "product/agent-in-the-loop/overview",
-              "product/agent-in-the-loop/how-coordination-works",
-              "product/agent-in-the-loop/hitl-and-request-roots",
-              "product/agent-in-the-loop/human-escalation",
-              "product/agent-in-the-loop/sessions-and-approvals",
-              "product/agent-in-the-loop/limits-and-troubleshooting"
-            ]
-          },
-          {
-            "group": "Embedded agents",
-            "pages": [
-              "product/embedded-agents/overview",
-              "product/embedded-agents/calling-the-api"
+              "concepts/workspace",
+              "concepts/secret",
+              "concepts/llm-provider",
+              "concepts/agent",
+              "concepts/session",
+              "concepts/integration",
+              "concepts/user-task"
             ]
           }
         ]
@@ -78,10 +36,7 @@
         "groups": [
           {
             "group": "Guides",
-            "pages": [
-              "academy/deploy-your-first-agent",
-              "academy/multi-agent"
-            ]
+            "pages": ["index"]
           }
         ]
       },
@@ -90,7 +45,7 @@
         "groups": [
           {
             "group": "HTTP API",
-            "pages": ["api-reference/introduction"]
+            "pages": ["index"]
           }
         ]
       }

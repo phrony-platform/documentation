@@ -3,7 +3,20 @@ title: "Introduction"
 description: "Phrony — an execution environment for governed, agentic systems."
 ---
 
-Phrony is an **execution environment for agentic systems**. It is the runtime in which AI agents operate — where perception, reasoning, and action are not only possible, but governed.
+<div className="not-prose mb-8">
+  <img
+    className="h-9 w-auto max-w-full dark:hidden"
+    src="/logo/light.svg"
+    alt="Phrony"
+  />
+  <img
+    className="hidden h-9 w-auto max-w-full dark:block"
+    src="/logo/dark.svg"
+    alt="Phrony"
+  />
+</div>
+
+Phrony is an **execution environment for agentic systems**. It is the runtime in which [AI agents](/concepts/agent) operate — where perception, reasoning, and action are not only possible, but governed.
 
 Phrony is **not** an interface for interacting with a language model. It is **not** a workflow engine. It does not model predefined sequences of steps, nor does it aim to encode deterministic logic. It operates at a different layer of the system: where autonomous decision-making meets real-world interaction.
 
@@ -11,106 +24,41 @@ Phrony is **not** an interface for interacting with a language model. It is **no
 
 This includes:
 
-- Controlling how external **operations** (integrations) are accessed
+- Controlling how external **operations** ([integrations](/concepts/integration)) are accessed
 - Recording how decisions are made and enabling inspection or reproduction of executions
 - Introducing structure around inherently dynamic processes without forcing them into fixed flows
-- Providing guardrails around agent behavior — enforcing boundaries on what can be accessed, how actions are executed, and how data is handled
+- Providing guardrails around agent behavior — enforcing boundaries around what can be accessed, how actions are executed, and how data is handled
+
+## Workflows vs. Agents
+
+Not every problem requires an agent. In many cases, what is described as an “agent” is in fact automation — a system where both the objective and the execution steps are known in advance.
+
+A **workflow** is a program with a known path. It encodes decisions ahead of time and produces a predictable outcome. The inclusion of an LLM does not change this: if both the goal and the method are already specified, the system is not acting autonomously; it is following instructions.
+
+An **[agent](/concepts/agent)** is a system that determines its next action *during* execution, operating under uncertainty in pursuit of a goal. Instead of prescribing a fixed path, the system is given an environment, a set of capabilities, and an objective. The sequence of actions emerges at runtime.
+
+Agents operate in a continuous loop of **perception → reasoning → action → adaptation**.
 
 ---
 
-Use the **Academy** tab for step-by-step guides: **Deploy your first agent** (**HITL**, Gmail + Calendar availability) and **multi-agent**. Stay on this **Documentation** tab for **[workflows vs. agents](/product/workflows-vs-agents)**, **[Embedded agents](/product/embedded-agents/overview)**, **[Human in the loop](/product/hitl/overview)**, **[Agent in the loop](/product/agent-in-the-loop/overview)**, **[Multi-agent](/product/multi-agent/overview)**, **concepts**, dashboard pages, and limits.
+## When to Use Phrony
 
-## Academy
+Phrony is not intended for every problem. If a system can be expressed as a fixed sequence of steps, it should be. Deterministic workflows are easier to reason about, cheaper to operate, and significantly more predictable.
 
-<CardGroup cols={2}>
+Phrony becomes relevant when the path to the outcome is **not known in advance** and cannot be reasonably encoded upfront. This typically occurs in four scenarios:
 
-<Card title="Deploy your first agent" icon="rocket" href="/academy/deploy-your-first-agent" />
-<Card title="Multi-agent" icon="bot" href="/academy/multi-agent" />
+### 1. Uncertainty in Decision-Making
 
-</CardGroup>
+The number of possible paths grows combinatorially, making upfront encoding impractical. Not all relevant possibilities can be known in advance. Each new conditional branch adds complexity and maintenance cost until the system becomes a dense graph of edge cases.
 
-<Card title="Workflows vs. agents" icon="git-compare" href="/product/workflows-vs-agents" horizontal>
-  When automation is enough, when an agent is appropriate, and the problems Phrony is built for.
-</Card>
+### 2. Dynamic Information Discovery
 
-## Embedded agents
+Workflows assume all required inputs are available at the start of execution. In many real-world problems this is not true. The system must decide what information is missing and how to obtain it — by querying external systems, asking follow-up questions, or exploring alternative sources — before it can proceed.
 
-<CardGroup cols={2}>
+### 3. Non-Trivial Tool Interaction
 
-<Card title="Overview" icon="box" href="/product/embedded-agents/overview" />
-<Card title="Calling the HTTP API" icon="terminal" href="/product/embedded-agents/calling-the-api" />
+In workflows, tool usage is predefined: which tool to call, in what order, and under which conditions. This breaks down when tool selection depends on context that evolves during execution. The system must decide not only how to use tools, but which tools to use and why.
 
-</CardGroup>
+### 4. Iterative Reasoning
 
-## Multi-agent
-
-<CardGroup cols={2}>
-
-<Card title="Overview" icon="layers" href="/product/multi-agent/overview" />
-<Card title="Parent and Sub-agent" icon="bot" href="/product/multi-agent/parent-and-sub-agent" />
-<Card title="Sequential and Parallel" icon="git-branch" href="/product/multi-agent/sequential-and-parallel" />
-<Card title="Sessions and runs" href="/product/multi-agent/sessions-and-runs" />
-<Card title="Limits and troubleshooting" icon="shield-check" href="/product/multi-agent/limits-and-troubleshooting" />
-
-</CardGroup>
-
-## Human in the loop
-
-<CardGroup cols={2}>
-
-<Card title="Overview" icon="user-check" href="/product/hitl/overview" />
-<Card title="Execution mode" icon="bot" href="/product/hitl/execution-mode" />
-<Card title="Gating operations" icon="webhook" href="/product/hitl/gating-operations" />
-<Card title="Approvals and runs" href="/product/hitl/approvals-and-runs" />
-<Card title="Limits and troubleshooting" icon="shield-check" href="/product/hitl/limits-and-troubleshooting" />
-
-</CardGroup>
-
-## Agent in the loop
-
-<CardGroup cols={2}>
-
-<Card title="Overview" icon="layers" href="/product/agent-in-the-loop/overview" />
-<Card title="How coordination works" icon="git-branch" href="/product/agent-in-the-loop/how-coordination-works" />
-<Card title="HITL and Request roots" icon="bot" href="/product/agent-in-the-loop/hitl-and-request-roots" />
-<Card title="Human escalation" icon="user" href="/product/agent-in-the-loop/human-escalation" />
-<Card title="Sessions and Approvals" href="/product/agent-in-the-loop/sessions-and-approvals" />
-<Card title="Limits and troubleshooting" icon="shield-check" href="/product/agent-in-the-loop/limits-and-troubleshooting" />
-
-</CardGroup>
-
-<Card title="Limits, permissions, and plans" icon="shield-check" href="/product/reference/platform-rules" horizontal>
-  Workspace roles, plan caps, and common blockers—summarized globally; each concept page also has a **Permissions** table.
-</Card>
-
-## Core concepts
-
-<CardGroup cols={2}>
-
-<Card title="Agent" icon="bot" href="/product/concepts/agent" />
-<Card title="Agent version" icon="git-branch" href="/product/concepts/agent-version" />
-<Card title="Session" icon="layers" href="/product/concepts/session" />
-<Card title="Run" href="/product/concepts/run" />
-<Card title="Trigger" icon="zap" href="/product/concepts/trigger" />
-<Card title="Integration" icon="webhook" href="/product/concepts/integration" />
-<Card title="LLM provider" icon="sparkles" href="/product/concepts/llm-provider" />
-<Card title="Secret" icon="key" href="/product/concepts/secret" />
-
-</CardGroup>
-
-## Dashboard (brief)
-
-<CardGroup cols={2}>
-
-<Card title="Dashboard home" href="/product/dashboard/home" />
-<Card title="Settings" href="/product/dashboard/settings" />
-<Card title="Approvals" href="/product/dashboard/approvals" />
-<Card title="Guard & anomaly" href="/product/dashboard/guard-anomaly" />
-
-</CardGroup>
-
-## Automation outside the browser
-
-<Card title="HTTP API (reference)" icon="terminal" href="/api-reference/introduction" horizontal>
-  API keys and automation; day-to-day setup stays in the dashboard.
-</Card>
+Some problems require multiple passes to reach a conclusion. The system must form hypotheses, test them, revise assumptions, and converge over time. Intermediate results influence future decisions, creating a feedback loop that cannot be modeled as a static flow.

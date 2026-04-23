@@ -1,0 +1,180 @@
+---
+title: "Integration"
+description: "HTTP and built-in connectors whose operations become tools for your agents."
+---
+
+## Description
+
+An **integration** is how you connect the Phrony platform to **systems outside the model**—your own APIs, or services from the built-in catalog—so an [agent](/concepts/agent) can **act on real systems** (read and write data, call external services) instead of only answering in chat. You need integrations whenever work should be **grounded in your tools and data** under **your** [workspace](/concepts/workspace) and security boundaries, not left to the model alone.
+
+## Properties — Integration (list and connection)
+
+| What you see | Description                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| **Name**     | Label for the integration in lists and on its detail page.                                                           |
+| **Type**     | **Built-in** or **HTTP**.                                                                                            |
+| **Base URL** | For **HTTP**, the connector’s root URL. For **built-in**, the list shows the **toolkit name** here instead of a URL. |
+| **Ops**      | Number of operations on this integration.                                                                            |
+| **Created**  | When the integration was created.                                                                                    |
+
+**Connection** card on the detail page — settings apply to **every operation** on that integration unless noted.
+
+#### HTTP connection
+
+| What you configure           | What it does                                                                                                                                                      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Base URL**                 | Root URL; each operation’s path is appended to this.                                                                                                              |
+| **Always require approval**  | HITL on every call through this connector, unless a single operation turns approval off.                                                                          |
+| **Authentication**           | **None**; **API key header**; **Bearer token**; or **Grant credentials (JSON secret)** (optional header templates using `{{fieldName}}` from the decrypted JSON). |
+| **Default headers**          | Sent on every request unless an operation overrides them. Values may use `{{secrets.NAME}}` (see [Secret](/concepts/secret)).                                     |
+| **Default query parameters** | Same as default headers for query string defaults.                                                                                                                |
+| **Secrets in auth**          | You pick [secrets](/concepts/secret) by name from dropdowns; the raw value is not shown again after you save.                                                     |
+
+#### Built-in connection
+
+| What you see                    | What it means                                                     |
+| ------------------------------- | ----------------------------------------------------------------- |
+| **Toolkit**                     | Which catalog service this integration uses.                      |
+| **Connection status**           | Whether an account is linked, or **Not connected**.               |
+| **Display name**                | Editable label; **Save** to update.                               |
+| **Changing toolkit or account** | Not done on this page—create a new integration and connect again. |
+
+## What is an operation?
+
+The **integration** is the **connection** to a system (your HTTP API or a built-in toolkit account). An **operation** is **one concrete action** you expose from that connection—the unit that becomes a **tool** the model can use when you allow it on an [agent](/concepts/agent) version.
+
+| Level             | Role                                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Integration**   | Shared settings: where to connect, how to authenticate, defaults for every call.                                               |
+| **Operation**     | A single callable tool: for **HTTP**, one request pattern (method, path, …); for **built-in**, one catalog tool you turned on. |
+| **Agent version** | You pick **which operations** (tools) that version may invoke—nothing else is visible to the model.                            |
+
+Several operations can belong to the same integration; each row in the **Operations** table on the integration page is one operation.
+
+<Frame caption="How an **integration** groups **operations** that you later allow on [agent](/concepts/agent) versions as tools.">
+  <div className="not-prose">
+    <img
+      className="w-full max-w-full dark:hidden"
+      src="/images/integration-operation-diagram-lightpng.png"
+      alt="Diagram: integration contains multiple operations; operations become tools allowed on agent versions (light)"
+    />
+    <img
+      className="hidden w-full max-w-full dark:block"
+      src="/images/integration-operation-diagram-dark.png"
+      alt="Diagram: integration contains multiple operations; operations become tools allowed on agent versions (dark)"
+    />
+  </div>
+</Frame>
+
+## Properties — Operation
+
+#### HTTP operation
+
+| What you configure                                                      | What it does                                                                                                         |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Name**, **Description**                                               | What the model sees for this tool.                                                                                   |
+| **HTTP method**, **Path**                                               | Path may use `{{name}}` for segments that match argument names.                                                      |
+| **Request headers**, **Query parameters**, **Body template (optional)** | Use `{{parameterName}}` where the runtime should inject arguments.                                                   |
+| **Tool arguments schema**                                               | JSON schema for parameters the model sends; omit if there are no arguments. Placeholders refer to these names.       |
+| **Require approval for this operation**                                 | Pauses the run for HITL. Works together with the connector **Always require approval** setting on HTTP integrations. |
+
+#### Built-in operation
+
+| What you configure                           | What it does                                  |
+| -------------------------------------------- | --------------------------------------------- |
+| **Name**                                     | Editable label for the operation.             |
+| **Description**                              | Read-only (comes from the catalog tool).      |
+| **Tool** (slug)                              | Read-only identifier for the underlying tool. |
+| **Require approval (HITL) before execution** | Pauses the run for HITL when this tool runs.  |
+
+#### Operations list (detail page)
+
+| Integration type | What the list represents                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| **Built-in**     | Each row is a catalog tool you exposed; [agents](/concepts/agent) can allow it on a version. |
+| **HTTP**         | Each row is one HTTP endpoint exposed as a tool (method, path, optional headers and body).   |
+
+## Approval (HITL): integration level vs operation level
+
+Human-in-the-loop (**HITL**) pauses a run until someone approves or rejects in the Phrony dashboard (often as a [user task](/concepts/user-task)). **HTTP** integrations can require approval **for the whole connector** and/or **per operation**. **Built-in** integrations only have **per operation** approval—the operation-level behavior is the **same** as on HTTP (only the control label in the form differs).
+
+#### Integration level (HTTP only)
+
+| Control                                           | Effect                                                                                                                                                                                         |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Always require approval** (**Connection** card) | **Default:** every outbound call through this integration waits for a human, **unless** a specific operation **overrides** that (see the switch help text: _unless overridden per operation_). |
+
+There is no equivalent switch on **built-in** **Connection** cards.
+
+#### Operation level (HTTP and built-in)
+
+| What                      | Effect                                                                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Same behavior**         | Pauses the run for HITL when **this** tool runs. Configure it when you **add** or **edit** an operation.                             |
+| **Labels in the product** | **HTTP:** **Require approval for this operation**. **Built-in:** **Require approval (HITL) before execution** in **Edit Operation**. |
+
+If **Always require approval** is on for an HTTP integration, that sets the **baseline** for all operations on that connector; each operation’s setting can still **override** that default per the switch help text.
+
+<Frame caption="**Operation-level** HITL (example from a **built-in** **Edit Operation** form—the same approval behavior applies to HTTP operations).">
+  <img
+    src="/images/operation-level-approval.png"
+    alt="Phrony Edit Operation: Require approval HITL before execution"
+  />
+</Frame>
+
+#### Practical notes
+
+- Turning on approval at **both** levels on busy tools can create a large approval queue; start with the narrowest scope that meets your risk bar.
+- Approvals show up for operators like other [user tasks](/concepts/user-task); train people on **reject** paths so downstream runs fail in an expected way.
+
+## How to create, edit, and delete
+
+**Open the list:** **Sidebar** → **Integrations**.
+
+**Add — primary button:** On the integrations table, **Add Integration** opens the **Add Integration** dialog.
+
+**Add — Quick Create:** **Quick Create** → **New Integration** (same dialog).
+
+<Frame caption="**Add Integration**: enter **Name**, choose **Built-in** or **HTTP**, then complete the connector or catalog connection.">
+  <img
+    src="/images/add-integration.png"
+    alt="Phrony Add Integration dialog with name, Built-in and HTTP types, and connector fields"
+  />
+</Frame>
+
+In **Add Integration**:
+
+- Set **Name** (the label used across the dashboard and when assigning operations to agents).
+- Set **Integration type** to **Built-in** or **HTTP**.
+- **HTTP** — Set **Base URL**, **Authentication**, defaults, and **Always require approval** as needed → **Create**. You are taken to the integration page, usually prompted to **Add Operation** next.
+- **Built-in** — Pick a toolkit from the catalog, search if needed, then complete **OAuth** or **API key** in the same dialog. Finishing **connect** creates the integration (there is no separate **Create** for this path) and opens the integration page, usually with **Add Operation** next.
+
+**Open an integration:** Click the **Name** link in the table, or the row **⋯** menu → **Edit**.
+
+**Edit connection:** On the detail page, use the **Connection** card → change fields → **Save**. **HTTP** updates base URL, auth, and defaults. **Built-in** updates **Display name**; toolkit and account stay as configured at create time.
+
+**Delete integration (list):** Row **⋯** → **Delete** → **Delete integration?** (warning: removes the integration and all operations; agent versions lose those links) → **Delete**.
+
+**Delete integration (detail):** **Delete integration** (top right) → **Delete this integration?** (“All operations will be removed. This cannot be undone.”) → **Delete**.
+
+**Add operations — built-in:** **Add Operation** → **Add Operations** → search with **Search tools…** → select one or more tools → **Add selected**. Each becomes an operation with the provider’s argument schema.
+
+**Add operations — HTTP:** **Add Operation** → fill method, path, headers, body, arguments schema, and approval as needed → **Create**.
+
+**Edit operation — built-in:** Open **Edit Operation** from the row menu. Change **Name** and **Require approval (HITL) before execution**; the underlying tool does not change → **Save**.
+
+**Edit operation — HTTP:** **Edit Operation** → update fields including **Tool arguments schema** and approval → **Save**.
+
+**Delete operation:** Row **⋯** → **Delete** → **Delete operation?** (“Agent versions that allowed this operation will no longer reference it.”) → **Delete**.
+
+## Notes
+
+- **Billing** may cap **custom HTTP** integration count and **integration calls** per period; see your plan and usage in the dashboard.
+- **Event triggers** (on an [agent](/concepts/agent)) need a **built-in** integration with an **active connection**; if none qualify, the product surfaces that in the trigger editor.
+- Use [Secret](/concepts/secret) Manager for credentials; integrations store references to secrets, not the raw values.
+
+## Warnings
+
+- Wrong **path**, **body template**, or **arguments schema** on an HTTP operation causes failed tool calls in runs; test on a non-production agent version first.
+- Deleting an integration or operation that **agents** (with **deployed** versions) or **triggers** still rely on will break those runs until you update the agent or trigger configuration.
+- **Always require approval** at the HTTP connector plus per-operation approval can create a large [user task](/concepts/user-task) queue; enable only where a human must confirm each call.

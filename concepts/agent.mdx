@@ -1,0 +1,156 @@
+---
+title: "Agent"
+description: "What an agent is, how versions work, and what each configuration area controls."
+---
+
+## What an agent is
+
+An **agent** is a long-lived thing in your [workspace](/concepts/workspace): a named actor with a fixed **execution mode** and a chosen **[LLM provider](/concepts/llm-provider)**. It does **not** hold the full prompt and tool setup by itself. That lives in **version snapshots** (often just called **versions**).
+
+| Layer                | Role                                                                                                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Agent**            | Identity for people and APIs: **name**, **execution mode**, and which provider credentials to use for model calls.                                                                                                             |
+| **Version snapshot** | Everything that shapes a **run**: model id, instructions, temperature, allowed [integration](/concepts/integration) tools, input/output contracts, safety limits, optional multi-agent delegation, and optional anomaly rules. |
+
+You edit a **Testing** snapshot freely, then **Deploy** it so new work uses that line. The **Deployed** snapshot is what production-style runs target; older snapshots stay in history for comparison or rollback.
+
+## Execution mode
+
+**Execution mode** decides what kind of lifecycle this agent is built for. It is set on the **agent** (not per version), because it changes product behavior (sessions, triggers, delegation) in broad ways.
+
+| Mode          | Meaning                                                                                                                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Request**   | A general-purpose agent meant to run as the main line of automation: API runs, test runs, and similar flows without the human-in-the-loop workflow emphasis of HITL.                                                                             |
+| **HITL**      | Geared toward runs where **human-in-the-loop** behavior (approvals, operator tasks) is part of the expected lifecycle.                                                                                                                           |
+| **Sub-agent** | This agent is intended to be **called by another agent** as a subordinate tool. It is not the right shape for the same top-level scheduling features as a root agent (for example **Triggers** are not offered for sub-agents in the dashboard). |
+
+Changing mode later can strand or relax integrations with other product areas; treat it as a structural choice, not a cosmetic label.
+
+## When an agent is blocked
+
+**Blocked** is an operational brake: **new runs do not start** until someone with access **clears** the block. Phrony uses this when automated review (for example async anomaly handling) needs a human to confirm the agent is safe to run again. If your workspace links anomaly **incidents**, you can jump from the alert to that record. Until the block is cleared, treat the agent as offline for new work even if old sessions still exist.
+
+## Agents list (dashboard)
+
+| Column           | What it tells you                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Name**         | The agent’s display identity; opens its detail page.                                                            |
+| **Mode**         | The same **execution mode** as on create/edit (the table uses a short header).                                  |
+| **Live version** | Which snapshot label is **currently deployed**—the line new runs pick up—or nothing if you have never deployed. |
+| **Created**      | When the agent record was created (may be hidden on narrow layouts).                                            |
+
+## Agent detail page (high level)
+
+| Area                 | Meaning                                                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Name**             | Shown as the page title; used in lists, sessions, and APIs as the human-readable identifier for this agent.                                                                                                                          |
+| **Execution mode**   | Shown next to the name; see [Execution mode](#execution-mode).                                                                                                                                                                       |
+| **LLM provider**     | The **default credential bundle** (vendor keys, optional base URL) used for this agent’s model calls. Each version still picks a concrete **model id**; that id must exist for the chosen provider.                                  |
+| **Version switcher** | Lets you pick which snapshot you are viewing or editing. The **deployed** one is the live default for new runs. You can open full history, create a new snapshot from the current line, or jump back to the latest or deployed view. |
+| **Main tabs**        | **Version Configuration** (sub-tabs below), **Sessions**, and **Triggers** when the agent is not a sub-agent.                                                                                                                        |
+
+## Version snapshots
+
+| Concept                   | Meaning                                                                                                                                                                                                                                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Testing vs Deployed**   | **Testing** is your draft line: editable, safe to break, good for iteration. **Deployed** is the committed line the platform treats as “what production should run.”                                                                                                                                                              |
+| **Version label**         | Your name for a snapshot (`v2`, `release-2025-04`, etc.). It appears in history, APIs, and ops tooling so you can tell lines apart.                                                                                                                                                                                               |
+| **Description** (version) | A **short summary of what this snapshot does**. For **Sub-agent** agents it is **required**: the **parent** model sees this text when the sub-agent is exposed as a tool—it is not a dump of your private system prompt. For other modes it is optional but still useful if another agent may call this one as a sub-agent later. |
+
+Sub-tabs under **Version Configuration** are documented below. **Multi-agent** appears only when your [workspace](/concepts/workspace) plan includes it.
+
+### Model & Prompt
+
+Controls **how the model thinks and speaks** for this snapshot.
+
+| Setting          | What it is for                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **LLM model**    | The exact model id sent to your [LLM provider](/concepts/llm-provider) (for example a vendor SKU). Wrong or unsupported ids fail at runtime. The dashboard may suggest common ids and rough pricing hints; **billing always follows your provider’s contract**, not the hint in the UI. If a model is missing from suggestions, type the id your vendor documents. |
+| **Description**  | Short text (up to **512** characters) describing outcomes, not implementation secrets. **Sub-agent** agents must have one so parent models get a safe tool summary. For **Request** / **HITL** it is optional but recommended if this version might ever be delegated to.                                                                                          |
+| **Instructions** | The usual “system / developer” layer: goals, tone, policies, and boundaries you want on **every** run using this snapshot. Empty is valid if you keep all behavior in tools and user input only.                                                                                                                                                                   |
+| **Temperature**  | How random completions are: lower is more deterministic, higher explores more phrasing and paths. It affects quality and repeatability; pair it with your evals, not a magic default.                                                                                                                                                                              |
+
+**Deployed** snapshots: these fields are view-only until you branch or promote another **Testing** line.
+
+### Input & Output
+
+Defines **JSON Schema** for the run **payload** the agent accepts and the structured **result** you want back.
+
+| Editor            | Purpose                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Input schema**  | Describes the shape of `input` for runs (API, test run, triggers). The runtime can **reject** malformed input before expensive work starts. |
+| **Output schema** | Describes the shape of the agent’s final structured output when you rely on typed results downstream.                                       |
+
+You can maintain schemas in a **simple table** (flat object: property name, JSON type, required flag, short description per field) or paste **full JSON Schema** for nested objects and advanced keywords. The simple editor only covers one object level; anything deeper belongs in JSON. Switching modes may require valid JSON so the product can round-trip your definition.
+
+### Operations
+
+This is the **tool allowlist** for the snapshot: which [integration](/concepts/integration) **operations** the model is permitted to call as tools.
+
+Only checked operations are even **visible** to the model as callable tools—everything else is hidden, which is how you enforce least privilege. If nothing is checked, the agent can still reason but cannot call your HTTP or built-in operations until you allow them. The list is grouped by integration so you can enable whole products or fine-grained actions.
+
+Rules under **Limits & Safety** that depend on a specific operation only consider operations you have **already allowed here**.
+
+### Limits & Safety
+
+Caps **how much work** one run may do and optionally adds **governance** on tool use.
+
+| Setting                | Effect                                                                                                                        |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Max iterations**     | Stops endless model↔tool loops: each “turn” or step counts toward a ceiling so a bug or prompt injection cannot spin forever. |
+| **Max tokens per run** | Budgets total language-model tokens for a single run so cost and latency stay bounded.                                        |
+| **Max tool calls**     | Limits how many tool invocations one run may attempt—another guardrail against runaway automation.                            |
+
+**Anomaly control (L1)** stores a **version-level flag** that downstream runtime and policy code can respect: it marks “this line expects anomaly handling.” When you turn it on, you can attach **rules** evaluated when the agent **attempts a tool call**.
+
+Rules can:
+
+- **Block** a call outright,
+- **Pause** it for review (human or workflow),
+- **Allow** it explicitly,
+
+based on **argument patterns** (for example “transfers over $10k”) or **how often** a tool was called in the run or in a sliding time window. Rules only apply to tools that appear in this version’s **Operations** allowlist, because those are the only tools the run can attempt. If you enable anomaly control but add no rules, only the flag is in effect—useful if another layer interprets it alone.
+
+### Multi-agent
+
+Only on plans that support it. Configures **whether this parent version may delegate** to other agents that are themselves configured as **Sub-agent** mode.
+
+| Setting                                    | Effect                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Can execute sub-agents**                 | Master switch: off means this version never dispatches child agents, regardless of other fields.                                                                                                                                                                                                                                                                                                               |
+| **Allowed sub-agents**                     | The explicit allowlist of **which** sub-agents the parent may call. Delegation is always **opt-in per pair** so you cannot accidentally chain to every agent in the workspace. Workspace plans may cap **how many** distinct sub-agents one version may list.                                                                                                                                                  |
+| **Execution model** (sub-agent scheduling) | **Sequential**: at most one sub-agent tool invocation per assistant turn—simplest mental model and easiest to audit. **Parallel**: the platform may run **multiple** child runs **at once** only when they are the **same** sub-agent identity with **different inputs** (for example batch lookups); mixing **different** sub-agents in one parallel burst is still serialized so behavior stays predictable. |
+| **Max session tokens**                     | Optional **session-wide** token budget adding up the parent run **and** all nested sub-agent runs—stops a deep tree from consuming unbounded tokens even if each run alone respects per-run caps.                                                                                                                                                                                                              |
+| **Max session duration**                   | Optional wall-clock cap for the whole **session** (parent + children). Exceeding it fails the session with a **`session_duration_exceeded`** outcome so stuck work cannot run indefinitely.                                                                                                                                                                                                                    |
+
+If your plan defines a **maximum delegation depth**, runs that would exceed that depth fail at dispatch so you cannot build accidental infinite recursion.
+
+---
+
+## How to create, edit, and delete
+
+**Create an agent**  
+In the dashboard, open **Agents**, choose **Add Agent**, or use **Quick Create → New Agent**. Set **name**, **execution mode**, and **LLM provider**, then create. You land on the agent page to add a first snapshot and deploy when ready.
+
+**Edit or delete an agent**  
+Use the row menu on **Agents** or **Agent options** on the detail page. Edit changes name, mode, or provider. You **cannot delete** an agent while any snapshot is still **deployed**; delete removes the agent and its **Testing** snapshots.
+
+**Work with versions**  
+On **Version Configuration**, use the version control to pick a snapshot, **Create new version** / **Create first version** when you need a new line, edit **Testing** fields, then **Save changes to this version**. Promote with **Deploy** (or move live back with **Rollback** when viewing an older line). Delete uses the trash control on **Testing** only.
+
+**Test run**  
+Runs the **currently selected** snapshot against the runtime with the JSON **input** you supply; if an input schema exists, the runtime validates against it.
+
+**Sessions and triggers**  
+Use **Sessions** to inspect runs for this agent. **Triggers** appears for agents that are not **Sub-agent** mode, because scheduling automation against a sub-agent is a different product path.
+
+## Notes
+
+- The **agent** row answers “who” and “how runs are categorized”; **versions** answer “what exactly runs this week.”
+- **Multi-agent** and sub-agent caps are **plan-gated**.
+
+## Warnings
+
+- Pointing the agent at a **different LLM provider** without retesting every **model id** on your versions will break runs.
+- Deleting agents or deployed lines affects **integrations**, **triggers**, and **API clients** that still reference them.
+- **Blocked** is meant to stop the line until humans agree it is safe again—do not clear it blindly if you do not understand why it was set.
