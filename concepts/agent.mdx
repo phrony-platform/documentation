@@ -93,6 +93,8 @@ Trigger **names** are unique per agent. Each trigger has a stable **id** (UUID) 
 
 **API keys** (prefix `phk_…`) are created in **Settings** in the Phrony dashboard, separate from the [Secret](/concepts/secret) manager used for LLM and integration credentials. Each key lists **trigger scopes** as `(agentId, triggerId)` pairs. Starting a run with `POST /v1/agents/{agentId}/runs` requires a key whose scope includes that **agent** and the **API** trigger you intend, so the platform can apply the right rate limits and identity. The example flow is documented under [Embedded agents](/techniques/embedded-agents).
 
+For **Event** and **API** triggers, the trigger detail view includes an **Ingress** tab: a paginated log of recent external attempts, redacted payload inspection, and optional [retries of failed starts](/concepts/trigger-ingress) when a full stored payload exists.
+
 ## Version snapshots
 
 | Concept                   | Meaning                                                                                                                                                                                                                                                                                                                           |

@@ -1,0 +1,58 @@
+---
+title: "Trigger ingress"
+description: "View delivery attempts, inspect payloads, and retry failed event or API starts from the Phrony dashboard."
+---
+
+## What it is
+
+**Ingress** is a per-trigger view of **recent attempts** to start a run through that trigger from outside Phrony: for **Event** triggers (integration / provider webhooks) and **API** triggers (HTTP run starts with an API key). It is an operational log—**not** a full HTTP trace—meant to help you confirm traffic, see outcomes, and recover when a run did not start.
+
+**Scheduled** triggers do not use the Ingress tab in the same way; they are driven by the scheduler, not by external webhooks or API run starts.
+
+**Where to find it:** In the [Phrony dashboard](/concepts/workspace), open an [agent](/concepts/agent), go to **Triggers**, open an **Event** or **API** trigger, then open the **Ingress** tab.
+
+## What you see in the table
+
+| Column | What it means |
+| ------ | --------------- |
+| **Time** | When Phrony recorded the attempt (your browser’s locale). |
+| **Log id** | A stable id for that ingress row. Only the first characters are shown; **hover** the value to see the full id. |
+| **Source** | How the row was created—**Event** or **API** for normal traffic, or **Event (retry)** / **API (retry)** for a [retry](#retry-a-failed-attempt) from the dashboard. |
+| **Outcome** | A short result code (for example whether a run was accepted, rate-limited, or rejected). |
+| **Client** | A redacted hint about the client (for example the remote IP and user agent when available). |
+| **Row menu** (⋯) | Actions for that row—see [Row actions](#row-actions). |
+
+If a row is a **retry** attempt, a **Ref:** line appears under the log id. That value is the **log id of the original ingress row** that was retried, so you can line up the chain in the list.
+
+Results are **paginated** (a fixed page size with **Previous** / **Next**). Use **Refresh** to reload the current page from the server.
+
+## Row actions
+
+Open the **⋯** menu on a row:
+
+- **Open run** — Available when the attempt **started a run** (a run id exists). Jumps to that run in the dashboard.
+- **View payload** — Opens a read-only, **redacted** JSON snapshot of what was recorded for that attempt (for example event fields or API `input`), subject to size limits. Use it to debug without expecting a raw copy of the entire original HTTP request.
+- **Retry** — Available only when Phrony can [replay the attempt](#when-retry-is-available) safely. Replays the stored payload through the same kind of start path (event or API) as the trigger. See the next section.
+
+## Retry a failed attempt
+
+### When **Retry** is available
+
+- The attempt did **not** result in a new run (no run to open).
+- Phrony still has a **complete, parseable** stored payload for that trigger type (Event vs API), so a replay is meaningful.
+
+If the menu shows **Retry unavailable**, the row is missing a usable snapshot (for example the attempt failed before a full body was stored) or the trigger type does not support replay from this list.
+
+### What happens when you retry
+
+- Phrony starts a **new** run using the same stored input shape as a normal start for that trigger.
+- A **new** ingress row is appended (shown as **Event (retry)** or **API (retry)**) with a **Ref:** id pointing at the row you retried.
+- A successful retry charges and behaves like any other run start for your workspace. Treat retries like a deliberate run: avoid hammering **Retry** for production loads.
+
+**Event** and **API** replays are both initiated from the same **Ingress** tab; the product picks the correct path from the [trigger type](/concepts/agent#triggers) and the stored payload.
+
+## Related documentation
+
+- [Agent](/concepts/agent) — Trigger types, limits, and how runs bind to a **deployed** version.
+- [Embedded agents](/techniques/embedded-agents) — **API** triggers, gateway URLs, and API keys scoped to a trigger.
+- [Integration](/concepts/integration) — How **Event** triggers connect to built-in services and provider events.

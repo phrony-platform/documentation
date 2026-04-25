@@ -23,6 +23,7 @@
               "concepts/secret",
               "concepts/llm-provider",
               "concepts/agent",
+              "concepts/trigger-ingress",
               "concepts/session",
               "concepts/integration",
               "concepts/user-task"
