@@ -68,6 +68,7 @@ A [workspace](/concepts/workspace)-wide list may add columns such as **agent nam
 - **Approvals and forms** in the product are always tied to a **session** (and a specific **run** inside it), often as a [user task](/concepts/user-task), so you can see **what** was waiting on a person and **how** it was resolved.
 - You may view sessions from an **agent** page, from a **global** list, or from **dashboard** views, depending on your role and layout.
 - The newest activity can take a very short time to show up in a list when traffic is high—refresh or open the session details if the row looks a step behind.
+- For **[embedded agents](/techniques/embedded-agents)**, HTTP **conversation** and **stream** responses may be **redacted** (output-only timeline, cleared session input metadata) when the **API** trigger turns off **Expose step timeline to API clients**; the in-product session view stays full. See [API redaction](/techniques/embedded-agents#api-redaction-output-only-mode).
 
 ## Warnings
 

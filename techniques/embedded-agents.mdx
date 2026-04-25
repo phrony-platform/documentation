@@ -16,16 +16,31 @@ Requests validate the key: for `POST /v1/agents/{agentId}/runs` the key must mat
 
 ## API surface (embedded)
 
-| Step | Method | Path | Purpose |
-| --- | --- | --- | --- |
-| Start a run | `POST` | `/v1/agents/{agentId}/runs` | Body: `{ "input": { ... } }` (`input` is optional). Returns **202** with `sessionId`, `runId`, and status. |
-| Poll status / result | `GET` | `/v1/runs/{runId}` | Status, `output`, optional `error`. |
-| List sessions (optional) | `GET` | `/v1/agents/{agentId}/sessions?skip=0&take=10` | Paginated [sessions](/concepts/session) for the agent. |
-| Conversation / stream (optional) | `GET` | `/v1/runs/{runId}/conversation`, `/v1/runs/{runId}/stream` | Timeline and SSE; same `X-API-Key` as above. |
-| Get upload URL | `POST` | `/v1/file-library/presign` | Optional: get a time-limited URL to `PUT` the file (requires [file uploads on the key](#file-uploads-with-an-api-key)). |
-| Complete upload | `POST` | `/v1/file-library/finalize` | Optional: after `PUT` succeeds, register the file for the [workspace](/concepts/workspace). |
+| Step                             | Method | Path                                                       | Purpose                                                                                                                 |
+| -------------------------------- | ------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Start a run                      | `POST` | `/v1/agents/{agentId}/runs`                                | Body: `{ "input": { ... } }` (`input` is optional). Returns **202** with `sessionId`, `runId`, and status.              |
+| Poll status / result             | `GET`  | `/v1/runs/{runId}`                                         | Status, `output`, optional `error`.                                                                                     |
+| List sessions (optional)         | `GET`  | `/v1/agents/{agentId}/sessions?skip=0&take=10`             | Paginated [sessions](/concepts/session) for the agent.                                                                  |
+| Conversation / stream (optional) | `GET`  | `/v1/runs/{runId}/conversation`, `/v1/runs/{runId}/stream` | Timeline and SSE; same `X-API-Key` as above.                                                                            |
+| Get upload URL                   | `POST` | `/v1/file-library/presign`                                 | Optional: get a time-limited URL to `PUT` the file (requires [file uploads on the key](#file-uploads-with-an-api-key)). |
+| Complete upload                  | `POST` | `/v1/file-library/finalize`                                | Optional: after `PUT` succeeds, register the file for the [workspace](/concepts/workspace).                             |
 
 All of these send the header `X-API-Key: <your phk_ key>`. The host is **https://api.phrony.com** with **no** extra path prefix before `v1` (for example `https://api.phrony.com/v1/agents/…`).
+
+## API redaction (output-only mode)
+
+Sessions started through an **[API trigger](/concepts/agent#triggers)** respect the trigger setting **Expose step timeline to API clients**. It defaults to **on**, so `GET /v1/runs/{runId}/conversation` and `GET /v1/runs/{runId}/stream` can surface the same kind of **step-by-step timeline** your team sees in the dashboard (within the limits of your key and product behavior).
+
+When that setting is **off**, Phrony applies **redaction** to those two **external** routes only (calls using your `X-API-Key`):
+
+| Surface | What changes |
+| ------- | ------------ |
+| **`GET .../conversation`** | The payload becomes **output-only**: timeline **items** are trimmed to **completion-level** rows (for example **session** and **root run** completed). In that JSON, **per-run** `output`, `error`, and `input` are **cleared**, and **session**-level **`input`** and **`startContext`** are **nulled** so prompts and execution metadata are not echoed to API clients. |
+| **`GET .../stream` (SSE)** | **Step**-detail events, **user task** / **HITL**-style events, and similar low-level engine signals are **filtered out** so clients cannot reconstruct the full trace from the stream. |
+
+**Dashboard and cockpit** views are **unchanged**: operators still see the full [session](/concepts/session) timeline for the same run.
+
+**`GET /v1/runs/{runId}`** (poll for status and final result) is **not** rewritten by this redaction path—it returns run fields as implemented for your workspace. If your policy must not expose model output even on that poll, enforce that in your own backend or discuss stricter deployment options with your team.
 
 ## File uploads with an API key
 
@@ -83,11 +98,17 @@ const started = await fetch(`${baseUrl}/v1/agents/${agentId}/runs`, {
     "Content-Type": "application/json",
     "X-API-Key": apiKey,
   },
-  body: JSON.stringify({ input: { /* your run payload */ } }),
+  body: JSON.stringify({
+    input: {
+      /* your run payload */
+    },
+  }),
 });
 
 if (!started.ok) {
-  throw new Error(`start run failed: ${started.status} ${await started.text()}`);
+  throw new Error(
+    `start run failed: ${started.status} ${await started.text()}`,
+  );
 }
 
 const { runId, sessionId, status } = (await started.json()) as {
