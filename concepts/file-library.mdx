@@ -1,0 +1,45 @@
+---
+title: "File library"
+description: "Workspace file storage for agent runs: upload, list, and attach files to input without pasting long paths in the product UI."
+---
+
+## What it is
+
+The **file library** is your [workspace’s](/concepts/workspace) place to store **files** that [agents](/concepts/agent) can use during runs—documents, images, and other supported types. Files live in **your** workspace; they are not shared across workspaces.
+
+You use the library to:
+
+- **Upload** files (dashboard or, for integrations, the HTTP flow described in [Embedded agents](/techniques/embedded-agents#file-uploads-with-an-api-key)).
+- **Browse and search** what has been uploaded, see size and type, and **remove** files you no longer need.
+- **Attach** those files to run **input** where the agent’s configuration expects a file (for example a PDF field in the test console or a structured `phronyFile` value in the API) without hand-copying long storage paths.
+
+## How it relates to runs
+
+[Agents](/concepts/agent) do not “own” the file library. The workspace does. A run’s **input** can **reference** a library file (by a short, stable name Phrony resolves inside your workspace). The runtime fetches the bytes when the model or tools need them.
+
+| Idea | Detail |
+| --- | --- |
+| **Scope** | Files belong to the **active workspace**; switching workspaces shows a different library. |
+| **Quotas** | Your plan’s **file storage** limit applies: uploads that would exceed the cap are blocked. |
+| **After delete** | Removing a file from storage can break [sessions](/concepts/session) that still expect it if those sessions resume—treat delete as final. |
+
+## What you see in the product
+
+| Area | Purpose |
+| --- | --- |
+| **File library** (dashboard) | List uploaded files, filter by type, search by name, see **who uploaded** each file (when known) and **when** it was added, see usage against your plan, delete files. |
+| **Agent / test UIs** | When an input field is a **file** type, you can pick from the same library (or upload) in context. |
+
+List rows show a **display name** (and technical details the product needs) so you can recognize files without dealing with long internal paths in everyday use.
+
+## Integrations and API keys
+
+To upload files **outside** the signed-in dashboard (for example from your backend), you use the **same file-library HTTP endpoints** as in [Embedded agents](/techniques/embedded-agents#file-uploads-with-an-api-key), with an [API key](/techniques/embedded-agents#how-you-wire-it-up) that has **Allow file uploads** enabled. You still start runs with `POST /v1/agents/{agentId}/runs` and pass file references in `input` as documented there.
+
+Keys without that permission cannot upload; they can still **start runs** and use files that were uploaded another way (for example from the dashboard or a key that can upload).
+
+## Notes
+
+- Uploads use **time-limited URLs** and **server-side encryption** in object storage; clients must send the **headers** returned with the upload URL or the put will fail.
+- **Finalizing** an upload after a successful **PUT** records the file in your workspace and updates usage; skipping finalize leaves no usable library entry.
+- Storing disallowed or unsafe **content types** (for example executable or inline HTML) may be **rejected** at upload—follow your security policy for user-provided files.

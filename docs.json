@@ -19,6 +19,7 @@
               "index",
               "when-to-use-phrony",
               "concepts/workspace",
+              "concepts/file-library",
               "concepts/secret",
               "concepts/llm-provider",
               "concepts/agent",

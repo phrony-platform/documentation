@@ -22,7 +22,7 @@ What defines a workspace in the product:
 | **Name**           | The label for your team or environment (shown in the switcher and settings).                              |
 | **Status**         | Whether the workspace is active and available, or limited (for example, suspended) based on your account. |
 | **Members**        | People who can sign in, each with a **role** that controls what they can do.                              |
-| **Plan and usage** | Your current subscription tier and how much of the included capacity you are using.                       |
+| **Plan and usage** | Your current subscription tier and how much of the included capacity you are using (including **file storage** for the [file library](/concepts/file-library) when your plan includes it). |
 
 #### Roles
 
@@ -39,3 +39,4 @@ Exact names and permissions follow what your Phrony dashboard shows for your org
 - While you are signed in, the Phrony dashboard is scoped to **one** active workspace at a time; use the workspace switcher to change it.
 - Usage and limits ([agents](/concepts/agent), [LLM providers](/concepts/llm-provider), [session](/concepts/session) volume) are **per workspace**, based on your plan and add-ons.
 - One person can be a member of **multiple** workspaces; switch between them from the account menu.
+- **File** attachments for agent runs are stored in the [file library](/concepts/file-library) for that workspace (quotas apply per plan).

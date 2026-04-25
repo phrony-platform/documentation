@@ -1,18 +1,18 @@
 ---
 title: "Embedded agents"
-description: "Run Phrony agents from your product over HTTP: deploy, API trigger, API key, and start runs."
+description: "Run Phrony agents from your product over HTTP: deploy, API trigger, API key, optional workspace file uploads, and start runs."
 ---
 
-**Embedded agents** are [agents](/concepts/agent) you invoke from your own application or backend through Phrony’s public **gateway** API — the same [workspace](/concepts/workspace)-scoped execution, [LLM provider](/concepts/llm-provider) credentials, [integrations](/concepts/integration), and policies as a dashboard [session](/concepts/session), with your product owning the user journey. That path depends on an **[API trigger](/concepts/agent#triggers)** on the agent (and an API key scoped to that agent + trigger).
+**Embedded agents** are [agents](/concepts/agent) you invoke from your own application or backend over Phrony’s **HTTP API** — the same [workspace](/concepts/workspace)-scoped execution, [LLM provider](/concepts/llm-provider) credentials, [integrations](/concepts/integration), and policies as a dashboard [session](/concepts/session), with your product owning the user journey. That path depends on an **[API trigger](/concepts/agent#triggers)** on the agent (and an API key scoped to that agent + trigger).
 
 ## How you wire it up
 
 1. **Deploy a version** of the agent in the Phrony dashboard so a **deployed** snapshot is what the platform runs for this line of work.
 2. **Create an [API trigger](/concepts/agent#triggers)** on that agent. Only **API** triggers get HTTP start URLs; each row carries limits, optional IP allowlists, and the **trigger id** you bind into API key scopes.
-3. **Create an API key in Settings** and give it a scope that includes that **agent** and that **API** trigger. The key is a single secret (prefix `phk_`) you send on every call.
-4. **Call the gateway** at **https://api.phrony.com** (Phrony Cloud’s public API host). The agent’s **Access** tab shows the same base URL plus your `agentId` and `triggerId` for scoping the API key.
+3. **Create an API key in Settings** and give it a scope that includes that **agent** and that **API** trigger. The key is a single secret (prefix `phk_`) you send on every call. If you need to **upload files** for runs (see [below](#file-uploads-with-an-api-key)), turn on **Allow file uploads** for that key (off by default).
+4. **Use the API** at **https://api.phrony.com** (Phrony Cloud’s API host). The agent’s **Access** tab shows the same base URL plus your `agentId` and `triggerId` for scoping the API key.
 
-The gateway enforces the key: for `POST /v1/agents/{agentId}/runs` the key must match the `agentId` in the path and the trigger encoded in the key’s scope. For `GET /v1/runs/{runId}` and optional conversation or stream paths, the same key must still authorize access to that run.
+Requests validate the key: for `POST /v1/agents/{agentId}/runs` the key must match the `agentId` in the path and the trigger encoded in the key’s scope. For `GET /v1/runs/{runId}` and optional conversation or stream paths, the same key must still authorize access to that run.
 
 ## API surface (embedded)
 
@@ -22,12 +22,41 @@ The gateway enforces the key: for `POST /v1/agents/{agentId}/runs` the key must 
 | Poll status / result | `GET` | `/v1/runs/{runId}` | Status, `output`, optional `error`. |
 | List sessions (optional) | `GET` | `/v1/agents/{agentId}/sessions?skip=0&take=10` | Paginated [sessions](/concepts/session) for the agent. |
 | Conversation / stream (optional) | `GET` | `/v1/runs/{runId}/conversation`, `/v1/runs/{runId}/stream` | Timeline and SSE; same `X-API-Key` as above. |
+| Get upload URL | `POST` | `/v1/file-library/presign` | Optional: get a time-limited URL to `PUT` the file (requires [file uploads on the key](#file-uploads-with-an-api-key)). |
+| Complete upload | `POST` | `/v1/file-library/finalize` | Optional: after `PUT` succeeds, register the file for the [workspace](/concepts/workspace). |
 
-All of these (except the browser) send the header `X-API-Key: <your phk_ key>`. The host is **https://api.phrony.com** with **no** extra path prefix before `v1` (for example `https://api.phrony.com/v1/agents/…`).
+All of these send the header `X-API-Key: <your phk_ key>`. The host is **https://api.phrony.com** with **no** extra path prefix before `v1` (for example `https://api.phrony.com/v1/agents/…`).
+
+## File uploads with an API key
+
+To attach **binary or document** inputs stored in your [workspace](/concepts/workspace) (the same file library as the dashboard), use the **`/v1/file-library`** steps below. Uploads are **off** for a key until you enable **Allow file uploads** in **Settings → API keys** (create or edit the key). If uploads are not enabled, `POST /v1/file-library/*` returns **403**.
+
+**Flow:**
+
+1. **`POST /v1/file-library/presign`** with JSON: `filename`, `mediaType`, and `maxContentLength` (bytes — the most this upload is allowed to be; your plan’s storage limit is checked here). The response includes `objectKey`, `uploadUrl`, `httpMethod` (`PUT`), `requiredHeaders`, and `expiresInSeconds`.
+2. **`PUT`** the file bytes to `uploadUrl` using **exactly** the `requiredHeaders` from the response (including `Content-Type` and encryption headers). For browser or fetch uploads, do not require a fixed `Content-Length` in the signed request.
+3. **`POST /v1/file-library/finalize`** with `objectKey` from step 1, the same `maxContentLength`, and optional `filename` / `mediaType` for labels in the file library.
+4. **Start a run** with `POST /v1/agents/{agentId}/runs` and pass a **file** in `input` where your agent expects it. Use the shape below: set `filename` to the **file name only** from the upload (the part after the last `/` in `objectKey` — for example `a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf`), not a full path. The `phronyFile` field marks the object as a stored file for the runtime:
+
+```json
+{
+  "input": {
+    "document": {
+      "phronyFile": true,
+      "filename": "a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf",
+      "mediaType": "application/pdf"
+    }
+  }
+}
+```
+
+Phrony matches `filename` to the file in your [workspace](/concepts/workspace) before the run runs. In `input` you normally send only `filename` and `mediaType` as shown; you do not need to pass long storage paths from the client.
+
+Use the **same** `X-API-Key` for presign, finalize, and `POST /v1/agents/{agentId}/runs`. Your plan’s file-storage limits apply the same as in the product UI.
 
 ## Examples
 
-Use **https://api.phrony.com** as the gateway host (or override with `GATEWAY_BASE_URL` in your app if you are pointed at a different environment). Get `AGENT_ID` and the trigger to scope your key from the agent’s **API trigger → Access** tab; create `PHRONY_API_KEY` under **Settings**. After you start a run, take `runId` from the JSON response to poll. Each tab shows the same flow: start a run, then poll by `runId`.
+Use **https://api.phrony.com** as the base URL, or the base URL your team uses for self-hosted or staging. Get `AGENT_ID` and the trigger to scope your key from the agent’s **API trigger → Access** tab; create `PHRONY_API_KEY` under **Settings**. After you start a run, take `runId` from the JSON response to poll. Each tab shows the same flow: start a run, then poll by `runId`.
 
 <CodeGroup>
 
@@ -44,11 +73,11 @@ curl -sS "https://api.phrony.com/v1/runs/${RUN_ID}" \
 ```
 
 ```typescript TypeScript
-const gateway = process.env.GATEWAY_BASE_URL ?? "https://api.phrony.com";
+const baseUrl = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
 const agentId = process.env.AGENT_ID ?? "";
 const apiKey = process.env.PHRONY_API_KEY ?? "";
 
-const started = await fetch(`${gateway}/v1/agents/${agentId}/runs`, {
+const started = await fetch(`${baseUrl}/v1/agents/${agentId}/runs`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -68,7 +97,7 @@ const { runId, sessionId, status } = (await started.json()) as {
 };
 
 // Poll run status
-const st = await fetch(`${gateway}/v1/runs/${runId}`, {
+const st = await fetch(`${baseUrl}/v1/runs/${runId}`, {
   headers: { "X-API-Key": apiKey },
 });
 const run = await st.json();
@@ -79,13 +108,13 @@ import json
 import os
 import urllib.request
 
-GATEWAY = os.environ.get("GATEWAY_BASE_URL", "https://api.phrony.com").rstrip("/")
+BASE = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
 AGENT_ID = os.environ["AGENT_ID"]
 API_KEY = os.environ["PHRONY_API_KEY"]
 
 def start_run(input_obj: dict) -> dict:
     req = urllib.request.Request(
-        f"{GATEWAY}/v1/agents/{AGENT_ID}/runs",
+        f"{BASE}/v1/agents/{AGENT_ID}/runs",
         data=json.dumps({"input": input_obj}).encode("utf-8"),
         method="POST",
         headers={
@@ -98,7 +127,7 @@ def start_run(input_obj: dict) -> dict:
 
 def get_run(run_id: str) -> dict:
     req = urllib.request.Request(
-        f"{GATEWAY}/v1/runs/{run_id}",
+        f"{BASE}/v1/runs/{run_id}",
         headers={"X-API-Key": API_KEY},
     )
     with urllib.request.urlopen(req) as res:
