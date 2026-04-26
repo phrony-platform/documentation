@@ -80,6 +80,10 @@ Which kinds you actually see depends on your [workspace](/concepts/workspace) pl
 
 **Delete / remove from queue:** You do not delete a user task from the list. A user task is **Completed** when someone performs the action the task asked for, or when the run ends in a way that finishes that task. If the page looks out of date, refresh. If you expected a **Pending** task and the list is empty, a teammate may have already finished it.
 
+## Phrony API
+
+If you [send input or messages to a run](/api-reference/agents-and-runs#send-input-or-messages-to-a-run) from your own systems, you can often complete the same user tasks you would in the **Phrony dashboard** (for example, approvals, prompts, and conversational follow-ups). **Not every user task can be completed through the API**—certain **escalations** from [multi-agent](/techniques/multi-agent-systems) runs, and some **guard**- or **alert**-style steps, must be completed in the **Phrony dashboard** instead.
+
 ## Warnings
 
 - Approving the **wrong** run or the wrong **action** can have serious effects; when in doubt, open the full **session** first.

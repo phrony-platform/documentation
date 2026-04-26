@@ -1,0 +1,549 @@
+---
+title: "Agents and runs"
+description: "Start runs, list sessions, poll status, read conversation, stream events, and send session messages over the public API."
+---
+
+All paths below are relative to your [API base URL](/api-reference/index#base-url). Unless noted, send **`X-API-Key`** and **`Content-Type: application/json`**.
+
+## Start a run
+
+`POST /v1/agents/{agentId}/runs`
+
+- **Auth:** Agent-scoped key: `{agentId}` in the path must match the key’s scope.
+- **Status:** **202 Accepted** on success.
+
+**Request body (JSON):**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `input` | object | No | JSON object (string keys). Shape must match your **deployed** [agent version](/concepts/agent) input contract. Omit or use `{}` when the agent needs no static input. |
+
+**Response (success, JSON):**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `sessionId` | string (UUID) | Yes | Session for this run. |
+| `runId` | string (UUID) | Yes | Use with `/v1/runs/{runId}` routes. |
+| `status` | string | Yes | Runtime status; work may still be in progress after this response. |
+| `totalTokensUsed` | number | Yes | Non-negative token count. |
+| `output` | JSON or `null` | Yes | Parsed when non-empty; otherwise `null` until (or if) available. |
+| `error` | string | No | Error message if the start path set one. |
+| `agentId` | string (UUID) | No | Set when useful for the client. |
+| `triggerId` | string (UUID) or `null` | No | The API trigger when applicable. |
+| `duplicateDelivery` | boolean | No | For some ingress paths, true when a prior delivery is replayed (not a normal API start). |
+
+The API may return additional fields. Rate limits, concurrency limits, and plan checks apply as configured on the [API trigger](/concepts/agent#triggers).
+
+## List sessions
+
+`GET /v1/agents/{agentId}/sessions`
+
+- **Auth:** Same agent-scoped key as start run.
+
+**Query (optional):**
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `skip` | integer | Offset for pagination (non-negative). |
+| `take` | integer | Page size. |
+| `versionId` | string (UUID) | Limit to a specific deployed [version](/concepts/agent). |
+
+**Response (success, JSON):**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `items` | array | [Session list item](#list-sessions-item) objects (newest or query order, depending on the service). |
+| `total` | number | Non-negative; total session rows that match the filter (for pagination). |
+
+**List sessions item (each `items[]` element):** 
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `id` | string (UUID) | [Session](/concepts/session) id. |
+| `tenantId` | string (UUID) | Workspace id. |
+| `agentId` | string (UUID) | [Agent](/concepts/agent) id. |
+| `agentVersionId` | string (UUID) | Version used for the session. |
+| `llmModel` | string or `null` | Resolved model label for that version, when available. |
+| `triggerType` | string | How the session was started (for example `api`, `scheduled`, or values your workspace uses). |
+| `triggeredBy` | string or `null` | Who/what started it (for example an API key id for API runs). |
+| `triggerId` | string (UUID) or `null` | [Trigger](/concepts/agent#triggers) id when applicable. |
+| `triggerName` | string or `null` | Trigger display name when resolved. |
+| `status` | string | Session status. |
+| `totalTokensUsed` | number | Cumulative token usage. |
+| `output` | JSON or `null` | Session-level result when set. |
+| `error` | string or `null` | Error when the session failed. |
+| `input` | JSON or `null` | Start input from the root run’s snapshot, when available. |
+| `startContext` | object or `null` | Start context (user input, version snapshot), when available. |
+| `rootRunId` | string (UUID) or `null` | Root run in the session (convenience for sub-agent lineages). |
+| `startedAt` | string (ISO-8601) | When the session started. |
+| `finishedAt` | string (ISO-8601) or `null` | When the session completed, if it has. |
+| `runCount` | number | Number of runs in the session. |
+| `entryRunId` | string (UUID) or `null` | A run you can use for run-scoped links (earliest in the session). |
+
+## Get run status
+
+`GET /v1/runs/{runId}`
+
+- **Auth:** Key must be [authorized for that run](/api-reference/authentication#scoping).
+
+**Response (JSON):** At minimum:
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `runId` | string (UUID) | Yes | Same as `{runId}` in the path. |
+| `status` | string | Yes | Run status for polling. |
+| `output` | JSON or `null` | Yes | Result payload when available. |
+| `error` | string | No | Error message if the run failed. |
+
+The API may include other fields. Use this to poll until the run reaches a terminal state, unless you rely on stream or webhooks.
+
+## Conversation
+
+`GET /v1/runs/{runId}/conversation`
+
+- **Auth:** Run-access key.
+
+**Query (optional):**
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `stepContent` | `slim` or `full` | `slim` strips redundant keys from step **`content`** objects (see below). Default is full when omitted. |
+
+**Response (success, JSON):** A **session** snapshot plus **runs** and a merged, sorted **items** timeline (steps from projection plus synthetic completion rows).
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `session` | object | [Session row](#conversation-response-session) for this [session](/concepts/session). |
+| `runs` | array | [Run summary](#conversation-response-run) for every run in the session (including sub-agents when present). |
+| `items` | array | [Timeline item](#conversation-response-item) — one row per step or synthetic `RunCompleted` / `SessionCompleted` row. |
+
+**Conversation: `session` object**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `id` | string (UUID) | Session id. |
+| `tenantId` | string (UUID) | Workspace id. |
+| `agentId` | string (UUID) | Agent id. |
+| `agentVersionId` | string (UUID) | Version id for the session. |
+| `llmModel` | string or `null` | Model for that version, when resolved. |
+| `triggerType` | string | How the run was started. |
+| `triggeredBy` | string or `null` | API key or other “who started it” wire value. |
+| `triggerId` | string (UUID) or `null` | Trigger id. |
+| `triggerName` | string or `null` | Trigger label when resolved. |
+| `status` | string | Session status. |
+| `totalTokensUsed` | number | Cumulative tokens. |
+| `output` | JSON or `null` | Session output when set. |
+| `error` | string or `null` | Error when the session failed. |
+| `startedAt` | string (ISO-8601) | Start time. |
+| `finishedAt` | string (ISO-8601) or `null` | When finished, if applicable. |
+| `input` | JSON or `null` | Start input (root run) when available. |
+| `startContext` | object or `null` | Start context (for example `userInput`, frozen config) when the snapshot has it. |
+
+**Conversation: `runs[]` run summary**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `id` | string (UUID) | Run id. |
+| `sessionId` | string (UUID) | Parent session. |
+| `agentId` | string (UUID) | Run’s agent. |
+| `agentVersionId` | string (UUID) | Version used for the run. |
+| `parentRunId` | string (UUID) or `null` | Parent run for sub-agent runs. |
+| `depth` | number | Nesting depth (0 for the root). |
+| `status` | string | Run status. |
+| `totalTokensUsed` | number | Run token usage. |
+| `output` | JSON or `null` | Run output when set. |
+| `error` | string or `null` | Run error if any. |
+| `startedAt` / `finishedAt` | string (ISO-8601) or `null` | Run timing. |
+| `triggerType` / `triggeredBy` / `triggerId` / `triggerName` | (mixed) | Carried from the session for context. |
+| `input` | JSON or `null` | From the run’s execution snapshot when available. |
+| `llmModel` | string or `null` | For this run’s version. |
+| `agentName` | string or `null` | Display name. |
+| `versionLabel` | string or `null` | Version label. |
+
+**Conversation: `items[]` timeline item**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `runId` | string (UUID) | Which run the row belongs to. |
+| `id` | string (UUID) | Step or synthetic row id. |
+| `sequence` | number | Monotonic per run; **not** a global sort key (use `ordinal`). |
+| `ordinal` | number | 1-based order after the service merges and sorts the full session timeline. |
+| `type` | string | Engine step `type` (for example `UserTaskReq`, `Reasoning`, …) or synthetic `RunCompleted` / `SessionCompleted`. |
+| `content` | JSON or `null` | Step payload; shape depends on `type`. For synthetic rows, includes completion `status` / `output` / `error` style fields. |
+| `tokensUsed` | number or `null` | Tokens for the step, when set. |
+| `error` | string or `null` | Error on the step when set. |
+| `startedAt` / `finishedAt` | string (ISO-8601) or `null` | Step timing. |
+
+**`stepContent=slim`:** For **object** `content` values, the API omits these keys to reduce payload size: `session_id`, `run_id`, `tenant_id`, `agent_id`, `agent_version_id`, `event_id`. Other shapes are unchanged.
+
+**Output-only (redacted) response:** When the **API** trigger has **Expose step timeline to API clients** off, Phrony may return a **redacted** JSON body for this route. See **[Embedded agents — API redaction](/techniques/embedded-agents#api-redaction-output-only-mode)**. In that mode, roughly:
+
+| Change | What you get |
+| ------ | -------------- |
+| `items` | Only completion-style rows: **`SessionCompleted`**, and **`RunCompleted`** for the **root** run. |
+| `runs[]` / `items` / `session` | `input`, `startContext` (on session), and per-run `output` / `error` on runs may be nulled to avoid exposing full detail. |
+
+## Stream (SSE)
+
+`GET /v1/runs/{runId}/stream`
+
+- **Auth:** Run-access key.
+
+**Response:** `text/event-stream` — each **SSE** event’s **`data`** string is a single JSON object (line). Parse it with `JSON.parse` after decoding UTF-8.
+
+| Aspect | Description |
+| ------ | ----------- |
+| Format | **Server-Sent Events**; each `data` line is one JSON value. |
+| Client | Browsers’ `EventSource` cannot set `X-API-Key`; use a **server** or `fetch` + stream reader. |
+
+**Event object schema (root fields on each `data` JSON):**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `ts` | string | ISO-8601 timestamp (when the hub emitted the event). |
+| `kind` | `step` · `session` · `run` · `user_task` · `aitl` | Groups the event. |
+| `subject` | string | Fine-grained name (for example `engine.session.started`, `engine.run.completed`, `engine.subagent.spawned`, `engine.step.*` — exact strings are engine/projection details). |
+| `data` | object | **Payload**; fields depend on `kind` and `subject` (run ids, session ids, step bodies, and so on). |
+
+**`kind` roles (at a glance):**
+
+| `kind` | Role |
+| ------ | ---- |
+| `session` | Session started / completed / paused, etc. |
+| `run` | Run started / completed, subagent spawn, HITL pause, etc. |
+| `step` | Individual engine/projection **step** (reasoning, tool, …). |
+| `user_task` | Human / approval task lifecycle. |
+| `aitl` | Agent-in-the-loop (AITL) request updates. |
+
+**Output-only (redacted) stream:** When the same API trigger setting hides the full timeline, Phrony **filters** the SSE event stream. Events with **`kind` `step`**, **`user_task`**, or **`aitl`** are dropped, and **`run`** events with `subject` **`engine.subagent.spawned`** are also dropped, so the client only receives a safe subset. Unfiltered clients still receive the full set of `kind` values.
+
+## Send input or messages to a run
+
+`POST /v1/runs/{runId}/input`  
+`POST /v1/runs/{runId}/messages`
+
+These routes cover the usual ways to [resume a run](/concepts/user-task) that is waiting for a human, including many approvals and follow-ups. **Not every type of user task can be completed through the API**—for example, some **escalations** to a person from multi-agent runs, and some **anomaly** or **alert** steps, must be completed in the **Phrony dashboard**. See [User task](/concepts/user-task#phrony-api).
+
+- **Auth:** Run-access key.
+- **Status:** **202 Accepted** on success.
+
+**Request body (JSON):** `runId` must match **`{runId}`** in the path.
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `runId` | string (UUID) | Yes | Same as `{runId}` in the path. |
+| `userTaskId` | string (UUID) | No | For [human-in-the-loop](/concepts/user-task) / approval flows: the pending user task to complete. When set, other completion fields may apply. |
+| `approved` | boolean | No | For approval / HITL: whether to run pending HTTP tool calls (default `true` when applicable). |
+| `selectedOptionId` | string | No | For multi-option tasks: chosen option from the task’s options list. |
+| `textValue` | string | No | For text-kind tasks. |
+| `numberValue` | number | No | For number-kind tasks. |
+| `metadata` | object | No | Extra fields stored on the user task. |
+| `text` | string | No | Preferred for conversational **WaitingForResponse** (alias: `message`). |
+| `message` | string | No | Same role as `text`. |
+| `files` | array | No | [Workspace file](/concepts/file-library) attachments for a user turn. See **File item** below. |
+| `completedByEmail` | string (email) | No | Set by the dashboard; do not rely on a client copy for untrusted clients. |
+
+**`files[]` item (when resuming with attachments):**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `phronyFile` | `true` | Yes | Must be the literal `true`. |
+| `objectKey` | string | Yes | Object key from [finalize](/api-reference/file-library#finalize). |
+| `filename` | string | No | Display or hint name. |
+| `mediaType` | string | No | Content type. |
+
+**Validation:** You must provide **`userTaskId`**, or non-empty **`text`/`message`**, or at least one **`files`** entry, according to the pause type.
+
+**Response (success, JSON):** **202 Accepted** body, typically:
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `status` | string | Acceptance status from the service (work may still run asynchronously). |
+| `error` | string | Optional error message if the service rejected the follow-up. |
+
+## Summary table
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `POST` | `/v1/agents/{agentId}/runs` | Start a run (`input` optional). |
+| `GET` | `/v1/agents/{agentId}/sessions` | List sessions (pagination / version). |
+| `GET` | `/v1/runs/{runId}` | Run status and result fields. |
+| `GET` | `/v1/runs/{runId}/conversation` | Conversation JSON. |
+| `GET` | `/v1/runs/{runId}/stream` | SSE stream. |
+| `POST` | `/v1/runs/{runId}/input` or `…/messages` | HITL completion or conversational message. |
+
+## Examples (cURL, TypeScript, Python)
+
+### Start a run and poll status
+
+Use **`runId`** from the `POST` response with **`GET /v1/runs/{runId}`** until the run reaches a finished state in your use case.
+
+<CodeGroup>
+
+```bash cURL
+export PHRONY_API_BASE="${PHRONY_API_BASE:-https://api.phrony.com}"
+export PHRONY_API_KEY="phk_..."
+export AGENT_ID="00000000-0000-0000-0000-000000000000"
+
+RESP=$(curl -sS -X POST "${PHRONY_API_BASE}/v1/agents/${AGENT_ID}/runs" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: ${PHRONY_API_KEY}" \
+  -d '{"input":{}}')
+echo "$RESP"
+RUN_ID=$(echo "$RESP" | python3 -c "import json,sys; print(json.load(sys.stdin)['runId'])")
+curl -sS "${PHRONY_API_BASE}/v1/runs/${RUN_ID}" \
+  -H "X-API-Key: ${PHRONY_API_KEY}"
+```
+
+```typescript TypeScript
+const baseUrl = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
+const apiKey = process.env.PHRONY_API_KEY ?? "";
+const agentId = process.env.AGENT_ID ?? "";
+
+async function startAndPoll() {
+  const started = await fetch(`${baseUrl}/v1/agents/${agentId}/runs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": apiKey,
+    },
+    body: JSON.stringify({ input: {} }),
+  });
+  if (!started.ok) {
+    throw new Error(`start: ${started.status} ${await started.text()}`);
+  }
+  const { runId } = (await started.json()) as { runId: string };
+
+  const st = await fetch(`${baseUrl}/v1/runs/${runId}`, {
+    headers: { "X-API-Key": apiKey },
+  });
+  if (!st.ok) {
+    throw new Error(`get run: ${st.status} ${await st.text()}`);
+  }
+  return st.json() as Promise<Record<string, unknown>>;
+}
+
+void startAndPoll().then(console.log);
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.request
+
+BASE = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
+API_KEY = os.environ["PHRONY_API_KEY"]
+AGENT_ID = os.environ["AGENT_ID"]
+
+
+def _req(request: urllib.request.Request) -> dict:
+    with urllib.request.urlopen(request) as res:
+        return json.load(res)
+
+
+def start_run(input_obj: dict) -> dict:
+    return _req(
+        urllib.request.Request(
+            f"{BASE}/v1/agents/{AGENT_ID}/runs",
+            data=json.dumps({"input": input_obj}).encode("utf-8"),
+            method="POST",
+            headers={"Content-Type": "application/json", "X-API-Key": API_KEY},
+        )
+    )
+
+
+def get_run(run_id: str) -> dict:
+    return _req(
+        urllib.request.Request(
+            f"{BASE}/v1/runs/{run_id}",
+            headers={"X-API-Key": API_KEY},
+        )
+    )
+
+
+if __name__ == "__main__":
+    body = start_run({})
+    print(get_run(body["runId"]))
+```
+
+</CodeGroup>
+
+### List sessions
+
+Optional query: **`skip`**, **`take`**, **`versionId`**.
+
+<CodeGroup>
+
+```bash cURL
+export PHRONY_API_BASE="${PHRONY_API_BASE:-https://api.phrony.com}"
+export PHRONY_API_KEY="phk_..."
+export AGENT_ID="00000000-0000-0000-0000-000000000000"
+
+curl -sS -G "${PHRONY_API_BASE}/v1/agents/${AGENT_ID}/sessions" \
+  --data-urlencode "skip=0" \
+  --data-urlencode "take=20" \
+  -H "X-API-Key: ${PHRONY_API_KEY}"
+```
+
+```typescript TypeScript
+async function listSessions() {
+  const baseUrl = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
+  const apiKey = process.env.PHRONY_API_KEY ?? "";
+  const agentId = process.env.AGENT_ID ?? "";
+  const u = new URL(`${baseUrl}/v1/agents/${agentId}/sessions`);
+  u.searchParams.set("skip", "0");
+  u.searchParams.set("take", "20");
+  const res = await fetch(u, { headers: { "X-API-Key": apiKey } });
+  if (!res.ok) {
+    throw new Error(`sessions: ${res.status} ${await res.text()}`);
+  }
+  console.log(await res.json());
+}
+void listSessions();
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.parse
+import urllib.request
+
+BASE = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
+API_KEY = os.environ["PHRONY_API_KEY"]
+AGENT_ID = os.environ["AGENT_ID"]
+q = urllib.parse.urlencode({"skip": 0, "take": 20})
+url = f"{BASE}/v1/agents/{AGENT_ID}/sessions?{q}"
+req = urllib.request.Request(url, headers={"X-API-Key": API_KEY})
+with urllib.request.urlopen(req) as res:
+    print(json.load(res))
+```
+
+</CodeGroup>
+
+### Get conversation and stream (SSE)
+
+**Conversation** returns JSON. **Stream** is Server-Sent Events: use **`curl -N`** for a quick look. In the browser, **`EventSource`** cannot set custom headers, so you typically call stream from a **server** with **`X-API-Key`**, or use a **`fetch`-based** `text/event-stream` reader in Node or Bun.
+
+<CodeGroup>
+
+```bash cURL
+export PHRONY_API_BASE="${PHRONY_API_BASE:-https://api.phrony.com}"
+export PHRONY_API_KEY="phk_..."
+RUN_ID="00000000-0000-0000-0000-000000000001"
+
+curl -sS -G "${PHRONY_API_BASE}/v1/runs/${RUN_ID}/conversation" \
+  --data-urlencode "stepContent=slim" \
+  -H "X-API-Key: ${PHRONY_API_KEY}"
+
+# Raw SSE (Ctrl+C to stop)
+curl -sSN "${PHRONY_API_BASE}/v1/runs/${RUN_ID}/stream" \
+  -H "X-API-Key: ${PHRONY_API_KEY}"
+```
+
+```typescript TypeScript
+async function conversation() {
+  const baseUrl = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
+  const apiKey = process.env.PHRONY_API_KEY ?? "";
+  const runId = process.env.RUN_ID ?? "";
+  const con = await fetch(
+    `${baseUrl}/v1/runs/${runId}/conversation?stepContent=slim`,
+    { headers: { "X-API-Key": apiKey } },
+  );
+  if (!con.ok) {
+    throw new Error(`conversation: ${con.status} ${await con.text()}`);
+  }
+  console.log(await con.json());
+  // Server-side SSE: fetch .../stream and read response.body in a loop; browser EventSource cannot set X-API-Key
+}
+void conversation();
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.parse
+import urllib.request
+
+BASE = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
+API_KEY = os.environ["PHRONY_API_KEY"]
+RUN_ID = os.environ.get("RUN_ID", "00000000-0000-0000-0000-000000000001")
+
+q = urllib.parse.urlencode({"stepContent": "slim"})
+u = f"{BASE}/v1/runs/{RUN_ID}/conversation?{q}"
+req = urllib.request.Request(u, headers={"X-API-Key": API_KEY})
+with urllib.request.urlopen(req) as r:
+    print(json.load(r))
+# For SSE, open f"{BASE}/v1/runs/{RUN_ID}/stream" the same way and read the stream in a loop, or use httpx
+```
+
+</CodeGroup>
+
+### Send a follow-up message
+
+When the run is waiting for user text, `POST` to **`…/input`** or **`…/messages`**. The body must include **`runId`**, non-empty **`text`**, and/or **`files`**, or a **`userTaskId`** for [human-in-the-loop](/concepts/user-task) flows.
+
+<CodeGroup>
+
+```bash cURL
+export PHRONY_API_BASE="${PHRONY_API_BASE:-https://api.phrony.com}"
+export PHRONY_API_KEY="phk_..."
+RUN_ID="00000000-0000-0000-0000-000000000001"
+
+curl -sS -X POST "${PHRONY_API_BASE}/v1/runs/${RUN_ID}/messages" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: ${PHRONY_API_KEY}" \
+  -d '{"runId":"'"${RUN_ID}"'","text":"My reply from curl"}'
+```
+
+```typescript TypeScript
+async function postMessage() {
+  const baseUrl = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
+  const apiKey = process.env.PHRONY_API_KEY ?? "";
+  const runId = process.env.RUN_ID ?? "";
+  const msg = await fetch(`${baseUrl}/v1/runs/${runId}/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": apiKey,
+    },
+    body: JSON.stringify({ runId, text: "My reply from TypeScript" }),
+  });
+  if (!msg.ok) {
+    throw new Error(`message: ${msg.status} ${await msg.text()}`);
+  }
+  console.log(await msg.json());
+}
+void postMessage();
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.request
+
+BASE = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
+API_KEY = os.environ["PHRONY_API_KEY"]
+run_id = os.environ["RUN_ID"]
+
+
+def post_message() -> dict:
+    body = {"runId": run_id, "text": "My reply from Python"}
+    req = urllib.request.Request(
+        f"{BASE}/v1/runs/{run_id}/messages",
+        data=json.dumps(body).encode("utf-8"),
+        method="POST",
+        headers={"Content-Type": "application/json", "X-API-Key": API_KEY},
+    )
+    with urllib.request.urlopen(req) as res:
+        return json.load(res)
+
+
+print(post_message())
+```
+
+</CodeGroup>
+
+## Related
+
+- **[File library](/api-reference/file-library)** — Upload files, then reference them in **`input`** or **`files`**, including presign/finalize examples.
+- **[Embedded agents](/techniques/embedded-agents)** — Longer walkthroughs and the same three languages.

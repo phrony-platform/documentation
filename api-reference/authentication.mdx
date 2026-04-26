@@ -1,0 +1,88 @@
+---
+title: "Authentication"
+description: "X-API-Key, key format, and how Phrony scopes access for the public API."
+---
+
+## API keys
+
+You create **API keys** in the **Phrony dashboard** under **Settings** (or your workspace settings, depending on layout). Each key is a single secret; issued keys are prefixed with **`phk_`**.
+
+You must not commit keys to source control or embed them in client-side code that end users can read. Use environment variables or a secret manager on your server.
+
+## Headers (authenticated routes)
+
+| Header | Required | Value |
+| ------ | -------- | ----- |
+| `X-API-Key` | Yes for authenticated routes | Your workspace API key (prefix `phk_`). |
+| `Content-Type` | When sending a JSON body | `application/json` |
+
+Example:
+
+```http
+X-API-Key: <your key>
+Content-Type: application/json
+```
+
+The gateway allows `X-API-Key` in CORS preflight.
+
+### Example
+
+Every authenticated request adds the same header. Replace `RUN_ID` after you [start a run](/api-reference/agents-and-runs#start-a-run).
+
+<CodeGroup>
+
+```bash cURL
+export PHRONY_API_BASE="${PHRONY_API_BASE:-https://api.phrony.com}"
+export PHRONY_API_KEY="phk_..."
+
+curl -sS "${PHRONY_API_BASE}/v1/runs/00000000-0000-0000-0000-000000000001" \
+  -H "X-API-Key: ${PHRONY_API_KEY}"
+```
+
+```typescript TypeScript
+async function example() {
+  const baseUrl = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
+  const apiKey = process.env.PHRONY_API_KEY ?? "";
+  const runId = "00000000-0000-0000-0000-000000000001";
+  const res = await fetch(`${baseUrl}/v1/runs/${runId}`, {
+    headers: { "X-API-Key": apiKey },
+  });
+  console.log(res.status, await res.json());
+}
+void example();
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.request
+
+BASE = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
+req = urllib.request.Request(
+    f"{BASE}/v1/runs/00000000-0000-0000-0000-000000000001",
+    headers={"X-API-Key": os.environ["PHRONY_API_KEY"]},
+)
+with urllib.request.urlopen(req) as res:
+    print(json.load(res))
+```
+
+</CodeGroup>
+
+## Scoping
+
+Keys are **scoped to your workspace** and to specific **agent** and **API trigger** pairs (and optionally other constraints). The scope determines what you may call:
+
+| Your call | What Phrony checks |
+| --------- | ------------------ |
+| `POST /v1/agents/{agentId}/runs` | The key must be scoped to **that** `agentId` and the **API** trigger used to start the run. The path `agentId` must match. |
+| `GET /v1/agents/{agentId}/sessions` | Same as above: `agentId` in the path must match the key’s agent scope. |
+| `GET` / `POST` under `/v1/runs/{runId}/…` | The key must be an **active** key for the workspace, and the key must be **allowed to access that run** (same agent, and when the run is tied to a trigger, a scope that includes that trigger). |
+| `POST /v1/file-library/presign` and `…/finalize` | The key must have **file uploads** enabled. |
+
+If a key is missing, wrong, or out of scope, the API returns **401** (missing or invalid key) or **403** (forbidden) as appropriate.
+
+## File uploads
+
+`POST` to `/v1/file-library/*` returns **403** if **Allow file uploads** is not enabled for that key, even when the key is otherwise valid.
+
+See **[File library](/api-reference/file-library)** for the upload flow.

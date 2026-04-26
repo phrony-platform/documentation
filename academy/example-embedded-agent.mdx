@@ -1,0 +1,192 @@
+---
+title: "Example: Building an embedded agent"
+description: "Create an agent in the Phrony dashboard, start runs from your code, and complete HITL user tasks over the HTTP API."
+---
+
+This walkthrough goes from **zero to a working API integration**: you configure an [agent](/concepts/agent) in the **Phrony dashboard**, then drive it from your backend with **`X-API-Key`**. It also covers **[human-in-the-loop (HITL)](/techniques/human-in-the-loop)**—pausing for approval or input—and how to **respond to [user tasks](/concepts/user-task) with the same API** instead of only in the dashboard.
+
+You should already have a [workspace](/concepts/workspace), an [LLM provider](/concepts/llm-provider), and permissions to create agents and API keys.
+
+## What you will set up
+
+| In the Phrony dashboard | In your code |
+| ----------------------- | ------------ |
+| Agent, **deployed** [version](/concepts/agent), **API** [trigger](/concepts/agent#triggers), **API key** scoped to that agent + trigger | `POST` to start a run, `GET` to poll, optional `GET` conversation |
+| Optional: HITL execution mode and an [integration](/concepts/integration) operation with **Require approval (HITL)** | When the run waits, `GET` conversation to read `user_task_id`, then `POST` to resume with `userTaskId` + `approved` (or other fields) |
+
+Full endpoint details: **[API Reference](/api-reference/index)** — especially **[Agents and runs](/api-reference/agents-and-runs)**.
+
+---
+
+## Part 1 — Create the agent and API access in the dashboard
+
+### 1. Create or open an agent
+
+In the Phrony dashboard, open your workspace and go to **Agents**. Create an **agent** or pick an existing one. Give it a clear name; you will reference it by id in code.
+
+### 2. Configure a version you can deploy
+
+Open the **Versions** (or **Editor**) area for that agent and add a **version**:
+
+- Choose a **model** and **prompt** appropriate to your use case.
+- Under **Integrations / operations**, attach at least one tool the model can call. For a **HITL** demo, edit an [operation](/concepts/integration#operation-level-http-and-built-in) and turn on **Require approval (HITL) before execution** (or the equivalent for that connector) so runs can **pause** until someone approves the call.
+- Set **[execution mode](/concepts/agent#execution-mode)** to **HITL** if you want people in the loop on the main path (recommended for approval flows).
+
+Save the version when you are ready.
+
+### 3. Deploy a version
+
+**Deploy** the version so the platform has a fixed snapshot to run. API runs always use what is **deployed**, not a draft.
+
+### 4. Add an API trigger
+
+Open **Triggers** on the agent and **add a trigger** of type **API**.
+
+- Note the **trigger id** (you will need it when scoping an API key).
+- For **HITL + API**, set **Expose step timeline to API clients** to **on**. If this is **off**, external `GET .../conversation` and `.../stream` calls are **redacted** and you may not see [user task](/concepts/user-task) steps or ids—so you cannot complete tasks from your integration. See **[Embedded agents — API redaction](/techniques/embedded-agents#api-redaction-output-only-mode)**.
+
+Optional: configure rate limits, IP allowlists, or concurrency on the trigger to match your environment.
+
+### 5. Create an API key
+
+Go to **Settings** (workspace) → **API keys** (or your workspace’s API key page).
+
+- **Create** a key and copy the secret (prefix **`phk_`**). Store it in a secret manager or environment variable—**never** expose it in a browser or mobile app.
+- Add a **scope** that includes this **agent** and this **API** trigger only.
+- If you will use [file uploads](/api-reference/file-library), enable **Allow file uploads** for the key.
+
+On the agent’s **API trigger** screen, the **Access** tab shows the public **base URL** (for Phrony Cloud: `https://api.phrony.com`) and your **`agentId`**—match those in your code.
+
+---
+
+## Part 2 — Start a run and read the result from code
+
+Set environment variables (names are suggestions):
+
+| Variable | Value |
+| -------- | ----- |
+| `PHRONY_API_BASE` | `https://api.phrony.com` (or your team’s base URL) |
+| `PHRONY_API_KEY` | Your `phk_...` key |
+| `AGENT_ID` | The agent UUID from the dashboard |
+
+**1. Start a run** with `POST /v1/agents/{agentId}/runs` and a JSON body shaped to your agent’s **input** contract, for example:
+
+```json
+{ "input": { "query": "Hello from the API" } }
+```
+
+**2. Read** `sessionId` and `runId` from the **202** response.
+
+**3. Poll** `GET /v1/runs/{runId}` until the run reaches a terminal state **or** a state that means “waiting for a person” (see Part 3). Use the same `X-API-Key` on every call.
+
+<CodeGroup>
+
+```bash cURL
+curl -sS -X POST "${PHRONY_API_BASE}/v1/agents/${AGENT_ID}/runs" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: ${PHRONY_API_KEY}" \
+  -d '{"input":{"query":"Hello"}}'
+```
+
+```typescript TypeScript
+const base = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
+const key = process.env.PHRONY_API_KEY!;
+const agentId = process.env.AGENT_ID!;
+
+const res = await fetch(`${base}/v1/agents/${agentId}/runs`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "X-API-Key": key },
+  body: JSON.stringify({ input: { query: "Hello" } }),
+});
+const body = (await res.json()) as { runId: string; sessionId: string; status: string };
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.request
+
+base = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
+key = os.environ["PHRONY_API_KEY"]
+agent = os.environ["AGENT_ID"]
+
+req = urllib.request.Request(
+    f"{base}/v1/agents/{agent}/runs",
+    data=json.dumps({"input": {"query": "Hello"}}).encode(),
+    method="POST",
+    headers={"Content-Type": "application/json", "X-API-Key": key},
+)
+with urllib.request.urlopen(req) as r:
+    body = json.load(r)
+```
+
+</CodeGroup>
+
+---
+
+## Part 3 — HITL: discover a user task and respond with the API
+
+When the model hits an operation that requires approval, the run **pauses** and Phrony creates a **[user task](/concepts/user-task)**. Your backend can treat this like a **second phase** of the same `runId`:
+
+1. **Poll** `GET /v1/runs/{runId}` until `status` indicates the run is waiting for input—common values include **`WaitingForHITL`**, **`WaitingForAITL`**, and **`WaitingForResponse`** (your workspace may use the same strings in the public poll body). If the run finishes without a pause, there is no task to complete in that loop.
+2. **Fetch the timeline** with `GET /v1/runs/{runId}/conversation` (same API key). With **Expose step timeline to API clients** **on**, the JSON includes an **`items`** array. Find the row whose **`type`** is **`UserTaskReq`**: the step **`content`** includes a **`user_task_id`** (snake_case in the payload) identifying the pending task.
+3. **Resume** with `POST /v1/runs/{runId}/messages` (or `.../input`) and a JSON body that includes:
+   - **`runId`** — same UUID as in the path
+   - **`userTaskId`** — the value from `content.user_task_id`
+   - **`approved`** — `true` to approve the tool call, `false` to reject (when the task is an approval-style HITL step)
+
+Other [user task kinds](/concepts/user-task#kinds) use different fields (for example **`selectedOptionId`**, **`textValue`**, **`numberValue`**). See **[Agents and runs — Send input or messages](/api-reference/agents-and-runs#send-input-or-messages-to-a-run)**.
+
+4. **Poll** `GET /v1/runs/{runId}` again. The run may continue, pause again (another task), or complete.
+
+**Waiting for chat-style text:** If the run is **`WaitingForResponse`**, send **`text`** or **`message`** instead of **`userTaskId`** (see the same API reference section).
+
+Example (TypeScript) after you have `runId` and have loaded `conversation`:
+
+```typescript
+function findPendingUserTaskId(conv: {
+  items: Array<{ type: string; content: unknown }>;
+}): string | null {
+  for (const it of conv.items) {
+    if (it.type !== "UserTaskReq" || it.content == null || typeof it.content !== "object") {
+      continue;
+    }
+    const id = (it.content as { user_task_id?: string }).user_task_id;
+    if (typeof id === "string") {
+      return id;
+    }
+  }
+  return null;
+}
+
+async function approveOrReject(runId: string, userTaskId: string, approved: boolean) {
+  const r = await fetch(`${base}/v1/runs/${runId}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-Key": key },
+    body: JSON.stringify({ runId, userTaskId, approved }),
+  });
+  if (!r.ok) {
+    throw new Error(`messages: ${r.status} ${await r.text()}`);
+  }
+  return r.json();
+}
+```
+
+Use **`GET /v1/runs/{runId}/stream`** (SSE) if you prefer event-driven waiting instead of polling; the same **Expose step timeline** setting applies. See **[Agents and runs — Stream](/api-reference/agents-and-runs#stream-sse)** for the event shape.
+
+---
+
+## Checklist
+
+- [ ] Version **deployed**; **API** trigger created; **API key** scoped to that agent + trigger
+- [ ] HITL demo: **HITL** mode + at least one **operation** with **Require approval**, if you want approval tasks
+- [ ] For HITL over HTTP: **Expose step timeline to API clients** = **on** on the **API** trigger
+- [ ] Your service stores **`phk_`** securely and only calls the API from your **backend**
+- [ ] You handle **both** `WaitingForHITL`-style and terminal run outcomes in a loop
+
+## Related
+
+- **[Embedded agents](/techniques/embedded-agents)** — Wider context, file uploads, and redaction
+- **[Human in the loop](/techniques/human-in-the-loop)** — HITL concepts and operation-level approval
+- **[User task](/concepts/user-task)** — Task kinds and how work appears in the product
+- **[API Reference — Agents and runs](/api-reference/agents-and-runs)** — Schemas, examples, conversation and stream

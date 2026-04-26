@@ -41,12 +41,32 @@
         ]
       },
       {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/index",
+              "api-reference/authentication"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api-reference/agents-and-runs",
+              "api-reference/file-library"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Academy",
         "groups": [
           {
             "group": "Guides",
             "pages": [
-              "index"
+              "index",
+              "academy/example-embedded-agent"
             ]
           }
         ]

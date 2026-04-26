@@ -1,0 +1,302 @@
+---
+title: "File library"
+description: "Presign, upload, finalize, and pass workspace files into runs via the public API."
+---
+
+Workspace files are shared with the [file library](/concepts/file-library) in the Phrony dashboard. From the API you upload bytes **out of band** to object storage, then **finalize** the object so the runtime can resolve it for your [agent runs](/concepts/session).
+
+**Requirements:** The same **`X-API-Key`** must be used for presign, finalize, and run calls. The key must have **Allow file uploads** enabled. Otherwise `POST` to these routes returns **403**.
+
+Paths are under **`/v1/file-library`** (relative to your [API base URL](/api-reference/index#base-url)).
+
+## Presign
+
+`POST /v1/file-library/presign`
+
+**Request body (JSON):**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `filename` | string | Yes | 1–512 characters. |
+| `mediaType` | string | Yes | Content type; unsafe or disallowed types are rejected for typical document and media flows. |
+| `maxContentLength` | integer | Yes | Maximum upload size in bytes (positive; within platform limits). Must be **≥** the actual file size you will upload. |
+
+**Response (success, JSON):**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `objectKey` | string | Storage key; use in [finalize](#finalize) and when building [file references](#use-in-a-run). |
+| `uploadUrl` | string (URL) | Issue **`PUT`** to this URL with the file bytes. |
+| `httpMethod` | `"PUT"` | Always `PUT` for the upload step. |
+| `requiredHeaders` | object | Header name → value. Send **every** header on the `PUT` (for example `Content-Type` and encryption-related headers). |
+| `expiresInSeconds` | integer | Presigned URL lifetime. |
+
+## Upload bytes
+
+Issue an HTTP **`PUT`** to **`uploadUrl`** with the **exact** `requiredHeaders` from the presign response. For browser or typical `fetch` uploads, do not rely on a fixed `Content-Length` baked into the signed URL; the uploader should set length from the file.
+
+## Finalize
+
+`POST /v1/file-library/finalize`
+
+**Request body (JSON):**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `objectKey` | string | Yes | Value from [presign](#presign) after a successful `PUT`. |
+| `maxContentLength` | integer | Yes | Same value as in presign; must be **≥** the actual uploaded size. |
+| `filename` | string | No | Display name in the library; should match presign when possible. |
+| `mediaType` | string | No | Content type label; should match presign when possible. |
+
+**Response (success, JSON):**
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `objectKey` | string | Confirmed storage key (same as in the request when successful). |
+| `sizeBytes` | string | Stored size as a decimal string. |
+| `alreadyFinalized` | boolean | `true` if this key was already finalized (idempotent retry). |
+
+## Use in a run
+
+After finalize, pass a **file reference** in **`POST /v1/agents/{agentId}/runs`** body under **`input`**. Use the **leaf** file name (the segment after the last `/` in **`objectKey`**, for example a UUID name with extension), not a full path.
+
+**`phronyFile` object in `input` (field name is up to your agent schema, e.g. `document`):**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `phronyFile` | `true` | Yes | Must be the literal `true`. |
+| `filename` | string | Yes | **Leaf** name only (same as the last segment of `objectKey`), not a full path. |
+| `mediaType` | string | Yes | Content type of the uploaded file. |
+
+Example:
+
+```json
+{
+  "input": {
+    "document": {
+      "phronyFile": true,
+      "filename": "a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf",
+      "mediaType": "application/pdf"
+    }
+  }
+}
+```
+
+For **`POST /v1/runs/{runId}/messages`** (or **`…/input`**), attach finalized files with the **`files[]`** shape in **[Agents and runs](/api-reference/agents-and-runs#send-input-or-messages-to-a-run)** (`phronyFile`, `objectKey`, optional `filename` / `mediaType`).
+
+## Examples (cURL, TypeScript, Python)
+
+The **`PUT`** to **`uploadUrl`** must send **every** key/value in **`requiredHeaders`** from the presign response. Size **`maxContentLength`** must be **at least** the real byte size of the file.
+
+### Full flow: presign, upload, finalize, start a run
+
+<CodeGroup>
+
+```bash cURL
+# Requires: jq, curl, file "document.pdf" in the current directory. Set AGENT_ID and API key.
+export PHRONY_API_BASE="${PHRONY_API_BASE:-https://api.phrony.com}"
+export PHRONY_API_KEY="phk_..."
+export AGENT_ID="00000000-0000-0000-0000-000000000000"
+FILE="document.pdf"
+SIZE=$(wc -c < "$FILE" | tr -d ' ')
+
+# 1) Presign
+PRESIGN=$(curl -sS -X POST "${PHRONY_API_BASE}/v1/file-library/presign" \
+  -H "Content-Type: application/json" -H "X-API-Key: ${PHRONY_API_KEY}" \
+  -d "$(jq -n --arg f "$FILE" --arg m "application/pdf" --argjson c "$SIZE" \
+      '{filename:$f, mediaType:$m, maxContentLength:($c|tonumber)}')")
+echo "$PRESIGN" | jq .
+OBJ=$(echo "$PRESIGN" | jq -r .objectKey)
+UP=$(echo "$PRESIGN" | jq -r .uploadUrl)
+LEAF=$(echo "$OBJ" | awk -F/ '{print $NF}')
+
+# 2) PUT: one -H for each requiredHeaders entry
+HARGS=()
+while IFS= read -r line; do
+  HARGS+=(-H "$line")
+done < <(echo "$PRESIGN" | jq -r '.requiredHeaders | to_entries[] | "\(.key): \(.value)"')
+curl -sS -X PUT "$UP" "${HARGS[@]}" --data-binary "@${FILE}"
+
+# 3) Finalize
+MAX=$SIZE
+curl -sS -X POST "${PHRONY_API_BASE}/v1/file-library/finalize" \
+  -H "Content-Type: application/json" -H "X-API-Key: ${PHRONY_API_KEY}" \
+  -d "$(jq -n --arg o "$OBJ" --argjson c "$MAX" --arg f "$FILE" --arg m "application/pdf" \
+      '{objectKey:$o, maxContentLength:($c|tonumber), filename:$f, mediaType:$m}')"
+
+# 4) Start run (match input field names to your agent)
+curl -sS -X POST "${PHRONY_API_BASE}/v1/agents/${AGENT_ID}/runs" \
+  -H "Content-Type: application/json" -H "X-API-Key: ${PHRONY_API_KEY}" \
+  -d "$(jq -n --arg f "$LEAF" --arg m "application/pdf" \
+    '{input:{document:{phronyFile:true, filename:$f, mediaType:$m}}}')"
+```
+
+```typescript TypeScript
+import { readFile } from "node:fs/promises";
+
+async function main() {
+  const baseUrl = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
+  const apiKey = process.env.PHRONY_API_KEY ?? "";
+  const agentId = process.env.AGENT_ID ?? "";
+  const filePath = process.argv[2] ?? "document.pdf";
+
+  const buf = await readFile(filePath);
+  const name = filePath.split("/").pop() ?? "document.pdf";
+  const maxContentLength = buf.length;
+
+  const presignR = await fetch(`${baseUrl}/v1/file-library/presign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+    body: JSON.stringify({
+      filename: name,
+      mediaType: "application/pdf",
+      maxContentLength,
+    }),
+  });
+  if (!presignR.ok) {
+    throw new Error(`presign: ${presignR.status} ${await presignR.text()}`);
+  }
+  const presign = (await presignR.json()) as {
+    objectKey: string;
+    uploadUrl: string;
+    requiredHeaders: Record<string, string>;
+  };
+
+  const put = await fetch(presign.uploadUrl, {
+    method: "PUT",
+    headers: presign.requiredHeaders,
+    body: buf,
+  });
+  if (!put.ok) {
+    throw new Error(`PUT failed: ${put.status} ${await put.text()}`);
+  }
+
+  const finalizeR = await fetch(`${baseUrl}/v1/file-library/finalize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+    body: JSON.stringify({
+      objectKey: presign.objectKey,
+      maxContentLength,
+      filename: name,
+      mediaType: "application/pdf",
+    }),
+  });
+  if (!finalizeR.ok) {
+    throw new Error(`finalize: ${finalizeR.status} ${await finalizeR.text()}`);
+  }
+
+  const leaf = presign.objectKey.split("/").pop() ?? name;
+  const runR = await fetch(`${baseUrl}/v1/agents/${agentId}/runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+    body: JSON.stringify({
+      input: {
+        document: {
+          phronyFile: true,
+          filename: leaf,
+          mediaType: "application/pdf",
+        },
+      },
+    }),
+  });
+  if (!runR.ok) {
+    throw new Error(`start run: ${runR.status} ${await runR.text()}`);
+  }
+  console.log(await runR.json());
+}
+
+void main();
+```
+
+```python Python (stdlib)
+import json
+import os
+import urllib.request
+import sys
+
+BASE = os.environ.get("PHRONY_API_BASE", "https://api.phrony.com").rstrip("/")
+API_KEY = os.environ["PHRONY_API_KEY"]
+AGENT_ID = os.environ["AGENT_ID"]
+
+
+def request_json(req: urllib.request.Request) -> dict:
+    with urllib.request.urlopen(req) as res:
+        return json.load(res)
+
+
+def main() -> None:
+    path = sys.argv[1] if len(sys.argv) > 1 else "document.pdf"
+    with open(path, "rb") as f:
+        data = f.read()
+    name = path.rsplit("/", 1)[-1]
+    n = len(data)
+    pres = request_json(
+        urllib.request.Request(
+            f"{BASE}/v1/file-library/presign",
+            data=json.dumps(
+                {
+                    "filename": name,
+                    "mediaType": "application/pdf",
+                    "maxContentLength": n,
+                }
+            ).encode("utf-8"),
+            method="POST",
+            headers={"Content-Type": "application/json", "X-API-Key": API_KEY},
+        )
+    )
+    put_req = urllib.request.Request(
+        pres["uploadUrl"],
+        data=data,
+        method="PUT",
+        headers=dict(pres["requiredHeaders"]),
+    )
+    with urllib.request.urlopen(put_req) as r:
+        r.read()
+    request_json(
+        urllib.request.Request(
+            f"{BASE}/v1/file-library/finalize",
+            data=json.dumps(
+                {
+                    "objectKey": pres["objectKey"],
+                    "maxContentLength": n,
+                    "filename": name,
+                    "mediaType": "application/pdf",
+                }
+            ).encode("utf-8"),
+            method="POST",
+            headers={"Content-Type": "application/json", "X-API-Key": API_KEY},
+        )
+    )
+    leaf = pres["objectKey"].rsplit("/", 1)[-1]
+    out = request_json(
+        urllib.request.Request(
+            f"{BASE}/v1/agents/{AGENT_ID}/runs",
+            data=json.dumps(
+                {
+                    "input": {
+                        "document": {
+                            "phronyFile": True,
+                            "filename": leaf,
+                            "mediaType": "application/pdf",
+                        }
+                    }
+                }
+            ).encode("utf-8"),
+            method="POST",
+            headers={"Content-Type": "application/json", "X-API-Key": API_KEY},
+        )
+    )
+    print(out)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+</CodeGroup>
+
+Adjust the **`input.document`** (or your real field name) to match the **Input** contract of your [deployed agent version](/concepts/agent).
+
+## Related
+
+- **[Embedded agents — File uploads](/techniques/embedded-agents#file-uploads-with-an-api-key)** — Step-by-step and examples.
