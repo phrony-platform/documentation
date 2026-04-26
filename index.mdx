@@ -16,20 +16,22 @@ description: "Phrony — an execution environment for governed, agentic systems.
   />
 </div>
 
-Phrony is an **execution environment for agentic systems**. It is the runtime in which [AI agents](/concepts/agent) operate — where perception, reasoning, and action are not only possible, but governed.
+Phrony is the fastest way to take an agent from prototype to production. You build the agent. Phrony handles everything around it — tool access, human approvals, execution history, safety checks, and the runtime itself.
 
-Phrony is **not** an interface for interacting with a language model. It is **not** a workflow engine. It does not model predefined sequences of steps, nor does it aim to encode deterministic logic. It operates at a different layer of the system: where autonomous decision-making meets real-world interaction.
+It is not a chat interface. It is not a workflow engine — it does not model fixed sequences of steps, and it does not encode logic upfront. Phrony sits a layer below: the infrastructure your agent needs to actually run in production, so you don't have to build it yourself.
 
-> Phrony defines not what an agent should do, but **how an agent is allowed to operate**.
+You define what your agent does. Phrony defines how it is allowed to operate — and runs it.
 
-This includes:
+What you get out of the box:
 
-- Controlling how external **operations** ([integrations](/concepts/integration)) are accessed
-- Recording how decisions are made and enabling inspection or reproduction of executions
-- Introducing structure around inherently dynamic processes without forcing them into fixed flows
-- Providing guardrails around agent behavior — enforcing boundaries around what can be accessed, how actions are executed, and how data is handled
+- Governed tool access — every integration call passes through approval rules and inline safety checks before it executes
+- Full execution history — every reasoning step, tool call, and decision is recorded, inspectable, and replayable
+- Structure without rigidity — agents decide their own path, inside the session limits, depth limits, and safety budgets you set
+- Guardrails by default — what an agent can access, how it acts, and how it handles data are enforced by the runtime, not the prompt
 
-If you are choosing between a workflow and an agent, or whether Phrony matches your use case, read **[When to use Phrony](/when-to-use-phrony)**.
+Stop building agent infrastructure. Ship the agent.
+
+If you are deciding between a workflow and an agent — or whether Phrony fits your use case — read **[When to use Phrony](/when-to-use-phrony)**.
 
 ## Concepts
 
