@@ -1,6 +1,6 @@
 ---
 title: "File library"
-description: "Workspace file storage for agent runs: upload, list, and attach files to input without pasting long paths in the product UI."
+description: "Workspace file storage for agent runs"
 ---
 
 ## What it is
@@ -17,18 +17,18 @@ You use the library to:
 
 [Agents](/concepts/agent) do not “own” the file library. The workspace does. A run’s **input** can **reference** a library file (by a short, stable name Phrony resolves inside your workspace). The runtime fetches the bytes when the model or tools need them.
 
-| Idea | Detail |
-| --- | --- |
-| **Scope** | Files belong to the **active workspace**; switching workspaces shows a different library. |
-| **Quotas** | Your plan’s **file storage** limit applies: uploads that would exceed the cap are blocked. |
+| Idea             | Detail                                                                                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scope**        | Files belong to the **active workspace**; switching workspaces shows a different library.                                                 |
+| **Quotas**       | Your plan’s **file storage** limit applies: uploads that would exceed the cap are blocked.                                                |
 | **After delete** | Removing a file from storage can break [sessions](/concepts/session) that still expect it if those sessions resume—treat delete as final. |
 
 ## What you see in the product
 
-| Area | Purpose |
-| --- | --- |
+| Area                         | Purpose                                                                                                                                                                |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **File library** (dashboard) | List uploaded files, filter by type, search by name, see **who uploaded** each file (when known) and **when** it was added, see usage against your plan, delete files. |
-| **Agent / test UIs** | When an input field is a **file** type, you can pick from the same library (or upload) in context. |
+| **Agent / test UIs**         | When an input field is a **file** type, you can pick from the same library (or upload) in context.                                                                     |
 
 List rows show a **display name** (and technical details the product needs) so you can recognize files without dealing with long internal paths in everyday use.
 
