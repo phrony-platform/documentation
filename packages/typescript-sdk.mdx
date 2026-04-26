@@ -1,0 +1,145 @@
+---
+title: "TypeScript SDK"
+description: "Install and use @phrony/sdk to call the Phrony public API with TypeScript: agents, runs, conversation, stream, and file uploads."
+---
+
+The **TypeScript SDK** ([`@phrony/sdk`](https://www.npmjs.com/package/@phrony/sdk)) wraps the same REST routes documented in the **[API Reference](/api-reference/index)**. It sets **`X-API-Key`**, maps methods to paths, and ships types for common responses (including the **[conversation](/api-reference/runs#conversation)** payload).
+
+**Requirements:** Node **18+**, or any JavaScript environment that provides **`fetch`** (browsers, Deno, Bun, and so on).
+
+**Source code:** the package is [open source on GitHub](https://github.com/phrony/ts-sdk) (MIT). Report issues and contribute there.
+
+## Install
+
+```bash
+pnpm add @phrony/sdk
+```
+
+You can also use `npm` or `yarn` if your project standardizes on those.
+
+## Create a client
+
+You need a [workspace API key](/api-reference/authentication) with prefix **`phk_`**, scoped to the same **agent** and **API trigger** as the requests you make.
+
+| Option | Default | Purpose |
+| ------ | ------- | ----------- |
+| `apiKey` | (required) | The secret key string |
+| `baseUrl` | `https://api.phrony.com` | Your team’s base URL, if it differs; use the value from the agent’s **Access** tab in the Phrony dashboard |
+| `fetch` | `globalThis.fetch` | Override for tests, old Node, or custom stacks |
+
+```typescript
+import { Phrony } from "@phrony/sdk";
+
+const phrony = new Phrony({
+  apiKey: process.env.PHRONY_API_KEY!,
+  // baseUrl: "https://api.phrony.com",
+});
+```
+
+## How it maps to the API
+
+| SDK method | HTTP |
+| ---------- | ---- |
+| `startRun` | [Start a run](/api-reference/agents#start-a-run) `POST /v1/agents/{agentId}/runs` |
+| `listSessions` | [List sessions](/api-reference/agents#list-sessions) `GET /v1/agents/{agentId}/sessions` |
+| `getRun` | [Get run status](/api-reference/runs#get-v1-runs-runid) `GET /v1/runs/{runId}` |
+| `getConversation` | [Get conversation](/api-reference/runs#conversation) `GET /v1/runs/{runId}/conversation` |
+| `sendRunMessage` | [Send input or messages](/api-reference/runs#send-input-or-messages-to-a-run) `POST .../messages` or `.../input` |
+| `streamRunEvents` | [Stream (SSE)](/api-reference/runs#stream-sse) `GET /v1/runs/{runId}/stream` |
+| `presignFile` / `finalizeFile` | [File library](/api-reference/file-library) `POST /v1/file-library/...` |
+| `uploadWorkspaceFile` | Presign → `PUT` → finalize in one call |
+
+## Start a run
+
+`input` must match your **deployed** [agent version](/concepts/agent) **input** contract. Pass `{}` or omit the shape the agent does not use.
+
+```typescript
+const { runId, sessionId, status } = await phrony.startRun(agentId, {
+  input: { query: "Hello from the SDK" },
+});
+```
+
+The service responds with **202 Accepted**; work may still be in progress after you receive `runId`.
+
+## Get the agent’s answer
+
+After the run has finished (or you only need the latest known fields), read **`output`** (and optional **`error`**) from **[get run status](/api-reference/runs#get-v1-runs-runid)**.
+
+```typescript
+const run = await phrony.getRun(runId);
+// run.output — finish state depends on your agent; poll until status matches your "done" rules
+// run.error — when the run failed
+```
+
+You can also read **`output`** (and the merged timeline) from **`getConversation`** on the `session` object, the **`runs[]`** entries, or completion rows in **`items`** (for example `RunCompleted` / `SessionCompleted`).
+
+## List sessions
+
+```typescript
+const page = await phrony.listSessions(agentId, { skip: 0, take: 20 });
+// page.items, page.total
+```
+
+## Conversation and timeline
+
+`getConversation` returns **`session`**, **`runs`**, and merged **`items`** (steps and synthetic rows). With **`stepContent: "slim"`**, redundant keys in step `content` objects can be omitted—see the [Runs API](/api-reference/runs#conversation) description.
+
+The SDK exports types such as **`ConversationResponse`**, **`ConversationSession`**, **`ConversationRunSummary`**, and **`ConversationTimelineItem`**, plus narrower **`content` shapes** for common step `type` values (for example `ToolCall`, `Reasoning`, `UserTaskReq`).
+
+```typescript
+import type { ConversationResponse } from "@phrony/sdk";
+
+const convo: ConversationResponse = await phrony.getConversation(runId, {
+  stepContent: "slim",
+});
+```
+
+## Follow-up messages, HITL, and [user tasks](/concepts/user-task)
+
+`sendRunMessage` sends **`runId`** for you. Add **`userTaskId`**, **`approved`**, **`text`**, **`files`**, and other fields as required for your run’s pause type—see **[Send input or messages to a run](/api-reference/runs#send-input-or-messages-to-a-run)**.
+
+```typescript
+await phrony.sendRunMessage(runId, {
+  userTaskId,
+  approved: true,
+});
+```
+
+To use the **`.../input`** path instead of **`.../messages`**, pass `{ path: "input" }` as the third argument.
+
+## Stream (SSE)
+
+`streamRunEvents` parses **Server-Sent Events** and yields a JSON object per event (`ts`, `kind`, `subject`, `data`). Use it from a **server** or a runtime with streamable **`fetch`**; the browser’s **`EventSource`** cannot set **`X-API-Key`**.
+
+```typescript
+for await (const ev of phrony.streamRunEvents(runId)) {
+  console.log(ev.kind, ev.subject, ev.data);
+}
+```
+
+## File library
+
+The key must have **[Allow file uploads](/api-reference/file-library#requirements)**. **`uploadWorkspaceFile`** runs presign, upload, and finalize. Use **`fileRefFromObjectKey`** (or a **`files[]`** attachment on a message) as in the [File library](/api-reference/file-library) examples.
+
+## Errors
+
+Failed HTTP status codes throw **`PhronyAPIError`** with **`status`**, **`path`**, and the response **`body`** (often JSON text).
+
+```typescript
+import { PhronyAPIError } from "@phrony/sdk";
+
+try {
+  await phrony.getRun(runId);
+} catch (e) {
+  if (e instanceof PhronyAPIError) {
+    console.error(e.status, e.path, e.body);
+  }
+  throw e;
+}
+```
+
+## Further reading
+
+- **npm:** [`@phrony/sdk`](https://www.npmjs.com/package/@phrony/sdk)
+- **Readme and advanced usage** (including a full method table) live in the [repository](https://github.com/phrony/ts-sdk)
+- **[Academy example](/academy/example-embedded-agent)** — Hands-on flow using the same package

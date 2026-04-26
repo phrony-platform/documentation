@@ -14,7 +14,7 @@ You should already have a [workspace](/concepts/workspace), an [LLM provider](/c
 | Agent, **deployed** [version](/concepts/agent), **API** [trigger](/concepts/agent#triggers), **API key** scoped to that agent + trigger | `POST` to start a run, `GET` to poll, optional `GET` conversation |
 | Optional: HITL execution mode and an [integration](/concepts/integration) operation with **Require approval (HITL)** | When the run waits, `GET` conversation to read `user_task_id`, then `POST` to resume with `userTaskId` + `approved` (or other fields) |
 
-Full endpoint details: **[API Reference](/api-reference/index)** — especially **[Agents](/api-reference/agents)** and **[Runs](/api-reference/runs)**.
+Full endpoint details: **[API Reference](/api-reference/index)** — especially **[Agents](/api-reference/agents)** and **[Runs](/api-reference/runs)**. For TypeScript, you can also use the official **[TypeScript SDK](/packages/typescript-sdk)** ([`@phrony/sdk`](https://www.npmjs.com/package/@phrony/sdk)) so you do not hand-author every `fetch` call.
 
 ---
 
@@ -88,17 +88,19 @@ curl -sS -X POST "${PHRONY_API_BASE}/v1/agents/${AGENT_ID}/runs" \
   -d '{"input":{"query":"Hello"}}'
 ```
 
-```typescript TypeScript
-const base = process.env.PHRONY_API_BASE ?? "https://api.phrony.com";
-const key = process.env.PHRONY_API_KEY!;
+```typescript TypeScript SDK (@phrony/sdk)
+import { Phrony } from "@phrony/sdk";
+
+const phrony = new Phrony({
+  apiKey: process.env.PHRONY_API_KEY!,
+  baseUrl: process.env.PHRONY_API_BASE ?? "https://api.phrony.com",
+});
 const agentId = process.env.AGENT_ID!;
 
-const res = await fetch(`${base}/v1/agents/${agentId}/runs`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "X-API-Key": key },
-  body: JSON.stringify({ input: { query: "Hello" } }),
+const body = await phrony.startRun(agentId, {
+  input: { query: "Hello" },
 });
-const body = (await res.json()) as { runId: string; sessionId: string; status: string };
+// body.runId, body.sessionId, body.status
 ```
 
 ```python Python (stdlib)
@@ -141,12 +143,17 @@ Other [user task kinds](/concepts/user-task#kinds) use different fields (for exa
 
 **Waiting for chat-style text:** If the run is **`WaitingForResponse`**, send **`text`** or **`message`** instead of **`userTaskId`** (see the same API reference section).
 
-Example (TypeScript) after you have `runId` and have loaded `conversation`:
+Example (TypeScript SDK) after you have `runId` and have called **`getConversation`**:
 
 ```typescript
-function findPendingUserTaskId(conv: {
-  items: Array<{ type: string; content: unknown }>;
-}): string | null {
+import { Phrony, type ConversationResponse, PhronyAPIError } from "@phrony/sdk";
+
+const phrony = new Phrony({
+  apiKey: process.env.PHRONY_API_KEY!,
+  baseUrl: process.env.PHRONY_API_BASE ?? "https://api.phrony.com",
+});
+
+function findPendingUserTaskId(conv: ConversationResponse): string | null {
   for (const it of conv.items) {
     if (it.type !== "UserTaskReq" || it.content == null || typeof it.content !== "object") {
       continue;
@@ -160,15 +167,14 @@ function findPendingUserTaskId(conv: {
 }
 
 async function approveOrReject(runId: string, userTaskId: string, approved: boolean) {
-  const r = await fetch(`${base}/v1/runs/${runId}/messages`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-API-Key": key },
-    body: JSON.stringify({ runId, userTaskId, approved }),
-  });
-  if (!r.ok) {
-    throw new Error(`messages: ${r.status} ${await r.text()}`);
+  try {
+    return await phrony.sendRunMessage(runId, { userTaskId, approved });
+  } catch (e) {
+    if (e instanceof PhronyAPIError) {
+      throw new Error(`messages: ${e.status} ${e.body}`);
+    }
+    throw e;
   }
-  return r.json();
 }
 ```
 
@@ -190,3 +196,4 @@ Use **`GET /v1/runs/{runId}/stream`** (SSE) if you prefer event-driven waiting i
 - **[Human in the loop](/techniques/human-in-the-loop)** — HITL concepts and operation-level approval
 - **[User task](/concepts/user-task)** — Task kinds and how work appears in the product
 - **[API Reference — Agents](/api-reference/agents)** and **[Runs](/api-reference/runs)** — Schemas, examples, conversation and stream
+- **[TypeScript SDK](/packages/typescript-sdk)** — `Phrony` client, types, and install instructions for [`@phrony/sdk`](https://www.npmjs.com/package/@phrony/sdk)

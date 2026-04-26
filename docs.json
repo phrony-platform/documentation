@@ -37,6 +37,13 @@
               "techniques/human-in-the-loop",
               "techniques/agent-in-the-loop"
             ]
+          },
+          {
+            "group": "Packages",
+            "pages": [
+              "packages/index",
+              "packages/typescript-sdk"
+            ]
           }
         ]
       },
