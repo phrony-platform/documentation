@@ -65,7 +65,7 @@
           {
             "group": "Guides",
             "pages": [
-              "index",
+              "academy/index",
               "academy/example-embedded-agent"
             ]
           }
