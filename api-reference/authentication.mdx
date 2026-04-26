@@ -3,11 +3,11 @@ title: "Authentication"
 description: "X-API-Key, key format, and how Phrony scopes access for the public API."
 ---
 
+Authentication is **header-based**: you send a workspace **API key** on every [authenticated route](/api-reference/index). There is no separate OAuth or session cookie for the public JSON API.
+
 ## API keys
 
-You create **API keys** in the **Phrony dashboard** under **Settings** (or your workspace settings, depending on layout). Each key is a single secret; issued keys are prefixed with **`phk_`**.
-
-You must not commit keys to source control or embed them in client-side code that end users can read. Use environment variables or a secret manager on your server.
+> Create and revoke keys in the **Phrony dashboard** (workspace or **Settings**, depending on layout). Each key is a single secret; issued keys are prefixed with **`phk_`**. Do not commit keys to source control or put them in client-side code; use environment variables or a secret manager on your server.
 
 ## Headers (authenticated routes)
 
@@ -27,7 +27,7 @@ The gateway allows `X-API-Key` in CORS preflight.
 
 ### Example
 
-Every authenticated request adds the same header. Replace `RUN_ID` after you [start a run](/api-reference/agents-and-runs#start-a-run).
+Every authenticated request adds the same header. Replace `RUN_ID` after you [start a run](/api-reference/agents#start-a-run).
 
 <CodeGroup>
 

@@ -53,7 +53,8 @@
           {
             "group": "Endpoints",
             "pages": [
-              "api-reference/agents-and-runs",
+              "api-reference/agents",
+              "api-reference/runs",
               "api-reference/file-library"
             ]
           }
@@ -88,5 +89,11 @@
   },
   "footer": {
     "socials": {}
-  }
+  },
+  "redirects": [
+    {
+      "source": "/api-reference/agents-and-runs",
+      "destination": "/api-reference/runs"
+    }
+  ]
 }

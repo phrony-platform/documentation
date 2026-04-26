@@ -9,9 +9,24 @@ Workspace files are shared with the [file library](/concepts/file-library) in th
 
 Paths are under **`/v1/file-library`** (relative to your [API base URL](/api-reference/index#base-url)).
 
-## Presign
+## The presign response
 
-`POST /v1/file-library/presign`
+After a successful `POST` to [Presign](#presign), you get storage coordinates and a time-limited upload target:
+
+```json
+{
+  "objectKey": "tenant/…/file.pdf",
+  "uploadUrl": "https://…",
+  "httpMethod": "PUT",
+  "requiredHeaders": { "Content-Type": "application/pdf" },
+  "expiresInSeconds": 3600
+}
+```
+
+<a id="presign" />
+## `POST` `/v1/file-library/presign`
+
+> Request a time-limited URL and required headers to upload a file to workspace storage (before [finalize](#finalize)).
 
 **Request body (JSON):**
 
@@ -35,9 +50,10 @@ Paths are under **`/v1/file-library`** (relative to your [API base URL](/api-ref
 
 Issue an HTTP **`PUT`** to **`uploadUrl`** with the **exact** `requiredHeaders` from the presign response. For browser or typical `fetch` uploads, do not rely on a fixed `Content-Length` baked into the signed URL; the uploader should set length from the file.
 
-## Finalize
+<a id="finalize" />
+## `POST` `/v1/file-library/finalize`
 
-`POST /v1/file-library/finalize`
+> Confirm the uploaded bytes so the [runtime](/concepts/session) can resolve the object for your agent. Idempotent for the same key.
 
 **Request body (JSON):**
 
@@ -82,7 +98,7 @@ Example:
 }
 ```
 
-For **`POST /v1/runs/{runId}/messages`** (or **`…/input`**), attach finalized files with the **`files[]`** shape in **[Agents and runs](/api-reference/agents-and-runs#send-input-or-messages-to-a-run)** (`phronyFile`, `objectKey`, optional `filename` / `mediaType`).
+For **`POST /v1/runs/{runId}/messages`** (or **`…/input`**), attach finalized files with the **`files[]`** shape in **[Runs API — Send input or messages](/api-reference/runs#send-input-or-messages-to-a-run)** (`phronyFile`, `objectKey`, optional `filename` / `mediaType`).
 
 ## Examples (cURL, TypeScript, Python)
 

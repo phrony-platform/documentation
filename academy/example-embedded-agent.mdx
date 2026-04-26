@@ -14,7 +14,7 @@ You should already have a [workspace](/concepts/workspace), an [LLM provider](/c
 | Agent, **deployed** [version](/concepts/agent), **API** [trigger](/concepts/agent#triggers), **API key** scoped to that agent + trigger | `POST` to start a run, `GET` to poll, optional `GET` conversation |
 | Optional: HITL execution mode and an [integration](/concepts/integration) operation with **Require approval (HITL)** | When the run waits, `GET` conversation to read `user_task_id`, then `POST` to resume with `userTaskId` + `approved` (or other fields) |
 
-Full endpoint details: **[API Reference](/api-reference/index)** — especially **[Agents and runs](/api-reference/agents-and-runs)**.
+Full endpoint details: **[API Reference](/api-reference/index)** — especially **[Agents](/api-reference/agents)** and **[Runs](/api-reference/runs)**.
 
 ---
 
@@ -135,7 +135,7 @@ When the model hits an operation that requires approval, the run **pauses** and 
    - **`userTaskId`** — the value from `content.user_task_id`
    - **`approved`** — `true` to approve the tool call, `false` to reject (when the task is an approval-style HITL step)
 
-Other [user task kinds](/concepts/user-task#kinds) use different fields (for example **`selectedOptionId`**, **`textValue`**, **`numberValue`**). See **[Agents and runs — Send input or messages](/api-reference/agents-and-runs#send-input-or-messages-to-a-run)**.
+Other [user task kinds](/concepts/user-task#kinds) use different fields (for example **`selectedOptionId`**, **`textValue`**, **`numberValue`**). See **[Runs — Send input or messages](/api-reference/runs#send-input-or-messages-to-a-run)**.
 
 4. **Poll** `GET /v1/runs/{runId}` again. The run may continue, pause again (another task), or complete.
 
@@ -172,7 +172,7 @@ async function approveOrReject(runId: string, userTaskId: string, approved: bool
 }
 ```
 
-Use **`GET /v1/runs/{runId}/stream`** (SSE) if you prefer event-driven waiting instead of polling; the same **Expose step timeline** setting applies. See **[Agents and runs — Stream](/api-reference/agents-and-runs#stream-sse)** for the event shape.
+Use **`GET /v1/runs/{runId}/stream`** (SSE) if you prefer event-driven waiting instead of polling; the same **Expose step timeline** setting applies. See **[Runs — Stream (SSE)](/api-reference/runs#stream-sse)** for the event shape.
 
 ---
 
@@ -189,4 +189,4 @@ Use **`GET /v1/runs/{runId}/stream`** (SSE) if you prefer event-driven waiting i
 - **[Embedded agents](/techniques/embedded-agents)** — Wider context, file uploads, and redaction
 - **[Human in the loop](/techniques/human-in-the-loop)** — HITL concepts and operation-level approval
 - **[User task](/concepts/user-task)** — Task kinds and how work appears in the product
-- **[API Reference — Agents and runs](/api-reference/agents-and-runs)** — Schemas, examples, conversation and stream
+- **[API Reference — Agents](/api-reference/agents)** and **[Runs](/api-reference/runs)** — Schemas, examples, conversation and stream
