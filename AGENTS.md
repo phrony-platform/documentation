@@ -10,6 +10,7 @@
 - Content is currently **`index.mdx` only** (introduction). Navigation lives in `docs.json` (**Documentation** → **Overview**, plus **Academy** and **API** tabs that also point at `index` until more pages exist).
 - Run `mint dev` to preview locally; `mint broken-links` to check links
 - **Voice**: say **Phrony**, **Phrony dashboard**, **API** — do **not** use internal code names (e.g. Cockpit, control-plane) in user-visible MDX
+- **Contributors** who also work on the Phrony monorepo: see [CONTRIBUTING.md](./CONTRIBUTING.md) (includes HTML/dialog notes for dashboard UI)
 
 ## Style preferences
 

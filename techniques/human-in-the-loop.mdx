@@ -25,6 +25,14 @@ HITL runs can **pause** and surface **[user tasks](/concepts/user-task)**—appr
 
 [Request](/concepts/agent#execution-mode)-mode agents are better when every run can finish without a person on the **critical** path. HITL is for when that path **must** include people. **L1** can still create **user tasks** on any [version](/concepts/agent#version-snapshots) where you enable it; the new section [below](#anomaly-control-l1-and-hitl) ties that to HITL-style queues.
 
+## Require approval and Request mode
+
+**Require approval** on an [integration](/concepts/integration) or [operation](/concepts/integration#operation-level-http-and-built-in) tells Phrony that a **human must approve** before that tool’s HTTP or built-in call executes. That **only** works when the **session’s root** agent is in **HITL** execution mode.
+
+If you start a session with a **Request**-mode agent (API, schedule, test run, or trigger) and the model tries to call a tool that **requires approval**, the run **does not** pause and **does not** create an approval in **Review**. Phrony **skips** executing that call and returns an error to the model so it can react (for example choose a different path or explain that a HITL agent is required). Other tools in the same turn that do **not** require approval can still run.
+
+So: **Request** + **Require approval** on an operation is not a supported combination for “pause until someone clicks Approve.” Either switch the agent to **HITL**, or turn off approval on operations that a Request agent must call.
+
 ## How pauses become work
 
 When a HITL run needs a person, Phrony creates a **[user task](/concepts/user-task)** and typically moves the session into a **waiting** state until the task is **completed** (including **rejection** on an approval, which records a deliberate no-go).
@@ -41,7 +49,7 @@ HITL **execution mode** and **L1** are complementary: you might use HITL for **s
 
 ## Gating a tool call (operation-level)
 
-For [integrations](/concepts/integration), you can require **HITL before** a specific **operation** runs. When the model tries to call that tool, the run **pauses** and a user task asks someone to **approve** or **reject** the call. You configure this in the **Edit Operation** flow for that integration (HTTP and built-in connectors both support operation-level flags; the exact label is **Require approval** / **Require approval (HITL) before execution** depending on the connector). Connector-wide defaults and per-operation overrides are described under [Operation level](/concepts/integration#operation-level-http-and-built-in) on the [integration](/concepts/integration) page.
+For [integrations](/concepts/integration), you can require **HITL before** a specific **operation** runs. When the **root** [agent](/concepts/agent) is in **HITL** mode and the model tries to call that tool, the run **pauses** and a user task asks someone to **approve** or **reject** the call. On a **Request**-mode root agent, that pause does not happen—see [Require approval and Request mode](#require-approval-and-request-mode). Configure approval in the **Edit Operation** flow (HTTP and built-in; labels are **Require approval** or **Require approval (HITL) before execution** depending on the connector). Connector-wide defaults and per-operation overrides are described under [Operation level](/concepts/integration#operation-level-http-and-built-in) on the [integration](/concepts/integration) page.
 
 <Frame caption="**Operation-level** HITL: turn on approval for the specific [operation](/concepts/integration) the model is allowed to call, so a human must clear each sensitive invocation.">
   <img

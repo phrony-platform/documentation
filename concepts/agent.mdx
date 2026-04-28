@@ -32,9 +32,13 @@ You edit a **Testing** snapshot freely, then **Deploy** it so new work uses that
 
 | Mode          | Triggerable externally?       | Callable by parent agents? | Human input?                                                                                                                  |
 | ------------- | ----------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Request**   | ✅ Scheduled, API             | ❌                         | ❌ Runs autonomously to completion                                                                                            |
+| **Request**   | ✅ Scheduled, API             | ❌                         | ❌ No **Require approval** pauses on tools (next paragraph). [Anomaly control (L1)](/concepts/agent#limits-safety) can still **pause** for review when rules fire. |
 | **HITL**      | ✅ Scheduled, API             | ❌                         | ✅ May pause and present [user tasks](/concepts/user-task) to humans                                                          |
 | **Sub-agent** | ❌ Not externally triggerable | ✅ Only by parent agents   | — [AITL](/techniques/agent-in-the-loop) to parent (see [Multi-agent](/techniques/multi-agent-systems#aitl-agent-in-the-loop)) |
+
+**Require approval on tools:** [Integration](/concepts/integration) and **operation** flags such as **Require approval** or **Always require approval** only **pause** a run and open an approval in the Phrony dashboard when the **session root** agent is in **HITL** mode. If the root agent is **Request** mode, those tools **do not** run and **do not** queue an approval—the model gets an error back instead. Use **HITL** on the agent when operations on the critical path must wait for a person. See [Human in the loop (HITL)](/techniques/human-in-the-loop#require-approval-and-request-mode).
+
+(L1 **anomaly** pauses are separate: they can still create [user tasks](/concepts/user-task) for **anomaly_review** on a version where L1 is enabled, including **Request**-mode agents.)
 
 For how HITL pauses, [user tasks](/concepts/user-task), and [triggers](/concepts/agent#triggers) work together in the product, see [Human in the loop (HITL)](/techniques/human-in-the-loop).
 
