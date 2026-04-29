@@ -1,0 +1,199 @@
+---
+title: "Manifest"
+description: "Declarative YAML that describes LLM providers, integrations, agents, versions, and triggers so you can export, share, and apply configuration in one step."
+---
+
+A **Phrony manifest** is a YAML document (or stream of documents) that declares resources in your [workspace](/concepts/workspace): [LLM providers](/concepts/llm-provider), [integrations](/concepts/integration) and their **operations**, [agents](/concepts/agent), **agent versions**, and **triggers**. Use it to back up setup, move work between environments, or review changes before you apply them.
+
+The product speaks the same model as the dashboard. Applying a manifest **reconciles** those declarations with what already exists—creating, updating, or aligning records so your workspace matches the file.
+
+## Where you use manifests in Phrony
+
+| Action | Where |
+| ------ | ----- |
+| **Export manifest** | On an agent’s detail page, or from the agents list (per agent). Downloads a YAML file (for example `phrony-manifest-<slug>.yaml`). |
+| **Apply manifest** | **Import manifest** on the agents list, or **Apply manifest** on an agent detail page. Upload YAML; optionally run a **dry run** first to preview planned changes without writing. |
+
+When you apply from an **agent detail** page, reconciliation can be **scoped** to that agent’s subtree (multi-agent setups). From the **agents list**, apply is **workspace-wide** unless your flow uses an anchor (the dashboard sets this when you open the dialog from an agent).
+
+After a successful apply, built-in integrations that need an account may appear as **pending connection**—complete connection in the dashboard the same way as when you create an integration without credentials.
+
+## Document shape (version 1)
+
+Every manifest **document** must include:
+
+| Field | Value |
+| ----- | ----- |
+| `kind` | `phrony.manifest` (legacy exports may use `phrony.workspace.manifest`; both are accepted.) |
+| `version` | `1` |
+
+Optional top-level sections:
+
+| Section | Purpose |
+| ------- | ------- |
+| `metadata` | Export hints: optional `exportedAt`, `label`, `rootManifestKey`. |
+| `llmProviders` | Named model backends referenced by agents. |
+| `services` | Integrations (`http` or `built_in`) and their operations. |
+| `agents` | Agent identity: `manifestKey`, `name`, `executionMode`, `llmProviderName`. |
+| `versions` | Per-agent version snapshots (model, instructions, tools, limits, …). |
+| `triggers` | How work enters agents (schedule, API, or event). |
+
+### Optional metadata
+
+| Field | Description |
+| ----- | ----------- |
+| `exportedAt` | ISO timestamp from export (informational). |
+| `label` | Optional human note. |
+| `rootManifestKey` | Optional logical key of the “root” agent in a multi-agent export. |
+
+### LLM providers (`llmProviders`)
+
+Each item is a named provider your agents can use:
+
+| Field | Description |
+| ----- | ----------- |
+| `name` | Unique name; **agents** reference this in `llmProviderName`. |
+| `type` | One of: `openai`, `openai_azure`, `anthropic`, `self_hosted`. |
+| `baseUrlOverride` | Optional override URL for the vendor API (often `null` or omitted). |
+
+Provider credentials are **not** embedded in the manifest. The workspace must already have compatible provider configuration; the manifest ties **agent** records to provider **names** you use in Phrony.
+
+### Services and operations (`services`)
+
+Each item is an [integration](/concepts/integration)-shaped record:
+
+| Field | Description |
+| ----- | ----------- |
+| `manifestKey` | Optional stable key for reconciliation; if omitted, identity falls back to `name`. |
+| `name` | Display name; referenced by **operations** and by `allowedOperations` on versions. |
+| `type` | `http` or `built_in`. |
+| `config` | Connection settings (base URL, auth shape, built-in toolkit slug, defaults, …). Sensitive pieces may be **redacted** on export (`secretsRedacted` may be set). |
+| `secretsRedacted` | When `true`, the export removed secrets; you must re-supply connection details or secrets where needed. |
+| `operations` | Optional list of tools exposed from this integration (see below). |
+
+**Operation** object:
+
+| Field | Description |
+| ----- | ----------- |
+| `manifestKey` | Optional stable key for this operation. |
+| `name` | Operation name; paired with `serviceName` in `allowedOperations`. |
+| `description` | Optional text for operators or tooling. |
+| `configuration` | HTTP path/method/headers, or built-in tool slug and version—same concepts as the operation editor in the dashboard. |
+| `requireApproval` | Whether this tool requires approval when your [execution mode](/concepts/agent#execution-mode) allows it. |
+| `argumentsSchema` | Optional JSON Schema for tool arguments. |
+| `secretsRedacted` | Mirrors service-level redaction for this operation if applicable. |
+
+Built-in rows may export **without** a live connection; after apply, connect the integration in the dashboard if prompted.
+
+### Agents (`agents`)
+
+| Field | Description |
+| ----- | ----------- |
+| `manifestKey` | Required stable id used everywhere else in the file (`agentManifestKey`, `allowedSubAgents`, triggers, …). |
+| `name` | Human-readable name. |
+| `executionMode` | `request`, `hitl`, or `sub_agent` (same semantics as [Agent](/concepts/agent#execution-mode)). |
+| `llmProviderName` | Must match a `llmProviders[].name`. |
+
+### Agent versions (`versions`)
+
+Each item is one **version snapshot** for an agent identified by `agentManifestKey`:
+
+| Field | Description |
+| ----- | ----------- |
+| `agentManifestKey` | Links to `agents[].manifestKey`. |
+| `status` | `testing` or `deployed`. |
+| `versionLabel` | Label for this line (for example `v1`). |
+| `llmModel` | Model id for the chosen provider. |
+| `instructions` | Optional system-style instructions. |
+| `description` | Optional short description (length limits apply in product). |
+| `inputSchema` /  `outputSchema` | Optional JSON Schema objects. |
+| `temperature` | Optional sampling temperature. |
+| `maxIterations`, `maxTokensPerRun`, `maxToolCalls` | Optional run budgets. |
+| `anomalyControl` | Optional L1 anomaly behavior. |
+| `canExecuteSubAgents` | Whether this agent may delegate to sub-agents. |
+| `subAgentExecutionModel` | `sequential` or `parallel` when sub-agents are allowed. |
+| `maxSessionTokens`, `maxSessionDurationSec`, `topP`, `topK` | Optional session and sampling limits. |
+| `rules` | Optional list (product-specific rule objects). |
+| `allowedOperations` | Optional list of `{ serviceName, operationName }` entries that become allowed tools. |
+| `allowedSubAgents` | Optional list of **sub-agent** `manifestKey` values this version may call. |
+
+`allowedOperations` uses **integration name** and **operation name** as shown in the manifest’s `services` section, not arbitrary labels.
+
+### Triggers (`triggers`)
+
+Each trigger targets one agent (`agentManifestKey`) and is one of:
+
+**Scheduled**
+
+| Field | Description |
+| ----- | ----------- |
+| `name` | Trigger name. |
+| `type` | `scheduled` |
+| `cronExpression` | Cron string. |
+| `timezone` | IANA timezone name. |
+| `inputPayload` | Optional JSON object passed into runs. |
+| `manifestKey` | Optional stable key. |
+
+**API**
+
+| Field | Description |
+| ----- | ----------- |
+| `name` | Trigger name. |
+| `type` | `api` |
+| `rpmLimit`, `rpdLimit`, `maxConcurrentRuns`, `maxInputTokens` | Optional rate and concurrency limits. |
+| `ipWhitelist` | Optional list of allowed callers. |
+| `exposeStepTimelineToApi` | Optional visibility flag for step timeline in API responses. |
+| `manifestKey` | Optional stable key. |
+
+**Event**
+
+| Field | Description |
+| ----- | ----------- |
+| `name` | Trigger name. |
+| `type` | `event` |
+| `serviceName` | Integration name the event is tied to. |
+| `eventSlug` | Event identifier for that service. |
+| `eventConfig` | Optional JSON object. |
+| `manifestKey` | Optional stable key. |
+
+For how triggers behave at runtime, see [Trigger ingress](/concepts/trigger-ingress) and [Agent — Triggers](/concepts/agent#triggers).
+
+## Multiple YAML documents and includes
+
+You can put **several YAML documents** in one file, separated by `---` (a multi-document stream). They are **merged** into a single logical manifest: later values override earlier ones for the same logical keys (for example same `manifestKey` on an agent or service).
+
+You can also add **index** documents that only pull in other paths or snippets:
+
+```yaml
+kind: phrony.manifest.index
+version: 1
+includes:
+  - ./shared-integrations.yaml
+  - ./my-agents.yaml
+```
+
+Included content is loaded in order and merged the same way. (Very deep include chains are rejected to avoid cycles.)
+
+## Dry run and apply result
+
+A **dry run** returns a **plan**: which resources would be created, updated, left unchanged, or deleted—without persisting changes. Use it to review diffs before applying.
+
+A real **apply** returns a result that includes the **root agent id** used for the operation, a list of **changes**, optional **warnings**, and—when integrations still need OAuth or API keys—a list of **services needing connection** so you can finish setup in the dashboard.
+
+## Related concepts
+
+<CardGroup cols={2}>
+
+<Card title="Agent" href="/concepts/agent">
+  Execution modes, versions, and triggers in the product model.
+</Card>
+
+<Card title="Integration" href="/concepts/integration">
+  HTTP and built-in services and how operations become tools.
+</Card>
+
+<Card title="LLM provider" href="/concepts/llm-provider">
+  Saved vendor connections agents use for model calls.
+</Card>
+
+</CardGroup>
