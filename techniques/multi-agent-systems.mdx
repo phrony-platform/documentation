@@ -1,6 +1,6 @@
 ---
 title: "Multi-agent systems"
-description: "Why to compose agents, one session for the run tree, sub-agent mode, AITL, safety, and runtime instruction addenda."
+description: "Why to compose agents, one session for the run tree, sub-agent mode, AITL, safety, model and schema guidance, troubleshooting and support, and runtime instruction addenda."
 ---
 
 **Multi-agent** is Phrony’s model for composing **specialized** [agents](/concepts/agent) into one **coordinated** execution. Instead of one monolithic agent, you split work: a **parent** orchestrates, and **sub-agents** handle focused parts with their own model, instructions, and [integration](/concepts/integration) tools.
@@ -121,6 +121,49 @@ The blocks are labeled in the system prompt (for example as execution contracts 
 
 - When a sub-agent’s result still includes a **pending** question to the parent (agent-in-the-loop), the **parent** model must **resolve** that on the **next** turn using the AITL **tools** (answer itself or escalate to a person where that tool exists) — not with unrelated tools first, and not with **plain text** that bypasses the AITL tools. Skipping that leaves the child stuck; Phrony may **fail** the parent run in those cases.
 - In **HITL**-mode **root** parents, a separate line in the addendum can remind the model: **mid-task** input that originated from a sub-agent should go through **escalation to the user** when a human is required, not only a free-text pause to the operator, so answers wire back to the right child. **Nested** parents that are themselves sub-agents but can delegate further use the same **parent** contract with **stricter** rules around human escalation, because a sub-agent is not a full HITL root session.
+
+## Models, schemas, and production readiness
+
+<Danger>
+  **Prefer newer, more capable models for multi-agent work.** Orchestration, sub-agent tool choice, structured handoffs, and AITL all punish weak models. Latest-generation, higher-capability SKUs are usually a better default than older or much smaller models—**especially for parent agents**—unless you have validated a lighter model end to end.
+</Danger>
+
+### Model choice: parent vs sub-agents
+
+- **Parent** agents reason about when to delegate, interpret child results, and resolve AITL. Give them a **more powerful** model than you would pick for a trivial single-step task.
+- **Sub-agents** can sometimes use smaller models when the task is narrow and contracts are strict—but they still must honor tools, schemas, and AITL rules. If a child model frequently skips operations or returns ambiguous output, stepping up model class is often cheaper than prompt padding.
+
+### Input and output schemas
+
+Define **both** [input and output JSON Schema](/concepts/agent#input--output) on **each** version in the tree—root and every sub-agent you allowlist.
+
+Consistent contracts reduce surprises: the parent and runtime see predictable shapes, malformed API or trigger payloads fail early, and downstream systems can rely on typed results. Ad hoc or undocumented fields across agents make failures harder to trace in production.
+
+### Temperature, top-p, and top-k
+
+There is no one-size-fits-all; tune **temperature**, **top-p**, and **top-k** with your own evals. Useful defaults to **start** from:
+
+- **Parents and orchestration:** favor **lower temperature** for steadier routing, fewer protocol deviations, and more reliable AITL handling. Raise it only when you explicitly want more variety in phrasing or exploration.
+- **Strong structured outputs:** keep sampling relatively **conservative** so completions stay close to your schema.
+- **Top-p and top-k:** behavior varies by provider and model—see **[Model & Prompt](/concepts/agent#model--prompt)**. When unsure, leave **top-p** and **top-k** empty in the dashboard so the provider’s defaults apply, then adjust after you measure.
+
+### Validate before production
+
+Swapping models or vendors can change tool-use habits, JSON shape, and escalation behavior even when prompts stay the same. **Exercise representative runs**, compare candidates if you change SKUs, and **iterate** prompts and sampling until the system is stable. Treat a model change like any other production configuration: verify it before you ship, not only in the dashboard test pane.
+
+### Prompts, platform behavior, and getting help
+
+<Danger>
+If a multi-agent run **behaves unexpectedly**, treat **prompt and contract quality** as the first lever: clearer goals, explicit delegation boundaries, and tighter [input/output schemas](#input-and-output-schemas) usually fix more than a small sampling tweak. Models still interpret your instructions; weak or ambiguous prompts show up as wrong tool use, vague handoffs, or malformed structured output.
+
+Phrony’s multi-agent implementation is **tested against complex scenarios and configurations**, and we **regularly validate** it with **hundreds of automated test cases** so the system stays **stable and consistent** as we ship. When we find a **bug in the platform**, we **communicate the cause and the fix** you should expect.
+
+That does **not** mean every surprising trace is a Phrony defect. **Most odd behavior traces back to the LLM** (non-compliance, drift between settings) or to **configuration**—not to the runtime mis-routing your session. **Improve your prompts and version settings** before assuming the product is at fault.
+
+If you believe you have hit a genuine **edge case in Phrony**, open **Get help** in the Phrony dashboard and reach us through the **official support channels** listed there.
+</Danger>
+
+For field-level definitions of temperature, top-p, and top-k, see **[Model & Prompt](/concepts/agent#model--prompt)** on the agent page.
 
 ## Session completion
 
