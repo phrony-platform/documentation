@@ -1,0 +1,71 @@
+---
+title: "L1 rules and evaluation"
+description: "How tool-call rules are structured, merged, evaluated inline and asynchronously, and exported."
+---
+
+**L1 anomaly control** attaches a JSON **rule set** to an [agent](/concepts/agent) **version** (under **Limits & safety**). Rules apply only when the model **attempts** a tool that is already on that version’s [operations](/concepts/agent#operations) allowlist.
+
+For **why** Guard exists and **dashboard** workflows, start with **[Guard](/guard)**.
+
+## How rules are evaluated
+
+Phrony uses two complementary paths:
+
+1. **Inline checks** — When the model tries to call a tool, the runtime evaluates the **effective** rule set **before** the call proceeds. The outcome can **allow**, **block**, **pause for review**, or **end the session**, depending on what matched.
+
+2. **Follow-up correlation** — The platform **replays** the same rule definitions against recorded events so **per-run / per-session counters** stay consistent and **Guard incidents**, alerts, and audits reflect the run. That path does **not** undo an inline decision after a call has already finished.
+
+Treat **block** and **session termination** as **immediate** at attempt time when they win precedence. **Pause** creates an **`anomaly_review`** [user task](/concepts/user-task) so someone can **approve** or **reject** before the tool runs.
+
+### Effective rule list in multi-agent sessions
+
+In [multi-agent](/techniques/multi-agent-systems) trees, a tool attempt may be governed by rules from **ancestors in the session** as well as the **current agent version**. Phrony **concatenates** those lists (**ancestors first**, then this version’s rules) into one set used for evaluation.
+
+## Rule shape
+
+Each rule has:
+
+| Field | Meaning |
+| ----- | ------- |
+| **`id`** | Stable identifier for auditing and UI. |
+| **`when`** | Conditions (below). An empty `when` matches **nothing**—a safeguard against accidental “match everything” rules. |
+| **`then`** | One of **`allow`**, **`block`**, **`pause`**, **`terminate_session`**. |
+| **`reason`** (optional) | Short text carried into audits and operator-facing views. |
+
+### When several rules match
+
+Every matching rule is recorded in the **audit trail**. The **outcome** applied to the call uses strict precedence:
+
+**`terminate_session`** → **`block`** → **`pause`** → **`allow`**
+
+The strictest matching action wins; history still lists **all** rules that matched.
+
+### Conditions (`when`)
+
+Top-level predicates are combined with **AND**. Nested **`all_of`**, **`any_of`**, and **`not`** build richer logic.
+
+| Predicate idea | Role |
+| -------------- | ---- |
+| Tool identity | Match allowed tool names via a list or a regex. |
+| Arguments | Compare, bound, list-membership, regex, or presence checks at JSON paths in the tool payload. |
+| **`call_count_in_run_gt`** | Matches once a tool (optionally scoped to one tool name) has been attempted **more than** a threshold **in the current run**. |
+| **`call_count_in_session_gt`** | Same pattern **across the entire session**, including **root and sub-agent runs**, using shared session semantics. |
+| **`call_count_in_window_gt`** | Matches when attempts exceed a threshold inside a sliding **time window** (seconds). |
+
+**`call_count_in_window_gt`:** Enforced in **async / Guard-side** evaluation. The **inline** checker at attempt time does **not** apply this predicate by itself. Use it for **follow-up** detection (incidents, alerts), not a guarantee at every single attempt.
+
+## Execution mode and pause rules
+
+Rules with **`then: pause`** stop **before** the tool executes and open **`anomaly_review`**.
+
+Phrony **rejects** saving **`pause`** rules on agents in **Request** execution mode. Use **HITL** on the agent (or configure a **Sub-agent** appropriately) when you need pause-for-review behavior from L1.
+
+**`block`**, **`allow`**, and **`terminate_session`** remain available on **Request**-mode agents.
+
+## Terminate session
+
+**`terminate_session`** ends the **session** when it wins precedence for a matched attempt. Use it when a pattern must stop **all** further work in that session, not only block a single call.
+
+## Manifest and exports
+
+Version-level anomaly settings appear in a [manifest](/concepts/manifest) as **`anomalyControl`** and optional **`rules`** on each version. The JSON rule format is shared across runtime and policy evaluation.

@@ -1,0 +1,51 @@
+---
+title: "Guard"
+description: "Policy incidents, L1 tool-call rules, and how Guard fits into approvals and the Phrony dashboard."
+---
+
+**Guard** is the Phrony dashboard area for **tool-call policy and anomaly handling**: open **Guard** in the main sidebar (labeled **Beta** while the product evolves) to triage **incidents**, see unresolved versus solved history, and—when your workspace supports it—work with **rule proposals**.
+
+This section explains **what Guard is for**, the **principles** behind it, and **where** incidents and human review show up. For rule JSON, evaluation order, and execution-mode constraints, read **[L1 rules and evaluation](/guard/l1-rules)**.
+
+## Principles
+
+These ideas apply whether you use the rule builder in **Limits & safety** or export rules in a [manifest](/concepts/manifest).
+
+1. **Least privilege first** — The model can only **attempt** tools that appear on the agent version’s [operations](/concepts/agent#operations) allowlist. L1 rules further constrain **how** those allowed tools may be used (arguments, repetition, and so on).
+
+2. **Decide before execution** — For each tool attempt, the runtime runs an **inline** check against your **effective** rule list **before** the integration call proceeds. Outcomes such as **block** and **terminate session** apply **immediately** when they win precedence.
+
+3. **Same rules, recorded events** — Phrony can **replay** the same rule definitions against what already happened on a run so **counters**, **audit**, and **Guard incidents** stay aligned. That **follow-up** path does not reverse a call that already completed; it powers **operations** like incident lists and **async** signals.
+
+4. **One winner, full audit** — If several rules match one attempt, **every** match is stored for auditing, but the **single outcome** follows strict precedence: **`terminate_session`** beats **`block`** beats **`pause`** beats **`allow`**. See [L1 rules — precedence](/guard/l1-rules#when-several-rules-match).
+
+5. **Pause means a person** — A **`pause`** rule stops **before** the tool runs and creates an **`anomaly_review`** [user task](/concepts/user-task). That path is **not** available for agents in **Request** execution mode; use **HITL** or configure **Sub-agent** behavior appropriately. See [L1 rules — execution mode](/guard/l1-rules#execution-mode-and-pause-rules).
+
+6. **Guard is the incidents hub** — When automated handling needs visibility or follow-up, **incidents** accumulate under **Guard** (often with a **badge** when something unresolved needs attention). Severe cases may also **block new runs** for an agent until someone clears the block.
+
+## What L1 is
+
+**L1** (“layer one”) **anomaly control** is the **version-level** feature that holds those declarative **rules**. You enable it and edit rules under **Limits & safety** on an [agent](/concepts/agent) version.
+
+L1 is **not** the same as operation-level **Require approval** ([HITL](/techniques/human-in-the-loop)): approvals are a fixed gate per operation; L1 expresses **patterns** across allowed tools—arguments, how often a tool fires in a run or session, or frequency in a **time window** (window predicates behave differently inline versus async; see [L1 rules](/guard/l1-rules)).
+
+## Incidents and proposals
+
+- **Incidents** — Records tied to policy matches or detection outcomes on runs. Use **Guard** to filter **unresolved** versus **solved** and open detail when you need context for remediation or sign-off.
+
+- **Rule proposals** — When available, workflows may suggest or stage rule changes; treat them like any other governance change—review impact on **HITL** vs **Request** agents and on **`pause`** rules before applying.
+
+## Where work appears in the product
+
+| Surface | Role |
+| ------- | ---- |
+| **Guard** (sidebar) | **Incidents** hub; badge when unresolved items may need attention. |
+| **Review → Approvals** | **`anomaly_review`** (approve or reject a paused tool attempt) and **`anomaly_alert`** (informational acknowledge) alongside other human steps; filter by **Anomaly**. |
+| **Agent blocked** | **New runs** may be stopped until the block clears—see [When an agent is blocked](/concepts/agent#when-an-agent-is-blocked). |
+
+## Related reading
+
+- [L1 rules and evaluation](/guard/l1-rules) — Rule shape, predicates, multi-agent merge, manifest fields.
+- [Agent — Limits & safety](/concepts/agent#limits-safety) — Where you configure L1 on a version.
+- [Human in the loop — L1 and HITL](/techniques/human-in-the-loop#anomaly-control-l1-and-hitl) — How **`pause`** fits next to operation approvals.
+- [User task — kinds](/concepts/user-task#kinds) — **`anomaly_review`** and **`anomaly_alert`**.

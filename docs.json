@@ -31,6 +31,13 @@
             ]
           },
           {
+            "group": "Guard",
+            "pages": [
+              "guard/index",
+              "guard/l1-rules"
+            ]
+          },
+          {
             "group": "Techniques",
             "pages": [
               "techniques/embedded-agents",
@@ -102,6 +109,10 @@
     {
       "source": "/api-reference/agents-and-runs",
       "destination": "/api-reference/runs"
+    },
+    {
+      "source": "/concepts/guard-and-l1-rules",
+      "destination": "/guard"
     }
   ]
 }
