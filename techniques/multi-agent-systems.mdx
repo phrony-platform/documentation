@@ -139,6 +139,10 @@ Define **both** [input and output JSON Schema](/concepts/agent#input--output) on
 
 Consistent contracts reduce surprises: the parent and runtime see predictable shapes, malformed API or trigger payloads fail early, and downstream systems can rely on typed results. Ad hoc or undocumented fields across agents make failures harder to trace in production.
 
+Use the **schema builder** to make the contract between agents explicit. A good contract says exactly what the parent must provide, what the sub-agent is allowed to assume, and what the child must return. Prefer precise field names, required properties for values the child cannot work without, enums for constrained choices, and short descriptions that explain business meaning—not only data type.
+
+Pair those schemas with **clear, narrow instructions** on both sides of the handoff. The parent should know when to delegate, which context to include, and how to consume the result. The sub-agent should know its goal, boundaries, tools, escalation conditions, and output obligations. In practice, well-defined input/output schemas plus precise instructions are one of the biggest levers for a reliable multi-agent system: they reduce ambiguous handoffs, make AITL questions more targeted, and keep child results easier for the parent to use.
+
 ### Temperature, top-p, and top-k
 
 There is no one-size-fits-all; tune **temperature**, **top-p**, and **top-k** with your own evals. Useful defaults to **start** from:
