@@ -157,7 +157,7 @@ Caps **how much work** one run may do and optionally adds **governance** on tool
 
 Rules can **allow**, **block**, **pause** for human review, or **terminate the session**, with strict precedence when several rules match (**terminate_session** wins over **block**, then **pause**, then **allow**). Conditions can use **argument patterns** (for example “transfers over $10k”), **per-run** call counts, **per-session** counts (including sub-agent runs), and **sliding-window** frequency—the last is primarily meaningful for **async / Guard-side** follow-up, not the inline moment of every attempt.
 
-**Pause** rules require **HITL** or **Sub-agent** execution mode on the agent; **Request** mode may still use **block**, **allow**, or **terminate_session**. In [multi-agent](/techniques/multi-agent-systems) sessions, inherited rules from parent agents are merged with this version’s rules. See **[Guard](/guard)** and **[L1 rules and evaluation](/guard/l1-rules)** for incidents, principles, and rule behavior.
+**Pause** rules require **HITL** or **Sub-agent** execution mode on the agent; **Request** mode may still use **block**, **allow**, or **terminate_session**. In [multi-agent](/techniques/multi-agent-systems) sessions, inherited rules from parent agents are merged with this version’s rules. See **[Guard overview](/guard)** and **[L1 rules and evaluation](/guard/l1-rules)** for incidents, principles, and rule behavior.
 
 If you enable anomaly control but add no rules, only the flag is in effect—useful when another integration reads it alone.
 

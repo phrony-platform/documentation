@@ -1,11 +1,21 @@
 ---
-title: "Guard"
-description: "Policy incidents, L1 tool-call rules, and how Guard fits into approvals and the Phrony dashboard."
+title: "Overview"
+description: "Why agents need blocking and review, policy incidents, L1 tool-call rules, and how Guard fits into approvals and the Phrony dashboard."
 ---
 
 **Guard** is the Phrony dashboard area for **tool-call policy and anomaly handling**: open **Guard** in the main sidebar (labeled **Beta** while the product evolves) to triage **incidents**, see unresolved versus solved history, and—when your workspace supports it—work with **rule proposals**.
 
 This section explains **what Guard is for**, the **principles** behind it, and **where** incidents and human review show up. For rule JSON, evaluation order, and execution-mode constraints, read **[L1 rules and evaluation](/guard/l1-rules)**.
+
+## Why agents need stops, blocks, and review
+
+Language models do not behave like traditional software. The same agent configuration can **produce different actions** from one run to the next: the model reasons over context that changes every turn, sampling and provider behavior add variation, and small differences in prompts or inputs can steer the chain of thought toward a different tool choice. That is useful for flexible work, but it means you cannot **prove** from the prompt alone that a run will never attempt a dangerous call.
+
+In production, “dangerous” is often ordinary capability used at the wrong time: initiating a **payment**, sending **email or messages** at scale, changing **permissions**, deleting or **overwriting** data, or calling an integration with arguments that violate policy. Without a layer that can **refuse execution**, **pause for a person**, or **end the session** before damage is done, a single bad attempt can become a real incident. Operators therefore need explicit **blocking**, **termination**, and **human-in-the-loop** paths—not as an optional extra, but as part of how you ship agents safely.
+
+That need exists because of **how general-purpose LLMs work**, not because Phrony is unreliable. Phrony does not replace the model; it **wraps** attempts to use tools in policy, history, and approvals so you can enforce **what may run** and **when a human must be in the path**. The underlying limitation—stochastic behavior, incomplete specification of intent in natural language, and no built-in guarantee that the model will always respect business rules—is a property of **today’s LLM-based agents** as a class. Framing it honestly helps teams invest in the right controls instead of treating occasional misbehavior as a bug in the platform.
+
+**Guard** and **L1** rules are where that enforcement becomes concrete in Phrony: declarative checks and incident workflows so you can **stop** or **review** attempts before or after they matter for operations—not because the product failed, but because **governed execution** is how you run LLM agents next to real systems and real money.
 
 ## Principles
 
