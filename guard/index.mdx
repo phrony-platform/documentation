@@ -31,7 +31,7 @@ These ideas apply whether you use the rule builder in **Limits & safety** or exp
 
 5. **Pause means a person** — A **`pause`** rule stops **before** the tool runs and creates an **`anomaly_review`** [user task](/concepts/user-task). That path is **not** available for agents in **Request** execution mode; use **HITL** or configure **Sub-agent** behavior appropriately. See [L1 rules — execution mode](/guard/l1-rules#execution-mode-and-pause-rules).
 
-6. **Guard is the incidents hub** — When automated handling needs visibility or follow-up, **incidents** accumulate under **Guard** (often with a **badge** when something unresolved needs attention). Severe cases may also **block new runs** for an agent until someone clears the block.
+6. **Guard is the incidents hub** — When automated handling needs visibility or follow-up, **incidents** accumulate under **Guard** (often with a **badge** when something unresolved needs attention).
 
 ## What L1 is
 
@@ -51,7 +51,7 @@ L1 is **not** the same as operation-level **Require approval** ([HITL](/techniqu
 | ------- | ---- |
 | **Guard** (sidebar) | **Incidents** hub; badge when unresolved items may need attention. |
 | **Review → Approvals** | **`anomaly_review`** (approve or reject a paused tool attempt) and **`anomaly_alert`** (informational acknowledge) alongside other human steps; filter by **Anomaly**. |
-| **Agent blocked** | **New runs** may be stopped until the block clears—see [When an agent is blocked](/concepts/agent#when-an-agent-is-blocked). |
+| **Stopping new runs** | There is no **Block agent** control (with a confirmation step) that halts **every** future run for an agent in one action. To prevent new work, set **triggers** to **inactive**, adjust **schedules**, or narrow **API** key **scopes** until you are ready to accept traffic again. |
 
 ## Related reading
 

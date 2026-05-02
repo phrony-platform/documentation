@@ -1,6 +1,6 @@
 ---
 title: "L1 rules and evaluation"
-description: "How tool-call rules are structured, merged, evaluated inline and asynchronously, and exported."
+description: "How tool-call rules are structured, merged, evaluated inline and asynchronously, exported in manifests, and illustrated with payment and email patterns."
 ---
 
 **L1 anomaly control** attaches a JSON **rule set** to an [agent](/concepts/agent) **version** (under **Limits & safety**). Rules apply only when the model **attempts** a tool that is already on that version’s [operations](/concepts/agent#operations) allowlist.
@@ -53,6 +53,116 @@ Top-level predicates are combined with **AND**. Nested **`all_of`**, **`any_of`*
 | **`call_count_in_window_gt`** | Matches when attempts exceed a threshold inside a sliding **time window** (seconds). |
 
 **`call_count_in_window_gt`:** Enforced in **async / Guard-side** evaluation. The **inline** checker at attempt time does **not** apply this predicate by itself. Use it for **follow-up** detection (incidents, alerts), not a guarantee at every single attempt.
+
+## Example rules (illustrative)
+
+These snippets show **patterns** you can adapt. **`tool_name_in`** must list the **exact tool names** Phrony exposes for your allowed [operations](/concepts/agent#operations)—that is usually each operation’s **id** (often a UUID), not the label you see in the UI. Copy real values from the agent version, a [manifest](/concepts/manifest) export, or session tooling so `when` matches live attempts. **Argument paths** (`amount`, `to`, and so on) must match the **JSON shape** your integration’s tool schema uses.
+
+Rules with **`then: pause`** require a **HITL** or **Sub-agent** [execution mode](/concepts/agent#execution-mode) agent; **`block`** and **`terminate_session`** work on **Request** mode too.
+
+### Payments — pause transfers above a threshold (HITL)
+
+Pause before the tool runs so someone can approve large movements (adjust the path and currency field to match your connector).
+
+```json
+{
+  "id": "transfer-over-10k-usd",
+  "when": {
+    "all_of": [
+      { "tool_name_in": ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"] },
+      { "arg_gt": { "path": "amount", "value": 10000 } }
+    ]
+  },
+  "then": "pause",
+  "reason": "Wire or ACH over $10,000 requires human approval"
+}
+```
+
+Replace the placeholder id with your **payment / transfer** operation’s id. If your API sends **cents**, use `amount_cents` and a threshold like `1000000` for $10,000.
+
+### Email — block sends without a support ticket (Request)
+
+Use **`arg_missing`** so the model cannot call **send** unless it supplies a field your schema defines (here `support_ticket_id`).
+
+```json
+{
+  "id": "email-requires-ticket",
+  "when": {
+    "all_of": [
+      { "tool_name_in": ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"] },
+      { "arg_missing": { "path": "support_ticket_id" } }
+    ]
+  },
+  "then": "block",
+  "reason": "Outbound email must reference a support_ticket_id"
+}
+```
+
+### Email — pause when the recipient looks like personal webmail (HITL)
+
+**`arg_regex`** matches a string at a JSON path. Tune the **path** (`to`, `recipients.0`, `body.to`, and so on) and **pattern** to your tool’s arguments.
+
+```json
+{
+  "id": "email-consumer-inbox-pause",
+  "when": {
+    "all_of": [
+      { "tool_name_in": ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"] },
+      {
+        "arg_regex": {
+          "path": "to",
+          "pattern": "@(gmail|yahoo|hotmail|icloud)\\."
+        }
+      }
+    ]
+  },
+  "then": "pause",
+  "reason": "Sending to a common consumer domain needs review"
+}
+```
+
+Phrony validates **regex** patterns when rules are saved. In JSON, a literal dot in the pattern is written as **`\\.`** (backslash + dot inside the string).
+
+### Payments or charges — stop the session after too many attempts
+
+**`call_count_in_run_gt`** matches when the attempt count for the scope is **strictly greater** than **`value`** (see the **`call_count_in_run_gt`** row in the conditions table). Example: with **`value`: 2** and a **`tool`** filter, the rule can match on the **third** attempt of that tool in the same run, so you can end the session before further payment tries.
+
+```json
+{
+  "id": "payment-retries-cap",
+  "when": {
+    "all_of": [
+      { "tool_name_in": ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"] },
+      { "call_count_in_run_gt": { "tool": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "value": 2 } }
+    ]
+  },
+  "then": "terminate_session",
+  "reason": "Too many payment attempts in one run"
+}
+```
+
+Omit the optional **`tool`** on **`call_count_in_run_gt`** if you want the threshold to apply across **all** tools in the run (see the conditions table above).
+
+### Email or messaging — burst detection (async / Guard)
+
+Flag many sends in a short wall-clock window for **incidents** or alerts—not a hard inline gate on every single attempt:
+
+```json
+{
+  "id": "email-burst-window",
+  "when": {
+    "call_count_in_window_gt": {
+      "tool": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "value": 30,
+      "windowSeconds": 300
+    }
+  },
+  "then": "pause",
+  "reason": "More than 30 send attempts in five minutes"
+}
+```
+
+Remember: **`call_count_in_window_gt`** is evaluated on the **async / Guard** path. Pair it with how you want operators to respond (incidents, **`anomaly_alert`** tasks, and so on). A rule whose **`when`** is **only** a window predicate does **not** drive **inline** checks by itself—use **`call_count_in_run_gt`** or argument predicates when you need a hard gate on every attempt.
 
 ## Execution mode and pause rules
 

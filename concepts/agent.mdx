@@ -48,10 +48,6 @@ Changing mode later can strand or relax integrations with other product areas; t
 
 An **agent version** is a versioned configuration of an agent. When an agent is updated, a new version is created. Runs are always executed against a specific agent version, ensuring reproducibility.
 
-## When an agent is blocked
-
-**Blocked** is an operational brake: **new runs do not start** until someone with access **clears** the block. Phrony uses this when automated review (for example Guard / async policy handling) needs a human to confirm the agent is safe to run again. Open **[Guard](/guard#where-work-appears-in-the-product)** for **incidents** and related context. Until the block is cleared, treat the agent as offline for new work even if old sessions still exist.
-
 ## Agents list (dashboard)
 
 | Column           | What it tells you                                                                                               |
@@ -203,4 +199,3 @@ Use **Sessions** to inspect runs for this agent. **Triggers** appears for agents
 
 - Pointing the agent at a **different LLM provider** without retesting every **model id** on your versions will break runs.
 - Deleting agents or deployed lines affects **integrations**, **triggers**, and **API clients** that still reference them.
-- **Blocked** is meant to stop the line until humans agree it is safe again—do not clear it blindly if you do not understand why it was set.
