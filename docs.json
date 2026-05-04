@@ -47,6 +47,19 @@
             ]
           },
           {
+            "group": "CLI",
+            "pages": [
+              "packages/cli/index",
+              "packages/cli/init-and-lint",
+              "packages/cli/login",
+              "packages/cli/profile",
+              "packages/cli/manifest",
+              "packages/cli/agent",
+              "packages/cli/authentication",
+              "packages/cli/credentials-and-config"
+            ]
+          },
+          {
             "group": "Packages",
             "pages": [
               "packages/index",
@@ -82,7 +95,8 @@
             "group": "Guides",
             "pages": [
               "academy/index",
-              "academy/example-embedded-agent"
+              "academy/example-embedded-agent",
+              "academy/multi-agent-cli-sdk"
             ]
           }
         ]

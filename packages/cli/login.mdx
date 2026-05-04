@@ -1,0 +1,24 @@
+---
+title: "CLI — Login"
+description: "Sign in to Phrony from the terminal with phrony login (OAuth 2 and PKCE)."
+---
+
+## `phrony login`
+
+Opens a browser to complete **OAuth 2 with PKCE** and writes tokens to your credentials file for the selected profile.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--api-base <url>` | Gateway origin for this login only (overrides `PHRONY_API_BASE` / `phrony.config.json`). |
+
+After login, network commands can use **Bearer** authentication against the gateway’s internal routes.
+
+For PAT-based CI, dashboard URLs, and scope requirements, see [Authentication](/packages/cli/authentication).
+
+---
+
+## See also
+
+- [CLI overview](/packages/cli)
+- [Profile and logout](/packages/cli/profile)
+- [Credentials](/packages/cli/credentials-and-config#credentials)

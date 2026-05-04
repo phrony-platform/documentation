@@ -1,0 +1,79 @@
+---
+title: "CLI — Agent and versions"
+description: "List agents and versions, fetch JSON details, and deploy or retract versions with phrony agent."
+---
+
+Workspace agents use the gateway **internal** HTTP API with the same Bearer auth as manifest commands (**`phrony login`** or **`PHRONY_ACCESS_TOKEN`**). See [Authentication](/packages/cli/authentication).
+
+Listing agents and versions is read-only. **`phrony agent version deploy`** and **`phrony agent version retract`** change deployment state and require **`agents:write`** on workspace access tokens.
+
+---
+
+## `phrony agent ls`
+
+Lists agents in the workspace. Default output is a table (**id**, **name**, **executionMode**, **deployedVersionLabel**); use **`--json`** for the raw **`{ total, items }`** payload plus **`command`** / **`ok`**.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+| `--skip <n>` | Pagination offset (non-negative integer). Omit **`--take`** to use the server default page size when paging. |
+| `--take <n>` | Page size (positive integer; the server caps at **100**). |
+
+---
+
+## `phrony agent get <agentId>`
+
+Prints one agent as JSON. Without **`--json`**, the CLI prints pretty-printed JSON only (the API response body). With **`--json`**, stdout is a wrapper object **`{ "command": "agent get", "ok": true, "agent": … }`** for scripting.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+
+---
+
+## `phrony agent version ls <agentId>`
+
+Lists [agent versions](/concepts/agent) for that agent (API order is newest first). Default output is a table (**id**, **versionLabel**, **status**, **llmModel**); **`--json`** returns **`{ command, ok, total, items }`**.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+| `--skip <n>` | Pagination offset (non-negative integer). |
+| `--take <n>` | Page size (positive integer; the server caps at **100**). |
+
+---
+
+## `phrony agent version get <agentId> <versionId>`
+
+Prints one version as JSON (same **`--json`** wrapper pattern as **`phrony agent get`**).
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+
+---
+
+## `phrony agent version deploy <agentId> <versionId>`
+
+Deploys that version for the agent (**`agents:write`**). **`--json`** wraps the API response as **`{ command, ok, result }`** (or **`result: null`** if the response body is empty).
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+
+---
+
+## `phrony agent version retract <agentId> <versionId>`
+
+Retracts a deployed version (**`agents:write`**). **`--json`** wraps the API response the same way as **`deploy`**.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+
+---
+
+## See also
+
+- [CLI overview](/packages/cli)
+- [Agent](/concepts/agent)

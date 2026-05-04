@@ -1,13 +1,20 @@
 ---
 title: "Authentication"
-description: "X-API-Key, key format, and how Phrony scopes access for the public API."
+description: "API keys (X-API-Key, public automation), workspace access tokens (Bearer, scoped internal APIs), and how scoping works."
 ---
 
-Authentication is **header-based**: you send a workspace **API key** on every [authenticated route](/api-reference/index). There is no separate OAuth or session cookie for the public JSON API.
+Phrony exposes two different **programmatic** credential types. They are **not** interchangeable:
+
+- **API keys** (`phk_…`) — send **`X-API-Key`**. For **[public `/v1` routes](/api-reference/index)** such as runs, sessions, triggers, and file library when the key allows it. Narrow, external-style automation.
+- **Workspace access tokens** (`pwt_…`) — send **`Authorization: Bearer`**. For **internal tenant APIs** on the gateway (for example manifest operations, members, billing surfaces the token is scoped for). Created in the Phrony dashboard; use **`PHRONY_ACCESS_TOKEN`** with the **[CLI](/packages/cli)** for CI. There is **no** migration from API keys to access tokens unless you explicitly create new tokens.
+
+Interactive people use the **Phrony dashboard** (session cookies / JWT) or **`phrony login`** (OAuth) instead of storing long-lived API keys on a laptop when possible.
+
+The sections below focus on **API keys** and the public JSON API. Workspace access tokens follow the same Bearer header shape as dashboard sessions but are documented with the **[CLI](/packages/cli)** and dashboard copy where you create them.
 
 ## API keys
 
-> Create and revoke keys in the **Phrony dashboard** (workspace or **Settings**, depending on layout). Each key is a single secret; issued keys are prefixed with **`phk_`**. Do not commit keys to source control or put them in client-side code; use environment variables or a secret manager on your server.
+> Create and revoke keys in the **Phrony dashboard** under **Settings → API keys**. Each key is a single secret; issued keys are prefixed with **`phk_`**. Do not commit keys to source control or put them in client-side code; use environment variables or a secret manager on your server. These keys do **not** grant arbitrary internal administration; for that, use **[workspace access tokens](/packages/cli/authentication#workspace-access-tokens-ci)** (or sign in as a person).
 
 ## Headers (authenticated routes)
 

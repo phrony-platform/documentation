@@ -1,0 +1,35 @@
+---
+title: "CLI — Init and lint"
+description: "Scaffold a Phrony manifest project with phrony init and validate YAML offline with phrony lint."
+---
+
+## `phrony init`
+
+Creates:
+
+- `manifests/index.yaml` — manifest **index** that includes other YAML files
+- `manifests/example.yaml` — starter `phrony.manifest` document
+- `phrony.config.json` — workspace hints (`tenantId`, `apiBase`, `rootAgentId`, `defaultProfile`)
+- `phrony.config.ts` — optional duplicate for editors (the CLI reads **JSON** only)
+
+If `.gitignore` exists (or is created), the CLI appends `.env` and `.phrony/` when missing.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--force` | Overwrite starter files if they already exist. |
+
+---
+
+## `phrony lint [path]`
+
+Validates manifest YAML against the published schema (with **includes** resolved from disk). Default path: `./manifests`.
+
+- Pass a **file** or a **directory**. Directories are scanned recursively for `.yaml` / `.yml` (skipping `node_modules` and `.git`).
+- **Offline** — does not call the network; safe in CI for schema checks.
+
+---
+
+## See also
+
+- [CLI overview](/packages/cli) — global flags, quick start, exit codes
+- [Manifest](/concepts/manifest)

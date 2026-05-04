@@ -1,0 +1,34 @@
+---
+title: "CLI — Profile and logout"
+description: "List credential profiles with phrony profile ls and clear OAuth sessions with phrony logout."
+---
+
+## `phrony profile`
+
+Inspect and update **`~/.phrony/credentials`** profiles (see [Credentials](/packages/cli/credentials-and-config#credentials)).
+
+### `phrony profile ls`
+
+Lists profile tables in the credentials file with **yes** / **no** for a usable **OAuth** session (refreshable) and for a non-empty stored **`access_token`** (may be expired if refresh failed). Nothing secret is printed. The **`→`** row is the profile that **`plan`**, **`apply`**, **`diff`**, **`agent`**, and **`login`** would use when **`--profile`** is omitted (same resolution: **`--profile`** → **`defaultProfile`** in **`phrony.config.json`** → **`default`** in the credentials file → the name **`default`**).
+
+### `phrony profile logout`
+
+Same behavior as [`phrony logout`](#phrony-logout): removes OAuth fields for the selected profile. JSON output uses **`"command": "profile logout"`**.
+
+---
+
+## `phrony logout`
+
+Removes **OAuth** fields for the selected profile from your credentials file (access and refresh tokens, tenant id stored with the session, optional **`api_base`** / **`user_email`**). Other profile keys (for example **`api_key`**) are **not** deleted. If nothing remains in that profile after stripping OAuth, the profile table is removed; if the file’s **`default`** pointer aimed at that profile, it is cleared too.
+
+Same as **`phrony profile logout`**; use whichever fits your mental model.
+
+This only changes your **local** token file. It does **not** revoke refresh tokens on the server (use the Phrony dashboard to revoke access if a machine was compromised).
+
+---
+
+## See also
+
+- [CLI overview](/packages/cli)
+- [Login](/packages/cli/login)
+- [Authentication](/packages/cli/authentication)

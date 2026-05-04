@@ -1,0 +1,55 @@
+---
+title: "CLI — Plan, apply, and diff"
+description: "Dry-run and apply manifest YAML with phrony plan and phrony apply; compare local files to the cloud with phrony diff."
+---
+
+Network manifest commands use **`Authorization: Bearer`** on internal gateway routes (**`phrony login`** or **`PHRONY_ACCESS_TOKEN`**). See [Authentication](/packages/cli/authentication).
+
+`plan`, `apply`, and `diff` accept a **file** or a **directory** that contains `index.yaml` / `index.yml`. Default path: `./manifests`.
+
+---
+
+## `phrony plan [path]`
+
+**Dry-run** manifest apply: sends merged YAML to the API with `dryRun=true` and prints a planned-change summary (table by default).
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+| `--prune` | Pass `prune=true` to the apply endpoint. |
+| `--name-suffix <s>` | Optional `nameSuffix` query parameter. |
+| `--anchor-agent <uuid>` | Optional `anchorAgentId` query parameter (scopes reconciliation when supported). |
+
+---
+
+## `phrony apply [path]`
+
+Runs **plan** (dry-run), then prompts **Apply these changes? [y/N]** unless you pass **`--auto-approve`**.
+
+| Flag | Description |
+| ---- | ----------- |
+| Same as `plan` | `--tenant`, `--prune`, `--name-suffix`, `--anchor-agent` |
+| `--auto-approve` | Skip the interactive confirmation (required for non-interactive applies). |
+
+**JSON behavior:** With `--json` and **without** `--auto-approve`, `apply` only outputs the dry-run result and does **not** perform the mutating apply (use `--auto-approve` with `--json` for scripting).
+
+---
+
+## `phrony diff [path]`
+
+Compares your **local** resolved manifest to the manifest **exported** from the cloud for a given **root agent**.
+
+You must supply the root agent id for the export side via **`--agent`**, **`PHRONY_ROOT_AGENT_ID`**, or `rootAgentId` in `phrony.config.json`.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--tenant <id>` | Workspace tenant id (overrides env / config). |
+| `--agent <uuid>` | Root agent id for export (overrides env / config). |
+
+---
+
+## See also
+
+- [CLI overview](/packages/cli) — global flags, CI
+- [Manifest](/concepts/manifest)
+- [Configuration file](/packages/cli/credentials-and-config#configuration-file)

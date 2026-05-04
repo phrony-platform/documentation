@@ -5,6 +5,8 @@ description: "Install and use @phrony/sdk to call the Phrony public API with Typ
 
 The **TypeScript SDK** ([`@phrony/sdk`](https://www.npmjs.com/package/@phrony/sdk)) wraps the same REST routes documented in the **[API Reference](/api-reference/index)**. It sets **`X-API-Key`**, maps methods to paths, and ships types for common responses (including the **[conversation](/api-reference/runs#conversation)** payload).
 
+The SDK targets the **public `/v1` API** for **workspace API keys** (`phk_…`). **Workspace access tokens** (`pwt_…`, **`Authorization: Bearer`**) are for **internal** gateway routes and CI flows such as **`phrony plan`** / **`apply`**; see the **[CLI](/packages/cli)** and **[Authentication](/api-reference/authentication)**. Do not assume you can swap an API key for an access token on the same paths.
+
 **Requirements:** Node **18+**, or any JavaScript environment that provides **`fetch`** (browsers, Deno, Bun, and so on).
 
 **Source code:** the package is [open source on GitHub](https://github.com/phrony/ts-sdk) (MIT). Report issues and contribute there.
@@ -19,7 +21,7 @@ You can also use `npm` or `yarn` if your project standardizes on those.
 
 ## Create a client
 
-You need a [workspace API key](/api-reference/authentication) with prefix **`phk_`**, scoped to the same **agent** and **API trigger** as the requests you make.
+You need a [workspace API key](/api-reference/authentication) with prefix **`phk_`**, scoped to the same **agent** and **API trigger** as the requests you make. That key is for **external** automation (runs, sessions, triggers, file library). It is **not** a workspace access token and does not call internal tenant admin routes.
 
 | Option | Default | Purpose |
 | ------ | ------- | ----------- |

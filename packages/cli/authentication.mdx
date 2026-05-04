@@ -1,0 +1,62 @@
+---
+title: "CLI — Authentication"
+description: "Bearer authentication for the Phrony CLI: OAuth login, workspace access tokens, scopes, tenant id, and API base URL."
+---
+
+Network commands (`plan`, `apply`, `diff`, `agent`) need a **tenant id** and **Bearer** authentication: either **`phrony login`** (OAuth, interactive) or **`PHRONY_ACCESS_TOKEN`** (workspace access token, for example in CI). The CLI calls the gateway’s **internal** routes only; it does **not** use workspace **API keys** (`X-API-Key` on public **`/v1`**) for these commands. Use the **[TypeScript SDK](/packages/typescript-sdk)** for `/v1` automation with API keys.
+
+---
+
+## Which credential should I use?
+
+| Situation | Credential | Header / env |
+| --------- | ---------- | ------------- |
+| Developer laptop, interactive | **`phrony login`** (OAuth) | Bearer access token from the token file (managed by the CLI) |
+| CI / automation (manifest plan, apply, diff; agent and agent-version commands; gateway `internal/v1/...`) | **Workspace access token** from the Phrony dashboard | Set **`PHRONY_ACCESS_TOKEN`** (`Authorization: Bearer`) |
+
+---
+
+## OAuth (terminal)
+
+Run **`phrony login`**. The CLI stores refresh and access tokens under the chosen **profile** and refreshes access tokens automatically when they are close to expiry. Run **`phrony profile logout`** (or **`phrony logout`**) to delete those OAuth fields from your credentials file on disk (for example when switching machines); it does not revoke tokens on the server. Use **`phrony profile ls`** to see which profiles exist, which have a usable OAuth session, and which still have a stored **access token** field.
+
+OAuth uses **Bearer** tokens against the gateway’s internal endpoints—no **`PHRONY_ACCESS_TOKEN`** required when you are logged in.
+
+Command flags and **`--api-base`** are documented on [Login](/packages/cli/login).
+
+---
+
+## Workspace access tokens (CI)
+
+Create a token in the **Phrony dashboard** under **Settings → Access tokens** (time to live and scopes). Copy the **`pwt_…`** secret once and store it in your CI provider as **`PHRONY_ACCESS_TOKEN`**.
+
+**Scopes for internal CLI routes:** the gateway checks scopes on internal routes. For **`phrony plan`**, **`phrony apply`**, **`phrony agent version deploy`**, and **`phrony agent version retract`**, the token must include **`agents:write`**. For **`phrony diff`** (manifest export), **`phrony agent ls`**, **`phrony agent get`**, **`phrony agent version ls`**, and **`phrony agent version get`**, include **`agents:read`**. Broader scopes (for example **`internal:*`**) also work if your organization issues them.
+
+The CLI resolves manifest auth in this order: **`PHRONY_ACCESS_TOKEN`** → **OAuth** profile from **`phrony login`**. When **`PHRONY_ACCESS_TOKEN`** is set, OAuth tokens in your credentials file are **ignored** for that run (the CLI prints a short warning if both apply).
+
+If **`PHRONY_API_KEY`** or a profile **`api_key`** is set, the CLI prints a warning that those keys are **not** used for `plan`, `apply`, `diff`, or `agent`.
+
+You still need **`PHRONY_TENANT_ID`** (or **`--tenant`** / `tenantId` in `phrony.config.json`) because request paths include the tenant id; the server validates the token for that workspace.
+
+---
+
+## Tenant and API base
+
+| Source | Use |
+| ------ | --- |
+| **`--tenant`** | Highest priority for tenant id. |
+| **`PHRONY_TENANT_ID`** | Environment override. |
+| **`phrony.config.json`** (`tenantId`) | Project default. |
+| **OAuth profile** | Tenant id from login / refresh when not overridden. |
+
+When **`PHRONY_ACCESS_TOKEN`** is set, choose the workspace the same way: **`PHRONY_TENANT_ID`**, **`--tenant`**, or **`tenantId`** in **`phrony.config.json`** (the token is validated for that tenant on the server).
+
+API base URL resolution (login and requests): **`--api-base`** (login only) → **`PHRONY_API_BASE`** → **`apiBase` in `phrony.config.json`** → stored OAuth `api_base` → default **`https://api.phrony.com`**.
+
+---
+
+## See also
+
+- [CLI overview](/packages/cli)
+- [Credentials and configuration](/packages/cli/credentials-and-config)
+- [API reference — Authentication](/api-reference/authentication)

@@ -1,0 +1,236 @@
+---
+title: "Tutorial: Multi-agent system with the CLI and TypeScript SDK"
+description: "Define a parent agent and sub-agents in YAML with the Phrony CLI, apply to your workspace, then start runs from your own backend with @phrony/sdk."
+---
+
+This guide walks you from **manifest as code** to a **working HTTP integration**: you model a small [multi-agent system](/techniques/multi-agent-systems) in YAML, reconcile it with **`phrony apply`**, then drive the **root** agent from your service using the [**TypeScript SDK**](/packages/typescript-sdk) (`@phrony/sdk`).
+
+You should already have a [workspace](/concepts/workspace), an [LLM provider](/concepts/llm-provider) named in Phrony (this example uses **`openai`**—change the name if yours differs), and a plan that supports **multi-agent** delegation.
+
+## What you will build
+
+| Layer | What you do |
+| ----- | ----------- |
+| **Manifest** | One [manifest](/concepts/manifest) document: a **parent** agent (`executionMode: request`) with `canExecuteSubAgents` and an **allowlist**, plus a **sub-agent** (`executionMode: sub_agent`) the parent may call. |
+| **CLI** | `phrony init` (optional), edit YAML, `phrony lint`, `phrony login`, `phrony plan`, `phrony apply`. |
+| **Your system** | Create an **API key** scoped to the parent’s **API** trigger, then call `startRun` / `getRun` (and optionally `getConversation`) from your backend. |
+
+The **API** trigger lives on the **parent** only. You never start runs directly on sub-agents when they are in **Sub-agent** mode; the parent delegates inside one [session](/concepts/session).
+
+---
+
+## Part 1 — Scaffold and author the manifest
+
+### 1. Create a project folder (optional)
+
+If you do not already have a manifest repo, scaffold one:
+
+```bash
+mkdir phrony-multi-agent-demo && cd phrony-multi-agent-demo
+pnpm dlx @phrony/cli init
+```
+
+That creates `manifests/`, `phrony.config.json`, and a starter file. You can instead add `manifests/tutorial.yaml` to an existing repo.
+
+See **[CLI — phrony](/packages/cli)** for global flags, credentials, and CI patterns.
+
+### 2. Point the CLI at your workspace
+
+Edit **`phrony.config.json`** (or use environment variables) so network commands know your tenant and API origin:
+
+| Field | Where to get it |
+| ----- | ---------------- |
+| `tenantId` | Workspace / tenant id from the Phrony dashboard |
+| `apiBase` | Usually `https://api.phrony.com` unless your team uses a custom gateway |
+
+### 3. Replace the example with a two-agent manifest
+
+Save the following as **`manifests/tutorial.yaml`** (or merge into your index). Adjust **`llmProviders[0].name`** if your workspace uses a different provider label than `openai`. Pick models your workspace actually allows; the comments note a common upgrade path for the parent.
+
+```yaml
+kind: phrony.manifest
+version: 1
+metadata:
+  label: multi-agent-cli-sdk-tutorial
+  rootManifestKey: tutorial_orchestrator
+llmProviders:
+  - name: openai
+    type: openai
+agents:
+  - manifestKey: tutorial_orchestrator
+    name: Tutorial orchestrator
+    executionMode: request
+    llmProviderName: openai
+  - manifestKey: tutorial_researcher
+    name: Tutorial researcher (sub-agent)
+    executionMode: sub_agent
+    llmProviderName: openai
+versions:
+  - agentManifestKey: tutorial_researcher
+    status: deployed
+    versionLabel: v1
+    llmModel: gpt-4o-mini
+    instructions: |
+      You are a narrow research specialist invoked by a parent agent.
+      Use the topic in your input. Produce concise, factual bullet points.
+      If the topic is ambiguous, infer the best interpretation and note assumptions in `notes`.
+      Respond only with JSON that matches the output schema.
+    inputSchema:
+      type: object
+      properties:
+        topic:
+          type: string
+          description: Research topic distilled by the parent
+      required: [topic]
+    outputSchema:
+      type: object
+      properties:
+        bullets:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+      required: [bullets]
+  - agentManifestKey: tutorial_orchestrator
+    status: deployed
+    versionLabel: v1
+    llmModel: gpt-4o-mini
+    instructions: |
+      You are the user-facing orchestrator. For questions that need grounded fact gathering,
+      delegate to the tutorial_researcher sub-agent with a single clear `topic` string.
+      When you receive the child's result, write a short, helpful `answer` for the user
+      that cites the bullets in natural language. Respond only with JSON matching your output schema.
+    canExecuteSubAgents: true
+    subAgentExecutionModel: sequential
+    allowedSubAgents:
+      - tutorial_researcher
+    inputSchema:
+      type: object
+      properties:
+        query:
+          type: string
+      required: [query]
+    outputSchema:
+      type: object
+      properties:
+        answer:
+          type: string
+      required: [answer]
+triggers:
+  - agentManifestKey: tutorial_orchestrator
+    name: Public API
+    type: api
+    exposeStepTimelineToApi: true
+```
+
+Design notes (see **[Multi-agent systems](/techniques/multi-agent-systems)** for the full model):
+
+- **`executionMode: sub_agent`** on the worker makes it callable only as a **sub-agent tool** from an allowlisted parent, not via its own API trigger.
+- **`canExecuteSubAgents: true`** and **`allowedSubAgents`** gate which children the parent’s model may invoke.
+- **`subAgentExecutionModel: sequential`** runs one child at a time in order; use **`parallel`** when you want batched child runs.
+- **`inputSchema` / `outputSchema`** on **both** agents keep handoffs predictable for production.
+
+If your **`manifests/index.yaml`** still includes the stock `example.yaml`, either remove that include or ensure labels and keys do not conflict.
+
+### 4. Lint, sign in, plan, and apply
+
+```bash
+pnpm dlx @phrony/cli lint manifests/tutorial.yaml
+pnpm dlx @phrony/cli login
+pnpm dlx @phrony/cli plan manifests/tutorial.yaml
+pnpm dlx @phrony/cli apply manifests/tutorial.yaml
+```
+
+`apply` runs a dry run first, then prompts for confirmation unless you pass **`--auto-approve`** (for scripts). Treat the plan output as your review gate before reconciliation.
+
+After a successful apply, note the **root agent id** in the CLI result if your CLI prints it, or open **Agents** in the Phrony dashboard and find **Tutorial orchestrator**—you need its **agent id** (UUID) for the SDK. On the agent’s **Triggers** page, open the **API** trigger you declared; you need that **trigger id** when you scope an API key.
+
+---
+
+## Part 2 — API access from your backend
+
+### 1. Create an API key
+
+In the Phrony dashboard: **Settings** → **API keys** (or your workspace equivalent).
+
+- Create a key with prefix **`phk_`** and store it in a **secret manager** or environment variable (`PHRONY_API_KEY`). Never ship it to a browser.
+- Add a **scope** that includes the **orchestrator** agent and its **API** trigger only.
+
+The agent’s **Access** tab shows **`agentId`** and the public **base URL**—match those to `AGENT_ID` and `PHRONY_API_BASE` in your code.
+
+### 2. Call shape
+
+Runs always target the **parent** agent id. `input` must satisfy the parent’s **deployed** version **`inputSchema`**—here, `{ "query": "..." }`.
+
+For **HITL**, streaming, or **user task** completion over HTTP, reuse the patterns in **[Example: Building an embedded agent](/academy/example-embedded-agent)** (expose timeline on the API trigger when you need conversation steps from the API).
+
+---
+
+## Part 3 — Integrate with `@phrony/sdk`
+
+Install the SDK in **your** service (backend or worker—not a public client bundle):
+
+```bash
+pnpm add @phrony/sdk
+```
+
+Minimal **start + poll** loop:
+
+```typescript
+import { Phrony } from "@phrony/sdk";
+
+const phrony = new Phrony({
+  apiKey: process.env.PHRONY_API_KEY!,
+  baseUrl: process.env.PHRONY_API_BASE ?? "https://api.phrony.com",
+});
+
+const agentId = process.env.AGENT_ID!;
+
+const { runId, status } = await phrony.startRun(agentId, {
+  input: {
+    query: "What are three notable facts about the James Webb Space Telescope?",
+  },
+});
+
+let run = await phrony.getRun(runId);
+while (shouldKeepPolling(run.status)) {
+  await sleep(1500);
+  run = await phrony.getRun(runId);
+}
+
+console.log("final status:", run.status);
+console.log("output:", run.output);
+
+function shouldKeepPolling(status: string) {
+  // Exact strings depend on your workspace; align with getRun docs / dashboard.
+  return status === "Running" || status.startsWith("Waiting");
+}
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+```
+
+**Observability:** Use **`getConversation(runId)`** to inspect merged timeline **`items`**—you should see **sub-agent** steps on the parent run and child activity in the same [session](/concepts/session). For live updates without polling, use **`streamRunEvents`** from a server environment (see **[TypeScript SDK](/packages/typescript-sdk)**).
+
+**Wiring into your product:** keep `Phrony` construction and `startRun` inside your API layer (Express route, Next.js server action, queue consumer, and so on). Map your user’s question into the **`query`** field, persist **`runId`** if you need async completion, and return **`run.output`** when `status` is **Completed**.
+
+---
+
+## Checklist
+
+- [ ] **`llmProviders`** name matches a configured provider in your workspace
+- [ ] Sub-agent **`executionMode: sub_agent`**; parent **`executionMode`** is **`request`** (or **`hitl`** if you need human gates on the root)
+- [ ] Parent version has **`canExecuteSubAgents: true`**, **`allowedSubAgents`** listing each child’s **`manifestKey`**, and a **`subAgentExecutionModel`**
+- [ ] Both agents have **deployed** versions before you rely on production traffic
+- [ ] **API** trigger on the **parent**; API key scoped to that agent + trigger
+- [ ] **`PHRONY_API_KEY`**, **`AGENT_ID`**, and optional **`PHRONY_API_BASE`** set in the integration environment
+
+## Related
+
+- **[Multi-agent systems](/techniques/multi-agent-systems)** — Run tree, sequential vs parallel, AITL, limits
+- **[Manifest](/concepts/manifest)** — Full field reference and merge semantics
+- **[CLI — phrony](/packages/cli)** — `lint`, `plan`, `apply`, `diff`, auth
+- **[TypeScript SDK](/packages/typescript-sdk)** — Methods, errors, streaming, files
+- **[Example: Building an embedded agent](/academy/example-embedded-agent)** — API keys, HITL, and `sendRunMessage`

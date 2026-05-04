@@ -1,0 +1,135 @@
+---
+title: "CLI — phrony"
+description: "Command-line tool to lint manifests, sign in or use a workspace access token, list agents and versions, preview changes (plan), apply YAML to your workspace, and diff local files against the cloud."
+---
+
+The **Phrony CLI** (`phrony`) is the official command-line companion for working with [manifests](/concepts/manifest) as code. You validate YAML locally, authenticate to Phrony (**`phrony login`** on your machine or **`PHRONY_ACCESS_TOKEN`** in CI), manage profiles and agents from the terminal, run **`plan`** / **`apply`** / **`diff`**, and tune credentials and config as described in the sections below.
+
+## Requirements
+
+- **Node.js 20** or newer
+
+## Install
+
+Install the package globally so `phrony` is on your `PATH`:
+
+```bash
+pnpm add -g @phrony/cli
+```
+
+You can also run it once without a global install:
+
+```bash
+pnpm dlx @phrony/cli --help
+```
+
+## Quick start
+
+1. **Scaffold a project** — creates `manifests/`, a starter [manifest index](/concepts/manifest#multiple-yaml-documents-and-includes), example manifest, and `phrony.config.json`:
+
+   ```bash
+   phrony init
+   ```
+
+2. **Lint** — validates YAML (including merged includes) before you push or apply:
+
+   ```bash
+   phrony lint
+   ```
+
+3. **Sign in** (terminal) — browser-based OAuth (PKCE). Tokens are stored under your home directory (see [Credentials](/packages/cli/credentials-and-config#credentials)):
+
+   ```bash
+   phrony login
+   ```
+
+   **CI / pipelines:** skip this step and set **`PHRONY_ACCESS_TOKEN`** to a workspace access token from the Phrony dashboard (**Settings → Access tokens**), plus **`PHRONY_TENANT_ID`** (or **`--tenant`** / `tenantId` in config). See [Workspace access tokens (CI)](/packages/cli/authentication#workspace-access-tokens-ci).
+
+4. **Plan then apply** — preview reconciliation, then confirm (or pass `--auto-approve` for scripts):
+
+   ```bash
+   phrony plan
+   phrony apply
+   ```
+
+## Global flags
+
+These flags are available on **every** command (including subcommands):
+
+| Flag | Description |
+| ---- | ----------- |
+| `--cwd <dir>` | Working directory (default: current directory). |
+| `--profile <name>` | Named credentials profile (see [Credentials](/packages/cli/credentials-and-config#credentials)). |
+| `--debug` | Extra diagnostics on **stderr** (secrets are redacted). |
+| `--json` | Machine-readable JSON on **stdout** where the command supports it. |
+
+## Command guides
+
+Each command family has its own page:
+
+<CardGroup cols={2}>
+
+<Card title="Init and lint" href="/packages/cli/init-and-lint" icon="folder-plus">
+  **`phrony init`** and **`phrony lint`**
+</Card>
+
+<Card title="Login" href="/packages/cli/login" icon="key">
+  **`phrony login`** (OAuth PKCE)
+</Card>
+
+<Card title="Profile and logout" href="/packages/cli/profile" icon="users">
+  **`phrony profile`**, **`phrony logout`**
+</Card>
+
+<Card title="Manifest" href="/packages/cli/manifest" icon="file-code">
+  **`phrony plan`**, **`phrony apply`**, **`phrony diff`**
+</Card>
+
+<Card title="Agent and versions" href="/packages/cli/agent" icon="cpu">
+  **`phrony agent`** and **`phrony agent version`**
+</Card>
+
+<Card title="Authentication" href="/packages/cli/authentication" icon="shield">
+  Bearer auth, PAT scopes, tenant and API base
+</Card>
+
+<Card title="Credentials and config" href="/packages/cli/credentials-and-config" icon="settings">
+  **`~/.phrony/credentials`** and **`phrony.config.json`**
+</Card>
+
+</CardGroup>
+
+### `phrony version`
+
+Prints the CLI version (`npm_package_version`), or JSON with `--json`.
+
+---
+
+## Exit codes
+
+For **`plan`**, **`apply`**, **`diff`**, and **`agent`**:
+
+| Code | Meaning |
+| ---- | ------- |
+| `0` | Success. |
+| `1` | Error (validation, HTTP failure, user cancelled apply, etc.). |
+| `2` | Manifest client unavailable (`ManifestApiUnavailableError`). |
+
+**`lint`** exits `1` if any file fails validation.
+
+---
+
+## Automation and CI
+
+- Use **`phrony lint`** in CI to enforce manifest schema on every change (no API access required).
+- For **`plan`**, **`apply`**, **`diff`**, and **`agent`**, set **`PHRONY_ACCESS_TOKEN`** to a dashboard workspace access token with the right **scopes** (see [Workspace access tokens (CI)](/packages/cli/authentication#workspace-access-tokens-ci)), plus **`PHRONY_TENANT_ID`** and optional **`PHRONY_API_BASE`**. You do not need **`phrony login`** or a credentials file in the runner.
+- For JSON orchestration, pass **`--json`** and parse stdout.
+- For unattended **`apply`**, use **`--auto-approve`** (and **`--json`** if you need structured output).
+
+---
+
+## Related
+
+- **[Manifest](/concepts/manifest)** — YAML structure, includes, and reconciliation behavior
+- **[TypeScript SDK](/packages/typescript-sdk)** — HTTP client for agents, runs, and more
+- **[API reference](/api-reference/index)** — Base URLs and authentication overview

@@ -7,7 +7,7 @@
 ## About this project
 
 - Phrony **customer-facing** documentation on [Mintlify](https://mintlify.com)
-- Content is currently **`index.mdx` only** (introduction). Navigation lives in `docs.json` (**Documentation** → **Overview**, plus **Academy** and **API** tabs that also point at `index` until more pages exist).
+- Navigation lives in **`docs.json`**. The **CLI** docs are split under **`packages/cli/`** (overview plus pages per command family: init/lint, login, profile, manifest, agent, authentication, credentials/config).
 - Run `mint dev` to preview locally; `mint broken-links` to check links
 - **Voice**: say **Phrony**, **Phrony dashboard**, **API** — do **not** use internal code names (e.g. Cockpit, control-plane) in user-visible MDX
 - **Contributors** who also work on the Phrony monorepo: see [CONTRIBUTING.md](./CONTRIBUTING.md) (includes HTML/dialog notes for dashboard UI)
