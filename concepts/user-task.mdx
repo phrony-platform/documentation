@@ -12,7 +12,7 @@ A **user task** is a **human step** while an [agent](/concepts/agent) [session](
 | Sensitive tool use | **Approve** or **reject** before the call runs.                                      |
 | Missing input      | **Fill in** a value, **choose** an option, or answer a **text** / **number** prompt. |
 | Escalation (AITL)  | Answer a question raised from a sub-agent run.                                       |
-| Guard / anomaly    | **Review** a paused tool call or **acknowledge** an alert; triage **incidents** under **Guard** in the main sidebar (see **[Guard overview](/guard)**). |
+| Firewall / anomaly    | **Review** a paused tool call or **acknowledge** an alert; triage **incidents** under **Firewall** in the main sidebar (see **[Firewall overview](/firewall)**). |
 
 You work tasks from **Review** lists and from the **session** view. Phrony creates them when a step **requires a person**—there is no separate “new task” document to author.
 
@@ -61,10 +61,10 @@ Each kind corresponds to a different human step. Internal identifiers (for APIs 
 | `multi_option`    | The person picks **one** option from a list Phrony provides.                                                                  |
 | `text`            | The person enters a **text** answer.                                                                                          |
 | `number`          | The person enters a **numeric** answer.                                                                                       |
-| `anomaly_review`  | **Guard / anomaly**: a suspicious tool call is **paused** until someone approves or rejects it.                               |
+| `anomaly_review`  | **Firewall / anomaly**: a suspicious tool call is **paused** until someone approves or rejects it.                               |
 | `anomaly_alert`   | **Async detection** alert: informational, **non-blocking**; the person **acknowledges** it.                                   |
 
-Which kinds you actually see depends on your [workspace](/concepts/workspace) plan and features (HITL, AITL, multi-agent, Guard, and so on).
+Which kinds you actually see depends on your [workspace](/concepts/workspace) plan and features (HITL, AITL, multi-agent, Firewall, and so on).
 
 ## How to create, edit, and delete
 
@@ -82,7 +82,7 @@ Which kinds you actually see depends on your [workspace](/concepts/workspace) pl
 
 ## Phrony API
 
-If you [send input or messages to a run](/api-reference/runs#send-input-or-messages-to-a-run) from your own systems, you can often complete the same user tasks you would in the **Phrony dashboard** (for example, approvals, prompts, and conversational follow-ups). **Not every user task can be completed through the API**—certain **escalations** from [multi-agent](/techniques/multi-agent-systems) runs, and some **guard**- or **alert**-style steps, must be completed in the **Phrony dashboard** instead.
+If you [send input or messages to a run](/api-reference/runs#send-input-or-messages-to-a-run) from your own systems, you can often complete the same user tasks you would in the **Phrony dashboard** (for example, approvals, prompts, and conversational follow-ups). **Not every user task can be completed through the API**—certain **escalations** from [multi-agent](/techniques/multi-agent-systems) runs, and some **firewall**- or **alert**-style steps, must be completed in the **Phrony dashboard** instead.
 
 ## Warnings
 

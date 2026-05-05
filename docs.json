@@ -31,10 +31,10 @@
             ]
           },
           {
-            "group": "Guard",
+            "group": "Firewall",
             "pages": [
-              "guard/index",
-              "guard/l1-rules"
+              "firewall/index",
+              "firewall/l1-rules"
             ]
           },
           {
@@ -126,7 +126,15 @@
     },
     {
       "source": "/concepts/guard-and-l1-rules",
-      "destination": "/guard"
+      "destination": "/firewall"
+    },
+    {
+      "source": "/guard",
+      "destination": "/firewall"
+    },
+    {
+      "source": "/guard/:path*",
+      "destination": "/firewall/:path*"
     }
   ]
 }

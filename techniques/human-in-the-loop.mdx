@@ -21,7 +21,7 @@ HITL runs can **pause** and surface **[user tasks](/concepts/user-task)**—appr
 | **Regulated or high-stakes tools** | A person **approves or rejects** specific tool calls (for example money movement, data export, or production changes). |
 | **Missing or sensitive inputs** | The run **stops in a known state** until someone **supplies** a value, **chooses** an option, or **confirms** context. |
 | **Clear accountability** | Work is not “the model said so”—there is a **record** of human consent or rejection tied to the run. |
-| **Anomaly (L1) + review** | [L1 rules](/guard/l1-rules) can **pause** a tool attempt for a person ([`anomaly_review`](/concepts/user-task#kinds)), separate from operation-level “approve every time”—but **`pause`** rules require **HITL** or **Sub-agent** mode, not **Request**. |
+| **Anomaly (L1) + review** | [L1 rules](/firewall/l1-rules) can **pause** a tool attempt for a person ([`anomaly_review`](/concepts/user-task#kinds)), separate from operation-level “approve every time”—but **`pause`** rules require **HITL** or **Sub-agent** mode, not **Request**. |
 
 [Request](/concepts/agent#execution-mode)-mode agents are better when every run can finish without a person on the **critical** path. HITL is for when that path **must** include people. **L1** **`pause`** tasks appear when the agent is **HITL** or **Sub-agent** and the version has **`pause`** rules; **Request** mode can still use **block** / **terminate_session** L1 actions without pausing for review. The section [below](#anomaly-control-l1-and-hitl) ties L1 to **Review** queues.
 
@@ -41,9 +41,9 @@ Tasks show up in **Review** (for example **Approvals**), in lists you can filter
 
 ## Anomaly control (L1) and HITL
 
-**Anomaly control (L1)** is configured on a **version** (under [Limits & safety](/concepts/agent#limits-safety) on the [agent](/concepts/agent) page), not on the HITL flag alone. When it is on, you define **rules** on **tool** attempts (only for [operations](/concepts/agent#operations) on that version’s allowlist). A rule can **allow**, **block**, **pause** for human review, or **terminate the session**, with strict precedence when several match—see [L1 rules and evaluation](/guard/l1-rules).
+**Anomaly control (L1)** is configured on a **version** (under [Limits & safety](/concepts/agent#limits-safety) on the [agent](/concepts/agent) page), not on the HITL flag alone. When it is on, you define **rules** on **tool** attempts (only for [operations](/concepts/agent#operations) on that version’s allowlist). A rule can **allow**, **block**, **pause** for human review, or **terminate the session**, with strict precedence when several match—see [L1 rules and evaluation](/firewall/l1-rules).
 
-**`Pause`** rules require **HITL** or **Sub-agent** execution mode; **Request** agents cannot save them. Those pauses surface like other human steps: a **[user task](/concepts/user-task)** in **Review**—commonly **`anomaly_review`** (approve or reject before the tool runs). **Async** signals may also appear as informational **`anomaly_alert`** tasks (acknowledgment-style). **[Guard](/guard#where-work-appears-in-the-product)** lists **incidents** for triage. See [User task — kinds](/concepts/user-task#kinds).
+**`Pause`** rules require **HITL** or **Sub-agent** execution mode; **Request** agents cannot save them. Those pauses surface like other human steps: a **[user task](/concepts/user-task)** in **Review**—commonly **`anomaly_review`** (approve or reject before the tool runs). **Async** signals may also appear as informational **`anomaly_alert`** tasks (acknowledgment-style). **[Firewall](/firewall#where-work-appears-in-the-product)** lists **incidents** for triage. See [User task — kinds](/concepts/user-task#kinds).
 
 HITL **execution mode** and **L1** are complementary: use HITL for **static** [operation](/concepts/integration)-level “approve every time,” and L1 for **pattern-based** gating (arguments, per-run or per-session repetition, time-window follow-up) on top of the same or other tools.
 
