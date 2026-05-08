@@ -7,6 +7,18 @@ Network manifest commands use **`Authorization: Bearer`** on internal gateway ro
 
 `plan`, `apply`, and `diff` accept a **file** or a **directory** that contains `index.yaml` / `index.yml`. Default path: `./manifests`.
 
+For parameterized manifests, put a **`phrony.values.yaml`** next to the manifest entry (or pass **`--values`** / set **`PHRONY_MANIFEST_VALUES`** to a file path). The file must declare `version: 1` and an `inputs` mapping (string keys to scalar values). See [Manifest — Parameterized values](/concepts/manifest#manifest-inputs).
+
+---
+
+## `phrony lint [path]`
+
+Validates manifest YAML (Zod) with include resolution from disk. Defaults to `./manifests`.
+
+| Flag | Description |
+| ---- | ----------- |
+| `--values <path>` | Same as `plan` / `apply`: merge `inputs` from a values file before validation. |
+
 ---
 
 ## `phrony plan [path]`
@@ -19,6 +31,7 @@ Network manifest commands use **`Authorization: Bearer`** on internal gateway ro
 | `--prune` | Pass `prune=true` to the apply endpoint. |
 | `--name-suffix <s>` | Optional `nameSuffix` query parameter. |
 | `--anchor-agent <uuid>` | Optional `anchorAgentId` query parameter (scopes reconciliation when supported). |
+| `--values <path>` | Path to `phrony.values.yaml` (overrides `PHRONY_MANIFEST_VALUES` and auto-discovery beside the manifest). |
 
 ---
 
@@ -28,7 +41,7 @@ Runs **plan** (dry-run), then prompts **Apply these changes? [y/N]** unless you 
 
 | Flag | Description |
 | ---- | ----------- |
-| Same as `plan` | `--tenant`, `--prune`, `--name-suffix`, `--anchor-agent` |
+| Same as `plan` | `--tenant`, `--prune`, `--name-suffix`, `--anchor-agent`, `--values` |
 | `--auto-approve` | Skip the interactive confirmation (required for non-interactive applies). |
 
 **JSON behavior:** With `--json` and **without** `--auto-approve`, `apply` only outputs the dry-run result and does **not** perform the mutating apply (use `--auto-approve` with `--json` for scripting).

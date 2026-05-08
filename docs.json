@@ -27,6 +27,7 @@
               "concepts/session",
               "concepts/integration",
               "concepts/manifest",
+              "samples/manifests",
               "concepts/user-task"
             ]
           },

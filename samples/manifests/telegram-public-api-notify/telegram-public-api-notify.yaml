@@ -1,0 +1,98 @@
+# Sample: HITL agent — fetch a cat fact from a public HTTP API and send it to Telegram (API trigger).
+# Human-in-the-loop gates the Telegram send (require approval), not open-ended “what should we send?” chat.
+# phrony.values.yaml in this folder supplies inputs for `phrony lint` / apply.
+# toolkitSlug / toolSlug match the built-in catalog (same labels as in the Phrony dashboard).
+kind: phrony.manifest
+version: 1
+metadata:
+  label: "Sample manifest — Public API to Telegram (HITL, API trigger)"
+inputs:
+  - key: llm_provider_name
+    type: llm_provider
+    description: Name of an LLM provider already configured in the target workspace.
+  - key: llm_model
+    type: string
+    description: Model id for the chosen provider (for example gpt-4o-mini).
+  - key: telegram_service_name
+    type: integration
+    description: Existing Telegram integration this sample should use (the one already listed under Integrations).
+  - key: telegram_chat_id
+    type: string
+    description: Telegram chat id your bot should send to (digits, or a negative id for a group or supergroup).
+  - key: agent_display_name
+    type: string
+    description: Human-readable agent name in the dashboard.
+  - key: api_trigger_name
+    type: string
+    description: Label for the API trigger your systems call to start a run.
+llmProviders:
+  - name: "{{inputs.llm_provider_name}}"
+    type: openai
+services:
+  - manifestKey: svc_public_catfacts_http
+    name: "Cat Facts (public HTTP)"
+    type: http
+    config:
+      baseUrl: "https://catfact.ninja"
+      auth:
+        method: none
+    operations:
+      - manifestKey: op_fetch_cat_fact
+        name: fetch_cat_fact
+        description: GET a random cat fact from the public API (JSON body includes a fact string).
+        configuration:
+          method: GET
+          path: /fact
+  - manifestKey: svc_telegram_builtin
+    name: "{{inputs.telegram_service_name}}"
+    type: built_in
+    config:
+      toolkitSlug: TELEGRAM
+      authScheme: API_KEY
+    operations:
+      - manifestKey: op_send_telegram_message
+        name: send_telegram_message
+        description: Send plain text to a Telegram chat; pass chat_id (use the id from the agent instructions).
+        configuration:
+          toolSlug: TELEGRAM_SEND_MESSAGE
+          toolVersion: latest
+        requireApproval: true
+agents:
+  - manifestKey: telegram_public_api_agent
+    name: "{{inputs.agent_display_name}}"
+    executionMode: hitl
+    llmProviderName: "{{inputs.llm_provider_name}}"
+versions:
+  - agentManifestKey: telegram_public_api_agent
+    status: testing
+    versionLabel: v1
+    llmModel: "{{inputs.llm_model}}"
+    description: Fetches one cat fact from the public HTTP API and sends it to Telegram; HITL queues the send for human approval.
+    instructions: |
+      Your job each run: put **one random cat fact** from the public API into **one Telegram message**.
+
+      Do this in order, once per run:
+      1. Call **fetch_cat_fact** exactly once. Build the Telegram body from the returned fact (plain text). You may add **at most one** short prefix line only if the API trigger payload or user message gives useful context (for example an alert id or title); keep the fact the main content.
+      2. Call **send_telegram_message** with **chat_id** **{{inputs.telegram_chat_id}}** and your composed message. Use any other required argument names exactly as your Telegram tool defines them.
+
+      Do **not** ask what text to send—the message **is** the cat fact (plus optional prefix). Do not call fetch_cat_fact more than once. Do not repeat the same clarifying questions.
+
+      If the operator explicitly gives a **different** chat id in this conversation and clearly confirms using it for this run, use that id instead of **{{inputs.telegram_chat_id}}** for send_telegram_message only.
+
+      Do not claim the message was sent until the Telegram tool succeeds.
+    temperature: 0.25
+    maxIterations: 10
+    maxToolCalls: 6
+    allowedOperations:
+      - serviceName: "Cat Facts (public HTTP)"
+        operationName: fetch_cat_fact
+      - serviceName: "{{inputs.telegram_service_name}}"
+        operationName: send_telegram_message
+triggers:
+  - agentManifestKey: telegram_public_api_agent
+    name: "{{inputs.api_trigger_name}}"
+    type: api
+    rpmLimit: 60
+    maxConcurrentRuns: 4
+    maxInputTokens: 16000
+    exposeStepTimelineToApi: false

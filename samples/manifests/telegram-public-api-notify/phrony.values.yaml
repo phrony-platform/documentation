@@ -1,0 +1,8 @@
+version: 1
+inputs:
+  llm_provider_name: "My OpenAI"
+  llm_model: "gpt-4o-mini"
+  telegram_service_name: "Telegram"
+  telegram_chat_id: "123456789"
+  agent_display_name: "Telegram — public API notify"
+  api_trigger_name: "POST to Telegram relay"

@@ -11,8 +11,10 @@ The product speaks the same model as the dashboard. Applying a manifest **reconc
 
 | Action | Where |
 | ------ | ----- |
-| **Export manifest** | On an agent’s detail page, or from the agents list (per agent). Downloads a YAML file (for example `phrony-manifest-<slug>.yaml`). |
-| **Apply manifest** | **Import manifest** on the agents list, or **Apply manifest** on an agent detail page. Upload YAML; optionally run a **dry run** first to preview planned changes without writing. |
+| **Preview wiring** | On an agent’s detail page, under **Version configuration**, open the **Manifest** sub-tab for an interactive diagram of integrations, triggers, and (when applicable) related agents for the snapshot you selected. |
+| **Export manifest** | **Agent options** (header menu) on an agent’s detail page, **Export manifest** on the **Manifest** sub-tab, or from the agents list (per agent). Downloads a YAML file (for example `phrony-manifest-<slug>.yaml`). |
+| **Apply manifest** | **Import manifest** on the agents list, or **Apply manifest** under **Agent options** on an agent detail page. Upload YAML; the dashboard runs **checks** for placeholders and LLM provider names, then you can **dry run** or **apply** with the resolved input map. |
+| **Example YAML** | [Sample manifests](/samples/manifests) — one **HITL** **Telegram** relay (**cat fact** from public HTTP + **API** trigger), with **inputs** and **`phrony.values.yaml`** next to the entry YAML in this documentation repository. |
 
 When you apply from an **agent detail** page, reconciliation can be **scoped** to that agent’s subtree (multi-agent setups). From the **agents list**, apply is **workspace-wide** unless your flow uses an anchor (the dashboard sets this when you open the dialog from an agent).
 
@@ -37,6 +39,7 @@ Optional top-level sections:
 | `agents` | Agent identity: `manifestKey`, `name`, `executionMode`, `llmProviderName`. |
 | `versions` | Per-agent version snapshots (model, instructions, tools, limits, …). |
 | `triggers` | How work enters agents (schedule, API, or event). |
+| `inputs` | Optional declarations for **parameterized** manifests (see [Parameterized values](#manifest-inputs)). |
 
 ### Optional metadata
 
@@ -157,6 +160,25 @@ Each trigger targets one agent (`agentManifestKey`) and is one of:
 | `manifestKey` | Optional stable key. |
 
 For how triggers behave at runtime, see [Trigger ingress](/concepts/trigger-ingress) and [Agent — Triggers](/concepts/agent#triggers).
+
+## Parameterized values {#manifest-inputs}
+
+You can reuse one manifest across workspaces by leaving **string placeholders** in YAML and supplying concrete values at **lint**, **plan/apply**, or in the **Apply manifest** dialog.
+
+- **Placeholder syntax:** only in **string** values, use `{{inputs.KEY}}` where `KEY` matches `[a-zA-Z0-9_]`. Optional spaces are allowed inside the braces.
+- **Declarations:** optional top-level `inputs` lists each key with `key`, `type` (`string`, `llm_provider`, or `integration`), and optional `description` / `default`. When `inputs` is present in a document, every placeholder in that document must be declared there. In the **Apply manifest** dialog, **`llm_provider`** shows your existing LLM providers, and **`integration`** shows your existing integrations—so you pick a row by name instead of guessing text. Each type includes a link to create a new resource if the list is empty.
+- **Substitution:** the server and CLI replace placeholders with your map **before** validation. Unknown `{{…}}` patterns in strings are rejected.
+- **Workspace LLM names:** agents still reference tenant LLM providers by **name**. If an export used names that do not exist in the target workspace, use a **values** map and/or the dashboard mapping step so names resolve to real providers (APIs accept an optional `llmProviderOverrides` map from manifest name → workspace provider name).
+
+**Values file (CLI):** beside your manifest entry (or via `--values` / `PHRONY_MANIFEST_VALUES`), a `phrony.values.yaml` file can hold:
+
+```yaml
+version: 1
+inputs:
+  llmProviderName: "My OpenAI"
+```
+
+**Preflight:** the API can run a non-mutating check that returns structured **blockers** (for example missing LLM provider names or unresolved placeholders) before you dry run or apply.
 
 ## Multiple YAML documents and includes
 

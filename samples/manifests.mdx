@@ -1,0 +1,33 @@
+---
+title: "Sample manifest"
+description: "Parameterized Phrony manifest: Telegram relay with a public HTTP cat-fact API and API trigger."
+---
+
+The [Phrony CLI](/packages/cli/manifest) can validate the sample with `phrony lint`. It uses [manifest inputs](/concepts/manifest#manifest-inputs); default values live in **`phrony.values.yaml`** in the same folder as the manifest entry file. **`telegram_service_name`** uses **`type: integration`** so **Apply manifest** lets you pick an existing Telegram integration. The sample adds **HTTP** to a public read-only API, **Telegram**, an **API** trigger, and a **HITL** root agent that **fetches a cat fact and sends it to Telegram** ([details below](#telegram-public-api-sample)). After apply, finish **integration connection** in the Phrony dashboard when prompted.
+
+## File in this repository
+
+| Path | Purpose |
+| ---- | ------- |
+| [telegram-public-api-notify/telegram-public-api-notify.yaml](./manifests/telegram-public-api-notify/telegram-public-api-notify.yaml) | **HITL**: **API** trigger → **cat fact** (public HTTP) → **Telegram** (approval), **`telegram_chat_id`**. See [below](#telegram-public-api-sample). |
+
+From a local clone of the docs repo, run:
+
+```bash
+phrony lint samples/manifests/telegram-public-api-notify/telegram-public-api-notify.yaml
+```
+
+## Telegram + public API sample {#telegram-public-api-sample}
+
+The **`telegram-public-api-notify/`** folder is a **relay demo**: an **API trigger** starts a run on a **HITL** root agent. Each run **fetches one cat fact** from a **read-only public HTTP** API (`https://catfact.ninja/fact`) and **sends that fact to Telegram**.
+
+**Why HITL:** the agent does **not** need to interview the operator about message text—the content is the fact (optionally with one short line of context from the trigger). **Human-in-the-loop** here means the Telegram **send** operation uses **require approval**, so a human can **approve or reject** the outbound message in the Phrony dashboard before it is delivered.
+
+**How to use it**
+
+1. Apply the manifest and set **`telegram_chat_id`** to the destination chat id.
+2. Connect the **Telegram** integration (bot token). The **Cat Facts (public HTTP)** integration is declared in the manifest (read-only, no auth).
+3. Use the agent’s **API trigger** from your automation (optional context in the payload). The agent fetches a fact and proposes the Telegram send; the operator **approves the send** in the dashboard when prompted.
+4. See [Human in the loop (HITL)](/techniques/human-in-the-loop) for execution mode and approvals.
+
+See [Manifest](/concepts/manifest) for document shape, apply, and dry run.

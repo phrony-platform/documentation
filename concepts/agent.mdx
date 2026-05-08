@@ -65,7 +65,7 @@ An **agent version** is a versioned configuration of an agent. When an agent is 
 | **Execution mode**   | Shown next to the name; see [Execution mode](#execution-mode).                                                                                                                                                                       |
 | **LLM provider**     | The **default credential bundle** (vendor keys, optional base URL) used for this agent’s model calls. Each version still picks a concrete **model id**; that id must exist for the chosen provider.                                  |
 | **Version switcher** | Lets you pick which snapshot you are viewing or editing. The **deployed** one is the live default for new runs. You can open full history, create a new snapshot from the current line, or jump back to the latest or deployed view. |
-| **Main tabs**        | **Version Configuration** (sub-tabs below), **Sessions**, and **[Triggers](#triggers)** when the agent is not a sub-agent.                                                                                                           |
+| **Main tabs**        | **Version configuration** (sub-tabs below, including **[Manifest](#manifest)**), **Sessions**, and **[Triggers](#triggers)** when the agent is not a sub-agent.                                                                          |
 
 ## Triggers
 
@@ -103,7 +103,15 @@ For **Event** and **API** triggers, the trigger detail view includes an **Ingres
 | **Version label**         | Your name for a snapshot (`v2`, `release-2025-04`, etc.). It appears in history, APIs, and ops tooling so you can tell lines apart.                                                                                                                                                                                               |
 | **Description** (version) | A **short summary of what this snapshot does**. For **Sub-agent** agents it is **required**: the **parent** model sees this text when the sub-agent is exposed as a tool—it is not a dump of your private system prompt. For other modes it is optional but still useful if another agent may call this one as a sub-agent later. |
 
-Sub-tabs under **Version Configuration** are documented below. **Multi-agent** appears only when your [workspace](/concepts/workspace) plan includes it.
+Sub-tabs under **Version configuration** are documented below. **Multi-agent** appears only when your [workspace](/concepts/workspace) plan includes it.
+
+### Manifest
+
+The **Manifest** sub-tab shows an interactive **manifest wiring** diagram for the **snapshot you have selected** in the version picker (including **Testing** lines). It summarizes how this agent connects to **integrations** (allowed operations), **triggers**, and—when your plan supports [multi-agent](/techniques/multi-agent-systems)—other agents in the related subtree. Hover details on the diagram match what you configure elsewhere on the page.
+
+The diagram follows the **root** agent’s selected snapshot. **Sub-agents** shown in the preview still reflect their own **deployed** snapshots, so you see live wiring for children while you draft the parent. Use the canvas controls to zoom or fit the view; **Export manifest** on the diagram downloads YAML for this agent (same export as **Agent options** → **Export manifest** in the header). **Apply manifest** stays in that header menu. For YAML shape and reconciliation, see [Manifest](/concepts/manifest).
+
+If no snapshot is selected yet, pick one with the version control in the header to load the diagram.
 
 ### Model & Prompt
 
@@ -182,7 +190,7 @@ In the dashboard, open **Agents**, choose **Add Agent**, or use **Quick Create �
 Use the row menu on **Agents** or **Agent options** on the detail page. Edit changes name, mode, or provider. You **cannot delete** an agent while any snapshot is still **deployed**; delete removes the agent and its **Testing** snapshots.
 
 **Work with versions**  
-On **Version Configuration**, use the version control to pick a snapshot, **Create new version** / **Create first version** when you need a new line, edit **Testing** fields, then **Save changes to this version**. Promote with **Deploy** (or move live back with **Rollback** when viewing an older line). Delete uses the trash control on **Testing** only.
+On **Version configuration**, use the version control to pick a snapshot, **Create new version** / **Create first version** when you need a new line, edit **Testing** fields, then **Save changes to this version**. Promote with **Deploy** (or move live back with **Rollback** when viewing an older line). Delete uses the trash control on **Testing** only.
 
 **Test run**  
 Runs the **currently selected** snapshot against the runtime with the JSON **input** you supply; if an input schema exists, the runtime validates against it.
