@@ -1,33 +1,48 @@
 ---
-title: "Sample manifest"
-description: "Parameterized Phrony manifest: Telegram relay with a public HTTP cat-fact API and API trigger."
+title: "Sample manifests"
+description: "Parameterized Phrony manifests: Telegram relay and Gmail new-mail triage (HITL)."
 ---
 
-The [Phrony CLI](/packages/cli/manifest) can validate the sample with `phrony lint`. It uses [manifest inputs](/concepts/manifest#manifest-inputs); default values live in **`phrony.values.yaml`** in the same folder as the manifest entry file. **`telegram_service_name`** uses **`type: integration`** so **Apply manifest** lets you pick an existing Telegram integration. The sample adds **HTTP** to a public read-only API, **Telegram**, an **API** trigger, and a **HITL** root agent that **fetches a cat fact and sends it to Telegram** ([details below](#telegram-public-api-sample)). After apply, finish **integration connection** in the Phrony dashboard when prompted.
+The [Phrony CLI](/packages/cli/manifest) can validate these files with `phrony lint`. Each sample uses [manifest inputs](/concepts/manifest#manifest-inputs); default values live in **`phrony.values.yaml`** in the same folder as the manifest entry file. **`type: integration`** inputs are picked in **Apply manifest**. After apply, finish **integration connection** in the Phrony dashboard when prompted.
 
-## File in this repository
+## Files in this repository
 
 | Path | Purpose |
 | ---- | ------- |
-| [telegram-public-api-notify/telegram-public-api-notify.yaml](./manifests/telegram-public-api-notify/telegram-public-api-notify.yaml) | **HITL**: **API** trigger → **cat fact** (public HTTP) → **Telegram** (approval), **`telegram_chat_id`**. See [below](#telegram-public-api-sample). |
+| [telegram-public-api-notify/telegram-public-api-notify.yaml](./manifests/telegram-public-api-notify/telegram-public-api-notify.yaml) | **HITL**: **API** trigger → **cat fact** (public HTTP) → **Telegram** (approval). [Details](#telegram-public-api-sample) |
+| [gmail-new-mail-hitl/gmail-new-mail-hitl.yaml](./manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml) | **HITL**: Gmail **new message** event (**`GMAIL_NEW_GMAIL_MESSAGE`**) → fetch, label, reply draft. [Details](#gmail-new-mail-sample) |
 
 From a local clone of the docs repo, run:
 
 ```bash
 phrony lint samples/manifests/telegram-public-api-notify/telegram-public-api-notify.yaml
+phrony lint samples/manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml
 ```
 
 ## Telegram + public API sample {#telegram-public-api-sample}
 
 The **`telegram-public-api-notify/`** folder is a **relay demo**: an **API trigger** starts a run on a **HITL** root agent. Each run **fetches one cat fact** from a **read-only public HTTP** API (`https://catfact.ninja/fact`) and **sends that fact to Telegram**.
 
-**Why HITL:** the agent does **not** need to interview the operator about message text—the content is the fact (optionally with one short line of context from the trigger). **Human-in-the-loop** here means the Telegram **send** operation uses **require approval**, so a human can **approve or reject** the outbound message in the Phrony dashboard before it is delivered.
+**Why HITL:** the Telegram **send** operation uses **require approval**, so a human can **approve or reject** the outbound message in the Phrony dashboard before it is delivered.
 
 **How to use it**
 
 1. Apply the manifest and set **`telegram_chat_id`** to the destination chat id.
-2. Connect the **Telegram** integration (bot token). The **Cat Facts (public HTTP)** integration is declared in the manifest (read-only, no auth).
-3. Use the agent’s **API trigger** from your automation (optional context in the payload). The agent fetches a fact and proposes the Telegram send; the operator **approves the send** in the dashboard when prompted.
-4. See [Human in the loop (HITL)](/techniques/human-in-the-loop) for execution mode and approvals.
+2. Connect **Telegram** (bot token). **Cat Facts (public HTTP)** is declared in the manifest (read-only, no auth).
+3. Call the agent’s **API trigger** from your automation (optional context in the payload). The operator **approves the send** when prompted.
+4. See [Human in the loop (HITL)](/techniques/human-in-the-loop).
+
+## Gmail new mail — label + draft sample {#gmail-new-mail-sample}
+
+The **`gmail-new-mail-hitl/`** manifest wires a **Gmail** built-in integration to Composio’s **“New Gmail Message Received”** trigger. Per [Composio Gmail toolkit documentation](https://docs.composio.dev/toolkits/gmail), that trigger’s slug is **`GMAIL_NEW_GMAIL_MESSAGE`** (poll-based; latency is typically on the order of a minute unless you use a different ingress). The manifest sets **`eventSlug: GMAIL_NEW_GMAIL_MESSAGE`** and **`eventConfig.userId: me`**; align **`eventSlug`** with what your Phrony workspace shows for that trigger if it differs.
+
+On each new message, the **HITL** agent **fetches** the message, **applies a triage label** (label id from **`triage_label_id`**), and **creates a reply draft** in the same thread. **Label** and **draft** operations use **require approval** so humans can review before Gmail is modified.
+
+**How to use it**
+
+1. Apply the manifest; pick your **Gmail** integration and set **`triage_label_id`** to a real Gmail **label id** (use **`list_gmail_labels`** in a test run or Gmail’s UI; not the human-readable name alone).
+2. Connect **Gmail** (OAuth) if prompted.
+3. Ensure the **event trigger** is enabled in the dashboard; new mail in the watched mailbox should start runs.
+4. See [Human in the loop (HITL)](/techniques/human-in-the-loop) and [Trigger ingress](/concepts/trigger-ingress).
 
 See [Manifest](/concepts/manifest) for document shape, apply, and dry run.

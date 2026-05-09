@@ -1,0 +1,8 @@
+version: 1
+inputs:
+  llm_provider_name: "My OpenAI"
+  llm_model: "gpt-4o-mini"
+  gmail_service_name: "Gmail"
+  triage_label_id: "Label_replace_with_your_label_id"
+  agent_display_name: "Gmail — new mail triage (HITL)"
+  new_mail_trigger_name: "New Gmail message"

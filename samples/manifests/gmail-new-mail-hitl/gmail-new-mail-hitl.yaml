@@ -1,0 +1,106 @@
+# Sample: HITL agent — new Gmail message (Composio poll trigger), triage label, and reply draft.
+# Event slug matches Composio Gmail toolkit: "New Gmail Message Received" -> GMAIL_NEW_GMAIL_MESSAGE
+# (see Composio Gmail toolkit trigger docs). Confirm the same slug appears in the Phrony dashboard for your workspace.
+# phrony.values.yaml in this folder supplies inputs for `phrony lint` / apply.
+kind: phrony.manifest
+version: 1
+metadata:
+  label: "Sample manifest — Gmail new mail (HITL, label + reply draft)"
+inputs:
+  - key: llm_provider_name
+    type: llm_provider
+    description: Name of an LLM provider already configured in the target workspace.
+  - key: llm_model
+    type: string
+    description: Model id for the chosen provider (for example gpt-4o-mini).
+  - key: gmail_service_name
+    type: integration
+    description: Existing Gmail integration this sample should use (the one already listed under Integrations).
+  - key: triage_label_id
+    type: string
+    description: Gmail label id to apply for triage (for example Label_123 from Gmail or list_labels); not the display name.
+  - key: agent_display_name
+    type: string
+    description: Human-readable agent name in the dashboard.
+  - key: new_mail_trigger_name
+    type: string
+    description: Label for the event trigger (new mail received) in the Phrony dashboard.
+llmProviders:
+  - name: "{{inputs.llm_provider_name}}"
+    type: openai
+services:
+  - manifestKey: svc_gmail_builtin
+    name: "{{inputs.gmail_service_name}}"
+    type: built_in
+    config:
+      toolkitSlug: GMAIL
+      authScheme: OAUTH2
+    operations:
+      - manifestKey: op_fetch_message
+        name: fetch_incoming_message
+        description: Load a message by Gmail message id (use id from the trigger payload when present).
+        configuration:
+          toolSlug: GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID
+          toolVersion: latest
+      - manifestKey: op_list_labels
+        name: list_gmail_labels
+        description: List Gmail labels to resolve label ids when needed.
+        configuration:
+          toolSlug: GMAIL_LIST_LABELS
+          toolVersion: latest
+      - manifestKey: op_add_label
+        name: apply_triage_label
+        description: Add triage label to the message; uses label id from agent instructions.
+        configuration:
+          toolSlug: GMAIL_ADD_LABEL_TO_EMAIL
+          toolVersion: latest
+        requireApproval: true
+      - manifestKey: op_create_draft
+        name: create_reply_draft
+        description: Create a Gmail draft reply in the same thread as the incoming message.
+        configuration:
+          toolSlug: GMAIL_CREATE_EMAIL_DRAFT
+          toolVersion: latest
+        requireApproval: true
+agents:
+  - manifestKey: gmail_inbox_hitl_agent
+    name: "{{inputs.agent_display_name}}"
+    executionMode: hitl
+    llmProviderName: "{{inputs.llm_provider_name}}"
+versions:
+  - agentManifestKey: gmail_inbox_hitl_agent
+    status: testing
+    versionLabel: v1
+    llmModel: "{{inputs.llm_model}}"
+    description: On new mail, fetch the message, apply a triage label, and draft a reply; HITL approves label and draft steps.
+    instructions: |
+      You help operators handle **new inbound Gmail** when a run starts from the **new message** trigger.
+
+      1. Read the run/trigger context for **message_id** (or equivalent id field). If it is missing, say so briefly and stop.
+      2. Call **fetch_incoming_message** once for that id so you understand subject, sender, and body.
+      3. Call **apply_triage_label** once with **message_id** and label ids that include **{{inputs.triage_label_id}}** (and any other ids the tool requires). If you are unsure of an id, use **list_gmail_labels** first, then apply the label.
+      4. Call **create_reply_draft** to save a **polite draft reply in the same thread** that answers the sender; do not send mail directly unless a future version adds an explicit send tool.
+
+      Keep the draft concise and faithful to the thread. Do not invent policy or commitments your organization did not publish.
+
+      Triage label id configured for this workspace: **{{inputs.triage_label_id}}**.
+    temperature: 0.2
+    maxIterations: 16
+    maxToolCalls: 10
+    allowedOperations:
+      - serviceName: "{{inputs.gmail_service_name}}"
+        operationName: fetch_incoming_message
+      - serviceName: "{{inputs.gmail_service_name}}"
+        operationName: list_gmail_labels
+      - serviceName: "{{inputs.gmail_service_name}}"
+        operationName: apply_triage_label
+      - serviceName: "{{inputs.gmail_service_name}}"
+        operationName: create_reply_draft
+triggers:
+  - agentManifestKey: gmail_inbox_hitl_agent
+    name: "{{inputs.new_mail_trigger_name}}"
+    type: event
+    serviceName: "{{inputs.gmail_service_name}}"
+    eventSlug: GMAIL_NEW_GMAIL_MESSAGE
+    eventConfig:
+      userId: me
