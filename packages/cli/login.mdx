@@ -9,7 +9,9 @@ Opens a browser to complete **OAuth 2 with PKCE** and writes tokens to your cred
 
 | Flag | Description |
 | ---- | ----------- |
-| `--api-base <url>` | Gateway origin for this login only (overrides `PHRONY_API_BASE` / `phrony.config.json`). |
+| `--api-base <url>` | Gateway origin for this login only (overrides `PHRONY_API_BASE`, the profile’s stored `api_base`, and `phrony.config.json`). |
+
+Global **`--profile`** (see [CLI overview](/packages/cli)) chooses which table in **`~/.phrony/credentials`** receives the new session. For **`phrony login`**, if that profile already has **`api_base`** / **`apiBase`** from a previous sign-in, the CLI uses it when **`--api-base`**, **`PHRONY_API_BASE`**, and **`phrony.config.json`** do not set a gateway—so **`phrony login --profile local`** can target your local API without repeating the URL. For a **new** profile with no stored gateway, pass **`--api-base`** once (or set **`PHRONY_API_BASE`** / **`apiBase`** in **`phrony.config.json`**).
 
 After login, network commands send **Bearer** tokens to the Phrony API endpoints the CLI uses (not public **`/v1`** requests).
 

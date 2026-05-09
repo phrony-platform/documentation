@@ -45,9 +45,9 @@ Edit **`phrony.config.json`** (or use environment variables) so network commands
 
 ### 3. Replace the example with a two-agent manifest
 
-Save the following as **`manifests/tutorial.yaml`** (or merge into your index). It reuses the **inputs**, **services**, and **HITL Telegram send** pattern from [`telegram-public-api-notify.yaml`](../samples/manifests/telegram-public-api-notify/telegram-public-api-notify.yaml), but splits **fetch** (sub-agent, public HTTP only) from **send** (parent, Telegram only).
+Save the following as **`manifests/tutorial.yaml`** (or merge into your index). It reuses the **inputs**, **services**, and **HITL Telegram send** pattern from [`telegram-public-api-notify.yaml`](../samples/manifests/telegram-public-api-notify/manifests/telegram-public-api-notify.yaml), but splits **fetch** (sub-agent, public HTTP only) from **send** (parent, Telegram only).
 
-Add **`manifests/phrony.values.yaml`** beside it using the same **`inputs`** keys as the **`phrony.values.yaml`** file in the **`telegram-public-api-notify/`** folder (see [Telegram + public API sample](/samples/manifests#telegram-public-api-sample); adjust **`telegram_chat_id`**, **`telegram_service_name`**, **`llm_provider_name`**, and **`llm_model`** for your workspace).
+Add **`manifests/phrony.values.yaml`** beside it using the same **`inputs`** keys as **`telegram-public-api-notify/manifests/phrony.values.yaml`** in the docs sample (see [Telegram + public API sample](/samples/manifests#telegram-public-api-sample); adjust **`telegram_chat_id`**, **`telegram_service_name`**, **`llm_provider_name`**, and **`llm_model`** for your workspace).
 
 ```yaml
 kind: phrony.manifest

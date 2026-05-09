@@ -12,7 +12,6 @@ Creates:
 - `manifests/index.yaml` — manifest **index** that includes other YAML files
 - `manifests/example.yaml` — starter `phrony.manifest` document
 - `phrony.config.json` — workspace hints (`tenantId`, `apiBase`, `rootAgentId`, `defaultProfile`)
-- `phrony.config.ts` — optional duplicate for editors (the CLI reads **JSON** only)
 
 If `.gitignore` exists (or is created), the CLI appends `.env` and `.phrony/` when missing.
 
@@ -28,7 +27,7 @@ If `.gitignore` exists (or is created), the CLI appends `.env` and `.phrony/` wh
 
 Validates manifest YAML against the published schema (with **includes** resolved from disk). Default path: `./manifests`.
 
-- Pass a **file** or a **directory**. Directories are scanned recursively for `.yaml` / `.yml` (skipping `node_modules` and `.git`).
+- Pass a **file** or a **directory**. Directories are scanned recursively for `.yaml` / `.yml` (skipping `node_modules`, `.git`, and **`phrony.values.yaml`** / **`phrony.values.yml`**, which are values files rather than manifest documents).
 - **Offline** — does not call the network; safe in CI for schema checks.
 
 | Flag | Description |

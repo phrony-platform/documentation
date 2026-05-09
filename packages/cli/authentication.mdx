@@ -32,7 +32,7 @@ Create a token in the **Phrony dashboard** under **Settings → Access tokens** 
 
 **Scopes:** the API checks scopes on each request. For **`phrony plan`**, **`phrony apply`**, **`phrony agent version deploy`**, and **`phrony agent version retract`**, the token must include **`agents:write`**. For **`phrony diff`** (manifest export), **`phrony agent ls`**, **`phrony agent get`**, **`phrony agent version ls`**, and **`phrony agent version get`**, include **`agents:read`**. Broader scopes (for example **`internal:*`**) also work if your organization issues them.
 
-The CLI resolves manifest auth in this order: **`PHRONY_ACCESS_TOKEN`** → **OAuth** profile from **`phrony login`**. When **`PHRONY_ACCESS_TOKEN`** is set, OAuth tokens in your credentials file are **ignored** for that run (the CLI prints a short warning if both apply).
+The CLI resolves manifest auth in this order: **`PHRONY_ACCESS_TOKEN`** → **OAuth** profile from **`phrony login`**. When **`PHRONY_ACCESS_TOKEN`** is set, OAuth tokens in your credentials file are **ignored** for that run, and **`--profile`** does not choose a different bearer token (the env token is always sent). The CLI prints a short warning on each run when the env token is set.
 
 If **`PHRONY_API_KEY`** or a profile **`api_key`** is set, the CLI prints a warning that those keys are **not** used for `plan`, `apply`, `diff`, or `agent`.
 
@@ -51,7 +51,11 @@ You still need **`PHRONY_TENANT_ID`** (or **`--tenant`** / `tenantId` in `phrony
 
 When **`PHRONY_ACCESS_TOKEN`** is set, choose the workspace the same way: **`PHRONY_TENANT_ID`**, **`--tenant`**, or **`tenantId`** in **`phrony.config.json`** (the token is validated for that tenant on the server).
 
-API base URL resolution (login and requests): **`--api-base`** (login only) → **`PHRONY_API_BASE`** → **`apiBase` in `phrony.config.json`** → stored OAuth `api_base` → default **`https://api.phrony.com`**.
+**Gateway (API origin)** depends on the auth mode:
+
+- **`phrony login`**: **`--api-base`** → **`PHRONY_API_BASE`** → **`api_base` on the target profile** → **`apiBase` in `phrony.config.json`** → default **`https://api.phrony.com`**.
+- **OAuth** on **`plan`**, **`apply`**, **`diff`**, **`agent`**, etc.: **`PHRONY_API_BASE`** → **`api_base` on the selected profile** → **`apiBase` in `phrony.config.json`** → default **`https://api.phrony.com`**. The profile’s stored gateway wins over a template **`phrony.config.json`** so a local login is not overridden by sample repos that ship **`https://api.phrony.com`**.
+- **`PHRONY_ACCESS_TOKEN`**: **`PHRONY_API_BASE`** → **`apiBase` in `phrony.config.json`** → default (the profile’s **`api_base`** is not used for the bearer token).
 
 ---
 

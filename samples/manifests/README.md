@@ -29,7 +29,7 @@ Set **`triage_label_id`** to a real Gmail **label id** (for example `Label_…`)
 From the root of this **documentation** repository:
 
 ```bash
-phrony lint samples/manifests/telegram-public-api-notify/telegram-public-api-notify.yaml
+phrony lint samples/manifests/telegram-public-api-notify/manifests
 phrony lint samples/manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml
 ```
 

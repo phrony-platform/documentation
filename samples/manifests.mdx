@@ -25,13 +25,13 @@ The paths below are under **`samples/manifests/`** in the docs source. Selected 
 
 | Path | Purpose |
 | ---- | ------- |
-| [telegram-public-api-notify/telegram-public-api-notify.yaml](./manifests/telegram-public-api-notify/telegram-public-api-notify.yaml) | **HITL**: **API** trigger → **cat fact** (public HTTP) → **Telegram** (approval). [Details](#telegram-public-api-sample) |
+| [telegram-public-api-notify/manifests/index.yaml](./manifests/telegram-public-api-notify/manifests/index.yaml) | **HITL**: **API** trigger → **cat fact** (public HTTP) → **Telegram** (approval). [Details](#telegram-public-api-sample) |
 | [gmail-new-mail-hitl/gmail-new-mail-hitl.yaml](./manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml) | **HITL**: Gmail **new message** event (**`GMAIL_NEW_GMAIL_MESSAGE`**) → fetch, label, reply draft. [Details](#gmail-new-mail-sample) |
 
 From a local clone of this documentation repository, run:
 
 ```bash
-phrony lint samples/manifests/telegram-public-api-notify/telegram-public-api-notify.yaml
+phrony lint samples/manifests/telegram-public-api-notify/manifests
 phrony lint samples/manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml
 ```
 
