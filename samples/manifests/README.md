@@ -1,6 +1,6 @@
 # Sample Phrony manifests
 
-This folder holds **two** parameterized examples you can copy and adapt. Each uses [manifest inputs](/concepts/manifest#manifest-inputs) (`inputs` + `{{inputs.*}}`) and a **`phrony.values.yaml`** beside the entry YAML for `phrony lint` / apply. **`type: integration`** inputs are chosen from your workspace in **Apply manifest**. After apply, finish **integration connection** in the Phrony dashboard when prompted.
+This folder holds **two** parameterized examples you can copy and adapt. Each uses [manifest inputs](/concepts/manifest#manifest-inputs) (`inputs` + `{{inputs.*}}`) and a **`phrony.values.yaml`** beside the entry YAML for **`phrony lint`**, **`phrony plan`**, and **`phrony apply`** (see [Plan, apply, and diff](/packages/cli/manifest)). In the dashboard, map **`integration`** and **`llm_provider`** inputs during **Import manifest** (agents list) or **Apply manifest** (**Agent options** on an agent). After apply, finish **integration connection** in the Phrony dashboard when prompted.
 
 | Folder | Use case |
 | ------ | -------- |
@@ -31,6 +31,6 @@ phrony lint samples/manifests/telegram-public-api-notify/telegram-public-api-not
 phrony lint samples/manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml
 ```
 
-The CLI picks up `phrony.values.yaml` automatically when it sits next to the manifest path you pass to `lint` or `apply`.
+The CLI picks up **`phrony.values.yaml`** automatically when it sits next to the manifest path you pass to **`lint`**, **`plan`**, or **`apply`**; otherwise pass **`--values`** (see [Plan, apply, and diff](/packages/cli/manifest)).
 
 On the published Phrony docs, open **Sample manifests** (`/samples/manifests`).

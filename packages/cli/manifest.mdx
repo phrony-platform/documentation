@@ -1,29 +1,27 @@
 ---
-title: "Plan, apply, and diff"
+title: "Manifest"
 description: "Dry-run and apply manifest YAML with phrony plan and phrony apply; compare local files to the cloud with phrony diff."
 ---
 
-Network manifest commands use **`Authorization: Bearer`** on internal gateway routes (**`phrony login`** or **`PHRONY_ACCESS_TOKEN`**). See [Authentication](/packages/cli/authentication).
+You can **dry run** and **apply** manifests from the **Phrony dashboard** or with the commands on this page. Dashboard flows use **Import manifest** (agents list) or **Apply manifest** (**Agent options** on an agent detail page): upload YAML, complete **checks**, map **inputs**, then **dry run** or **apply**. See [Manifest — Where you use manifests in Phrony](/concepts/manifest#where-you-use-manifests-in-phrony).
 
-`plan`, `apply`, and `diff` accept a **file** or a **directory** that contains `index.yaml` / `index.yml`. Default path: `./manifests`.
+### With the CLI
 
-For parameterized manifests, put a **`phrony.values.yaml`** next to the manifest entry (or pass **`--values`** / set **`PHRONY_MANIFEST_VALUES`** to a file path). The file must declare `version: 1` and an `inputs` mapping (string keys to scalar values). See [Manifest — Parameterized values](/concepts/manifest#manifest-inputs).
+Network manifest commands use **`Authorization: Bearer`** with **`phrony login`** or **`PHRONY_ACCESS_TOKEN`**. They call the same Phrony API endpoints as other CLI network commands (not the public **`/v1`** surface). See [Authentication](/packages/cli/authentication).
 
----
+**`phrony plan`**, **`phrony apply`**, and **`phrony diff`** accept a **file** or a **directory** that contains `index.yaml` / `index.yml`. Default path: `./manifests`.
 
-## `phrony lint [path]`
+Validate YAML first with **`phrony lint`** (see [Init and lint](/packages/cli/init-and-lint)); pass **`--values`** when manifests declare inputs.
 
-Validates manifest YAML (Zod) with include resolution from disk. Defaults to `./manifests`.
-
-| Flag | Description |
-| ---- | ----------- |
-| `--values <path>` | Same as `plan` / `apply`: merge `inputs` from a values file before validation. |
+For parameterized manifests, put a **`phrony.values.yaml`** next to the manifest entry (or pass **`--values`** / set **`PHRONY_MANIFEST_VALUES`** to a file path). The file must declare `version: 1` and an `inputs` mapping (string keys to scalar values). See [Manifest — Parameterized values](/concepts/manifest#manifest-inputs). In the Phrony dashboard, you supply the same logical **inputs** in the **Import manifest** or **Apply manifest** dialog instead of a values file.
 
 ---
 
 ## `phrony plan [path]`
 
 **Dry-run** manifest apply: sends merged YAML to the API with `dryRun=true` and prints a planned-change summary (table by default).
+
+**In the Phrony dashboard:** after you open **Import manifest** or **Apply manifest** and upload YAML, choose **dry run** when the dialog offers it—same idea as a non-mutating plan before you commit changes.
 
 | Flag | Description |
 | ---- | ----------- |
@@ -46,6 +44,8 @@ Runs **plan** (dry-run), then prompts **Apply these changes? [y/N]** unless you 
 
 **JSON behavior:** With `--json` and **without** `--auto-approve`, `apply` only outputs the dry-run result and does **not** perform the mutating apply (use `--auto-approve` with `--json` for scripting).
 
+**In the Phrony dashboard:** use **apply** in the same dialog after you review the dry-run result (the CLI’s confirmation prompt is your local equivalent of that step).
+
 ---
 
 ## `phrony diff [path]`
@@ -59,10 +59,13 @@ You must supply the root agent id for the export side via **`--agent`**, **`PHRO
 | `--tenant <id>` | Workspace tenant id (overrides env / config). |
 | `--agent <uuid>` | Root agent id for export (overrides env / config). |
 
+**In the Phrony dashboard:** there is no single command that matches **`phrony diff`**. Use **Export manifest** (agents list, **Agent options**, or the **Manifest** sub-tab on an agent) to download YAML from the cloud, then compare files in your editor or source control. **`phrony diff`** automates that comparison for CLI workflows.
+
 ---
 
 ## See also
 
 - [CLI overview](/packages/cli) — global flags, CI
-- [Manifest](/concepts/manifest)
+- [Init and lint](/packages/cli/init-and-lint) — **`phrony lint`**
+- [Manifest](/concepts/manifest) — YAML structure and reconciliation
 - [Configuration file](/packages/cli/credentials-and-config#configuration-file)

@@ -11,7 +11,7 @@ Opens a browser to complete **OAuth 2 with PKCE** and writes tokens to your cred
 | ---- | ----------- |
 | `--api-base <url>` | Gateway origin for this login only (overrides `PHRONY_API_BASE` / `phrony.config.json`). |
 
-After login, network commands can use **Bearer** authentication against the gateway’s internal routes.
+After login, network commands send **Bearer** tokens to the Phrony API endpoints the CLI uses (not public **`/v1`** requests).
 
 For PAT-based CI, dashboard URLs, and scope requirements, see [Authentication](/packages/cli/authentication).
 

@@ -3,9 +3,9 @@ title: "TypeScript SDK"
 description: "Install and use @phrony/sdk to call the Phrony public API with TypeScript: agents, runs, conversation, stream, and file uploads."
 ---
 
-The **TypeScript SDK** ([`@phrony/sdk`](https://www.npmjs.com/package/@phrony/sdk)) wraps the same REST routes documented in the **[API Reference](/api-reference/index)**. It sets **`X-API-Key`**, maps methods to paths, and ships types for common responses (including the **[conversation](/api-reference/runs#conversation)** payload).
+The **TypeScript SDK** ([`@phrony/sdk`](https://www.npmjs.com/package/@phrony/sdk)) wraps the same REST routes documented in the **[API Reference](/api-reference/index)**. It sends **`X-API-Key`**, maps methods to paths, and ships types for common responses (including the **[conversation](/api-reference/runs#conversation)** payload).
 
-The SDK targets the **public `/v1` API** for **workspace API keys** (`phk_…`). **Workspace access tokens** (`pwt_…`, **`Authorization: Bearer`**) are for **internal** gateway routes and CI flows such as **`phrony plan`** / **`apply`**; see the **[CLI](/packages/cli)** and **[Authentication](/api-reference/authentication)**. Do not assume you can swap an API key for an access token on the same paths.
+Use this SDK with **workspace API keys** (`phk_…`) against the **public `/v1` API**. **Workspace access tokens** (`pwt_…`) use **`Authorization: Bearer`** for the **[CLI](/packages/cli)** (for example **`phrony plan`** and **`phrony apply`**) and similar automation—they do not replace API keys on these REST paths. See **[Authentication](/api-reference/authentication)**.
 
 **Requirements:** Node **18+**, or any JavaScript environment that provides **`fetch`** (browsers, Deno, Bun, and so on).
 
@@ -21,7 +21,7 @@ You can also use `npm` or `yarn` if your project standardizes on those.
 
 ## Create a client
 
-You need a [workspace API key](/api-reference/authentication) with prefix **`phk_`**, scoped to the same **agent** and **API trigger** as the requests you make. That key is for **external** automation (runs, sessions, triggers, file library). It is **not** a workspace access token and does not call internal tenant admin routes.
+You need a [workspace API key](/api-reference/authentication) with prefix **`phk_`**, scoped to the same **agent** and **API trigger** as the requests you make. Use it for automation against the public API (runs, sessions, triggers, file library). It is **not** a workspace access token and does not authenticate CLI or manifest commands.
 
 | Option | Default | Purpose |
 | ------ | ------- | ----------- |

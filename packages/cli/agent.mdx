@@ -3,7 +3,7 @@ title: "Agent and versions"
 description: "List agents and versions, fetch JSON details, and deploy or retract versions with phrony agent."
 ---
 
-Workspace agents use the gateway **internal** HTTP API with the same Bearer auth as manifest commands (**`phrony login`** or **`PHRONY_ACCESS_TOKEN`**). See [Authentication](/packages/cli/authentication).
+Agent commands use the same **Bearer** authentication as manifest commands (**`phrony login`** or **`PHRONY_ACCESS_TOKEN`**) and the same Phrony API surface as the rest of the CLI. See [Authentication](/packages/cli/authentication).
 
 Listing agents and versions is read-only. **`phrony agent version deploy`** and **`phrony agent version retract`** change deployment state and require **`agents:write`** on workspace access tokens.
 

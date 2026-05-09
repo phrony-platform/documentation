@@ -3,18 +3,18 @@ title: "Packages"
 description: "Official client libraries for the Phrony API."
 ---
 
-Phrony publishes **open-source packages** so you can call the HTTP API with typed clients instead of hand-rolling `fetch` on every call. The API surface is the same as in the **[API Reference](/api-reference/index)**; packages add convenience, `X-API-Key` handling, and TypeScript types aligned with real responses.
+Phrony publishes **open-source packages** so you can call the HTTP API with typed clients instead of wiring `fetch` yourself. Behavior matches the **[API Reference](/api-reference/index)**; packages add helpers, **`X-API-Key`** handling, and TypeScript types aligned with responses.
 
 ## Available packages
 
 <CardGroup cols={2}>
 
-<Card title="@phrony/cli" href="/packages/cli">
-  Node **22.14+**. Lint manifests, sign in with OAuth, **agent** / **agent version**, **plan** / **apply**, and **diff** local YAML against the cloud.
+<Card title="CLI — @phrony/cli" href="/packages/cli">
+  Node **22.14+**. Lint manifests, sign in with OAuth, manage **agent** and **agent version**, **plan** / **apply**, and **diff** local YAML against the cloud.
 </Card>
 
-<Card title="TypeScript — @phrony/sdk" href="/packages/typescript-sdk">
-  Node **18+** (or any runtime with `fetch`). Covers agents, runs, conversation, stream (SSE), and the file library.
+<Card title="TypeScript SDK — @phrony/sdk" href="/packages/typescript-sdk">
+  Node **18+** or any runtime with **`fetch`** (including browsers and Deno). Agents, runs, conversation, stream (SSE), and the file library.
 </Card>
 
 </CardGroup>
@@ -22,4 +22,4 @@ Phrony publishes **open-source packages** so you can call the HTTP API with type
 ## Related
 
 - **[API Reference](/api-reference/index)** — Base URLs, authentication, and endpoint schemas
-- **[Example: Building an embedded agent](/academy/example-embedded-agent)** — End-to-end walkthrough you can follow with the TypeScript package
+- **[Building an embedded agent](/academy/example-embedded-agent)** — End-to-end walkthrough using the TypeScript package

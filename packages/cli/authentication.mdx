@@ -3,16 +3,16 @@ title: "Authentication"
 description: "Bearer authentication for the Phrony CLI: OAuth login, workspace access tokens, scopes, tenant id, and API base URL."
 ---
 
-Network commands (`plan`, `apply`, `diff`, `agent`) need a **tenant id** and **Bearer** authentication: either **`phrony login`** (OAuth, interactive) or **`PHRONY_ACCESS_TOKEN`** (workspace access token, for example in CI). The CLI calls the gateway’s **internal** routes only; it does **not** use workspace **API keys** (`X-API-Key` on public **`/v1`**) for these commands. Use the **[TypeScript SDK](/packages/typescript-sdk)** for `/v1` automation with API keys.
+Network commands (`plan`, `apply`, `diff`, `agent`) need a **tenant id** and **Bearer** authentication: either **`phrony login`** (OAuth, interactive) or **`PHRONY_ACCESS_TOKEN`** (workspace access token, for example in CI). The CLI does **not** use workspace **API keys** (`X-API-Key` on public **`/v1`**) for these commands; it uses workspace access tokens or OAuth for the Phrony API endpoints reserved for the CLI. Use the **[TypeScript SDK](/packages/typescript-sdk)** for **`/v1`** automation with API keys.
 
 ---
 
 ## Which credential should I use?
 
-| Situation | Credential | Header / env |
-| --------- | ---------- | ------------- |
+| Situation | Credential | Header or environment |
+| --------- | ---------- | ---------------------- |
 | Developer laptop, interactive | **`phrony login`** (OAuth) | Bearer access token from the token file (managed by the CLI) |
-| CI / automation (manifest plan, apply, diff; agent and agent-version commands; gateway `internal/v1/...`) | **Workspace access token** from the Phrony dashboard | Set **`PHRONY_ACCESS_TOKEN`** (`Authorization: Bearer`) |
+| CI / automation (`plan`, `apply`, `diff`, `agent`, agent-version deploy/retract) | **Workspace access token** from the Phrony dashboard | Set **`PHRONY_ACCESS_TOKEN`** (`Authorization: Bearer`) |
 
 ---
 
@@ -20,7 +20,7 @@ Network commands (`plan`, `apply`, `diff`, `agent`) need a **tenant id** and **B
 
 Run **`phrony login`**. The CLI stores refresh and access tokens under the chosen **profile** and refreshes access tokens automatically when they are close to expiry. Run **`phrony profile logout`** (or **`phrony logout`**) to delete those OAuth fields from your credentials file on disk (for example when switching machines); it does not revoke tokens on the server. Use **`phrony profile ls`** to see which profiles exist, which have a usable OAuth session, and which still have a stored **access token** field.
 
-OAuth uses **Bearer** tokens against the gateway’s internal endpoints—no **`PHRONY_ACCESS_TOKEN`** required when you are logged in.
+OAuth supplies **Bearer** tokens for those CLI API endpoints. You do not set **`PHRONY_ACCESS_TOKEN`** when you are logged in.
 
 Command flags and **`--api-base`** are documented on [Login](/packages/cli/login).
 
@@ -30,7 +30,7 @@ Command flags and **`--api-base`** are documented on [Login](/packages/cli/login
 
 Create a token in the **Phrony dashboard** under **Settings → Access tokens** (time to live and scopes). Copy the **`pwt_…`** secret once and store it in your CI provider as **`PHRONY_ACCESS_TOKEN`**.
 
-**Scopes for internal CLI routes:** the gateway checks scopes on internal routes. For **`phrony plan`**, **`phrony apply`**, **`phrony agent version deploy`**, and **`phrony agent version retract`**, the token must include **`agents:write`**. For **`phrony diff`** (manifest export), **`phrony agent ls`**, **`phrony agent get`**, **`phrony agent version ls`**, and **`phrony agent version get`**, include **`agents:read`**. Broader scopes (for example **`internal:*`**) also work if your organization issues them.
+**Scopes:** the API checks scopes on each request. For **`phrony plan`**, **`phrony apply`**, **`phrony agent version deploy`**, and **`phrony agent version retract`**, the token must include **`agents:write`**. For **`phrony diff`** (manifest export), **`phrony agent ls`**, **`phrony agent get`**, **`phrony agent version ls`**, and **`phrony agent version get`**, include **`agents:read`**. Broader scopes (for example **`internal:*`**) also work if your organization issues them.
 
 The CLI resolves manifest auth in this order: **`PHRONY_ACCESS_TOKEN`** → **OAuth** profile from **`phrony login`**. When **`PHRONY_ACCESS_TOKEN`** is set, OAuth tokens in your credentials file are **ignored** for that run (the CLI prints a short warning if both apply).
 

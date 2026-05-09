@@ -3,6 +3,8 @@ title: "Init and lint"
 description: "Scaffold a Phrony manifest project with phrony init and validate YAML offline with phrony lint."
 ---
 
+Manifest **lint** in this section is the **CLI** command: it validates YAML **offline** against the published schema. If you work mostly in the **Phrony dashboard**, **Import manifest** and **Apply manifest** run **checks** (placeholders, LLM provider names, and related blockers) in the browser before you **dry run** or **apply**—see [Manifest — Where you use manifests in Phrony](/concepts/manifest#where-you-use-manifests-in-phrony). You can use **`phrony lint`** in CI or before upload for the same declared inputs shape as **`--values`** on **`plan`** / **`apply`**.
+
 ## `phrony init`
 
 Creates:
@@ -18,6 +20,8 @@ If `.gitignore` exists (or is created), the CLI appends `.env` and `.phrony/` wh
 | ---- | ----------- |
 | `--force` | Overwrite starter files if they already exist. |
 
+**In the Phrony dashboard:** you do not need **`phrony init`** to use manifests—create agents and integrations in the UI, **export manifest** when you want YAML on disk, or **import manifest** / **apply manifest** to bring YAML into the workspace. **`phrony init`** is for a **local** starter layout (`manifests/`, `phrony.config.json`) when you prefer files and the CLI.
+
 ---
 
 ## `phrony lint [path]`
@@ -27,9 +31,17 @@ Validates manifest YAML against the published schema (with **includes** resolved
 - Pass a **file** or a **directory**. Directories are scanned recursively for `.yaml` / `.yml` (skipping `node_modules` and `.git`).
 - **Offline** — does not call the network; safe in CI for schema checks.
 
+| Flag | Description |
+| ---- | ----------- |
+| `--values <path>` | Merge `inputs` from a values file before validation (same behavior as **`phrony plan`** / **`phrony apply`**). |
+
+**In the Phrony dashboard:** parameterized manifests are validated when you map **inputs** in the **Import manifest** or **Apply manifest** dialog; use **`phrony lint --values`** when you want the same merged document checked **before** upload.
+
+For **`plan`**, **`apply`**, and **`diff`**, see [Manifest](/packages/cli/manifest).
+
 ---
 
 ## See also
 
 - [CLI overview](/packages/cli) — global flags, quick start, exit codes
-- [Manifest](/concepts/manifest)
+- [Manifest](/concepts/manifest) — YAML structure, includes, and reconciliation

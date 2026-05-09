@@ -3,7 +3,19 @@ title: "Sample manifests"
 description: "Parameterized Phrony manifests: Telegram relay and Gmail new-mail triage (HITL)."
 ---
 
-The [Phrony CLI](/packages/cli/manifest) can validate these files with `phrony lint`. Each sample uses [manifest inputs](/concepts/manifest#manifest-inputs); default values live in **`phrony.values.yaml`** in the same folder as the manifest entry file. **`type: integration`** inputs are picked in **Apply manifest**. After apply, finish **integration connection** in the Phrony dashboard when prompted.
+Each sample declares [manifest inputs](/concepts/manifest#manifest-inputs). You can bring them into a workspace from the **Phrony dashboard** or with the **CLI**.
+
+### In the Phrony dashboard
+
+Open **Import manifest** on the agents list, or **Apply manifest** under **Agent options** on an agent. Upload the sample YAML file from this repo. After **checks** pass, map **`integration`** and **`llm_provider`** inputs (and any **`string`** inputs such as ids) in the dialog—defaults in each folder’s **`phrony.values.yaml`** show the shape of the resolved map. Then **dry run** and **apply**. See [Manifest — Where you use manifests in Phrony](/concepts/manifest#where-you-use-manifests-in-phrony).
+
+### With the CLI
+
+Run **`phrony lint`** (offline schema check), then **`phrony plan`** / **`phrony apply`** with merged inputs—see [Plan, apply, and diff](/packages/cli/manifest). For includes and **`--values`**, see [Init and lint](/packages/cli/init-and-lint).
+
+Defaults live in **`phrony.values.yaml`** next to each manifest entry (same format as **`--values`** / **`PHRONY_MANIFEST_VALUES`** on **`plan`** and **`apply`**).
+
+After apply (either path), finish **integration connection** in the Phrony dashboard when prompted.
 
 ## Files in this repository
 
@@ -12,12 +24,14 @@ The [Phrony CLI](/packages/cli/manifest) can validate these files with `phrony l
 | [telegram-public-api-notify/telegram-public-api-notify.yaml](./manifests/telegram-public-api-notify/telegram-public-api-notify.yaml) | **HITL**: **API** trigger → **cat fact** (public HTTP) → **Telegram** (approval). [Details](#telegram-public-api-sample) |
 | [gmail-new-mail-hitl/gmail-new-mail-hitl.yaml](./manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml) | **HITL**: Gmail **new message** event (**`GMAIL_NEW_GMAIL_MESSAGE`**) → fetch, label, reply draft. [Details](#gmail-new-mail-sample) |
 
-From a local clone of the docs repo, run:
+From a local clone of this documentation repository, run:
 
 ```bash
 phrony lint samples/manifests/telegram-public-api-notify/telegram-public-api-notify.yaml
 phrony lint samples/manifests/gmail-new-mail-hitl/gmail-new-mail-hitl.yaml
 ```
+
+Pass **`--values <path>`** if your values file is not beside the YAML path (same behavior as **`phrony plan`** / **`phrony apply`**).
 
 ## Telegram + public API sample {#telegram-public-api-sample}
 
@@ -27,7 +41,7 @@ The **`telegram-public-api-notify/`** folder is a **relay demo**: an **API trigg
 
 **How to use it**
 
-1. Apply the manifest and set **`telegram_chat_id`** to the destination chat id.
+1. **Apply the manifest** from the **Phrony dashboard** (**Import manifest** / **Apply manifest**) or with **`phrony apply`** and **`--values`** pointing at the folder’s **`phrony.values.yaml`**. Set **`telegram_chat_id`** to the destination chat id (in the dialog or in the values file).
 2. Connect **Telegram** (bot token). **Cat Facts (public HTTP)** is declared in the manifest (read-only, no auth).
 3. Call the agent’s **API trigger** from your automation (optional context in the payload). The operator **approves the send** when prompted.
 4. See [Human in the loop (HITL)](/techniques/human-in-the-loop).
@@ -40,9 +54,9 @@ On each new message, the **HITL** agent **fetches** the message, **applies a tri
 
 **How to use it**
 
-1. Apply the manifest; pick your **Gmail** integration and set **`triage_label_id`** to a real Gmail **label id** (use **`list_gmail_labels`** in a test run or Gmail’s UI; not the human-readable name alone).
+1. **Apply the manifest** from the **Phrony dashboard** or with **`phrony apply`** and the sample **`phrony.values.yaml`**. Pick your **Gmail** integration and set **`triage_label_id`** to a real Gmail **label id** (use **`list_gmail_labels`** in a test run or Gmail’s UI; not the human-readable name alone).
 2. Connect **Gmail** (OAuth) if prompted.
 3. Ensure the **event trigger** is enabled in the dashboard; new mail in the watched mailbox should start runs.
 4. See [Human in the loop (HITL)](/techniques/human-in-the-loop) and [Trigger ingress](/concepts/trigger-ingress).
 
-See [Manifest](/concepts/manifest) for document shape, apply, and dry run.
+See [Manifest](/concepts/manifest) for document shape, placeholders, and dashboard dry run. See [Plan, apply, and diff](/packages/cli/manifest) for **`phrony plan`**, **`phrony apply`**, and **`phrony diff`**.
