@@ -5,6 +5,8 @@ description: "Parameterized Phrony manifests: Telegram relay and Gmail new-mail 
 
 Each sample declares [manifest inputs](/concepts/manifest#manifest-inputs). You can bring them into a workspace from the **Phrony dashboard** or with the **CLI**.
 
+The Phrony team maintains an open-source registry on GitHub—[**phrony-platform/manifests**](https://github.com/phrony-platform/manifests)—with curated samples you can clone or browse outside this documentation repo.
+
 ### In the Phrony dashboard
 
 Open **Import manifest** on the agents list, or **Apply manifest** under **Agent options** on an agent. Upload the sample YAML file from this repo. After **checks** pass, map **`integration`** and **`llm_provider`** inputs (and any **`string`** inputs such as ids) in the dialog—defaults in each folder’s **`phrony.values.yaml`** show the shape of the resolved map. Then **dry run** and **apply**. See [Manifest — Where you use manifests in Phrony](/concepts/manifest#where-you-use-manifests-in-phrony).
@@ -17,7 +19,9 @@ Defaults live in **`phrony.values.yaml`** next to each manifest entry (same form
 
 After apply (either path), finish **integration connection** in the Phrony dashboard when prompted.
 
-## Files in this repository
+## Files in this documentation repository
+
+The paths below are under **`samples/manifests/`** in the docs source. Selected samples also appear in [**phrony-platform/manifests**](https://github.com/phrony-platform/manifests).
 
 | Path | Purpose |
 | ---- | ------- |

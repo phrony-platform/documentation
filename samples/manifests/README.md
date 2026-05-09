@@ -1,5 +1,7 @@
 # Sample Phrony manifests
 
+Open-source registry (GitHub): [**phrony-platform/manifests**](https://github.com/phrony-platform/manifests).
+
 This folder holds **two** parameterized examples you can copy and adapt. Each uses [manifest inputs](/concepts/manifest#manifest-inputs) (`inputs` + `{{inputs.*}}`) and a **`phrony.values.yaml`** beside the entry YAML for **`phrony lint`**, **`phrony plan`**, and **`phrony apply`** (see [Plan, apply, and diff](/packages/cli/manifest)). In the dashboard, map **`integration`** and **`llm_provider`** inputs during **Import manifest** (agents list) or **Apply manifest** (**Agent options** on an agent). After apply, finish **integration connection** in the Phrony dashboard when prompted.
 
 | Folder | Use case |
