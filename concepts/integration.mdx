@@ -171,7 +171,7 @@ In **Add Integration**:
 
 ## Notes
 
-- **Billing** may cap **custom HTTP** integration count and **integration calls** per period; see your plan and usage in the dashboard.
+- **Billing** may cap **custom HTTP** integration count, **integration calls** per period, and per-session **active time** plus **agent wait budget** (time agents spend in completed waits during a session); see your plan and usage under **Settings** → **Plan & billing** and [Session — plan limits](/concepts/session#plan-limits-on-a-session).
 - **Event triggers** (on an [agent](/concepts/agent)) need a **built-in** integration with an **active connection**; if none qualify, the product surfaces that in the trigger editor.
 - Use [Secret](/concepts/secret) Manager for credentials; integrations store references to secrets, not the raw values.
 

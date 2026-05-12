@@ -1,6 +1,6 @@
 ---
 title: "Session"
-description: "One continuous piece of work for an agent: status, history, and controls."
+description: "One continuous piece of work for an agent: status, history, controls, and subscription limits on session time and waits."
 ---
 
 ## Description
@@ -27,6 +27,28 @@ What you typically see for a session:
 | **Runs and steps**            | Deeper views show each **run** in the session and a **step-by-step** timeline for debugging.                                |
 
 A [workspace](/concepts/workspace)-wide list may add columns such as **agent name** so you can scan activity across many agents.
+
+## Plan limits on a session
+
+Your [workspace](/concepts/workspace) **subscription** includes platform limits on a **single session** so runs cannot grow without bound:
+
+| Limit | What it means |
+| ----- | --------------- |
+| **Max active session time** | How long the session may stay in “working” time on the clock, **excluding** time spent in **completed** waits when the agent pauses until later (for pacing or polling). When this cap is reached, the session ends with an error that calls out active time. |
+| **Agent wait budget (per session)** | How many **scheduled** seconds of agent-chosen waits may **complete successfully** in that session. If the next wait would exceed the budget, the run surfaces a clear error instead of completing that wait. |
+
+Exact numbers for **your** workspace appear under **Settings** → **Plan & billing** in the Phrony dashboard. **Catalog defaults** (SaaS) are:
+
+| Tier | Max active session time | Agent wait budget (per session) |
+| ---- | ------------------------ | ------------------------------- |
+| **Free** | 1 hour | 5 minutes |
+| **Premium** | 6 hours | 48 hours |
+| **Business** | Unlimited | 7 days |
+| **Enterprise** (SaaS catalog) | Unlimited | 7 days |
+
+Self-hosted **Enterprise** limits are set in your contract; they often align with **Business** SaaS defaults until you negotiate otherwise.
+
+These limits apply to the **session** as a whole (root run and any related work in that session), not per individual model step. They are separate from per-run settings on an [agent version](/concepts/agent), such as **max tool calls** or optional version-level session caps, which Phrony still combines with your plan where the product merges both.
 
 <Frame caption="A **Sessions** list: scan **Status** and open a row for details.">
   <img

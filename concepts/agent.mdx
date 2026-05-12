@@ -145,6 +145,8 @@ This is the **tool allowlist** for the snapshot: which [integration](/concepts/i
 
 Only checked operations are even **visible** to the model as callable tools—everything else is hidden, which is how you enforce least privilege. If nothing is checked, the agent can still reason but cannot call your HTTP or built-in operations until you allow them. The list is grouped by integration so you can enable whole products or fine-grained actions.
 
+**Waiting and pacing:** Agents can pause for a relative duration or until a specific wall time—for example to poll gently, space out actions, or sleep until an event window. Use this sparingly. Your [workspace](/concepts/workspace) **plan** caps **how much total wait** may complete in a session and **how long** the session may stay active on the clock excluding completed waits—see [Session — plan limits](/concepts/session#plan-limits-on-a-session).
+
 Rules under **Limits & Safety** that depend on a specific operation only consider operations you have **already allowed here**.
 
 ### Limits & Safety
