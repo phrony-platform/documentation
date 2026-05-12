@@ -47,6 +47,7 @@ const phrony = new Phrony({
 | `getRun` | [Get run status](/api-reference/runs#get-v1-runs-runid) `GET /v1/runs/{runId}` |
 | `getConversation` | [Get conversation](/api-reference/runs#conversation) `GET /v1/runs/{runId}/conversation` |
 | `sendRunMessage` | [Send input or messages](/api-reference/runs#send-input-or-messages-to-a-run) `POST .../messages` or `.../input` |
+| `skipAgentWaitTimer` | [Skip agent wait](/api-reference/runs#post-v1-runs-runid-skip-agent-wait) `POST /v1/runs/{runId}/skip-agent-wait` |
 | `streamRunEvents` | [Stream (SSE)](/api-reference/runs#stream-sse) `GET /v1/runs/{runId}/stream` |
 | `presignFile` / `finalizeFile` | [File library](/api-reference/file-library) `POST /v1/file-library/...` |
 | `uploadWorkspaceFile` | Presign → `PUT` → finalize in one call |

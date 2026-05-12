@@ -163,9 +163,20 @@ The API may include other fields.
 
 **Output-only (redacted) stream:** When the same API trigger setting hides the full timeline, Phrony **filters** the SSE event stream. Events with **`kind` `step`**, **`user_task`**, or **`aitl`** are dropped, and **`run`** events with `subject` **`engine.subagent.spawned`** are also dropped, so the client only receives a safe subset. Unfiltered clients still receive the full set of `kind` values.
 
+<a id="post-v1-runs-runid-skip-agent-wait" />
+## `POST` `/v1/runs/{runId}/skip-agent-wait`
+
+> End a **phrony_wait** timer early when the run is **`WaitingForTimer`**. Same **run-scoped** API key authorization as other **`/v1/runs/{runId}`** routes.
+
+- **Auth:** Run-access key (same as [Get run](#get-v1-runs-runid)).
+- **Status:** **202 Accepted** on success (body shape matches [Send input or messages](#send-input-or-messages-to-a-run) — typically `{ "status": "Running" }`).
+- **Body:** None. The platform records the **API key** as the skip actor for audit.
+
+**Errors:** **400** when the run is not **`WaitingForTimer`**, billing or configuration rejects the resume, or the runtime rejects the request. If the run already resumed (race with the natural timer), the service may still return success when the runtime reports the run is already running.
+
 ## The session message body
 
-`POST` to **`/v1/runs/{runId}/input`** or **`/v1/runs/{runId}/messages`** accepts JSON with a **`runId`** that matches the path, plus either **`userTaskId`** (HITL), or **`text`** / **`message`**, and/or **`files`**, depending on [how the run is paused](/concepts/user-task). See [Send input or messages](#send-input-or-messages-to-a-run) below for field tables.
+`POST` to **`/v1/runs/{runId}/input`** or **`/v1/runs/{runId}/messages`** accepts JSON with a **`runId`** that matches the path, plus either **`userTaskId`** (HITL), or **`text`** / **`message`**, and/or **`files`**, or use the dedicated [skip-agent-wait](#post-v1-runs-runid-skip-agent-wait) route for **`WaitingForTimer`**. See [Send input or messages](#send-input-or-messages-to-a-run) below for field tables.
 
 <a id="send-input-or-messages-to-a-run" />
 ## `POST` `/v1/runs/{runId}/input` and `/v1/runs/{runId}/messages`
@@ -192,6 +203,7 @@ These routes cover the usual ways to [resume a run](/concepts/user-task) that is
 | `message` | string | No | Same role as `text`. |
 | `files` | array | No | [Workspace file](/concepts/file-library) attachments for a user turn. See **File item** below. |
 | `completedByEmail` | string (email) | No | Set by the dashboard; do not rely on a client copy for untrusted clients. |
+| `skipAgentWait` | `true` | No | Only when the run is **`WaitingForTimer`**: resume the **phrony_wait** immediately (dashboard session messages; requires **`completedByEmail`** from the trusted gateway). |
 
 **`files[]` item (when resuming with attachments):**
 
@@ -202,7 +214,7 @@ These routes cover the usual ways to [resume a run](/concepts/user-task) that is
 | `filename` | string | No | Display or hint name. |
 | `mediaType` | string | No | Content type. |
 
-**Validation:** You must provide **`userTaskId`**, or non-empty **`text`/`message`**, or at least one **`files`** entry, according to the pause type.
+**Validation:** You must provide **`userTaskId`**, or non-empty **`text`/`message`**, or at least one **`files`** entry, or use **`skipAgentWait: true`** only when the run is **`WaitingForTimer`** (dashboard / internal session messages — see your integration guide), according to the pause type. Embedded API keys should prefer **`POST /v1/runs/{runId}/skip-agent-wait`** instead of mixing skip flags into the generic messages body.
 
 **Response (success, JSON):** **202 Accepted** body, typically:
 
@@ -219,6 +231,7 @@ These routes cover the usual ways to [resume a run](/concepts/user-task) that is
 | `GET` | `/v1/runs/{runId}/conversation` | Conversation JSON. |
 | `GET` | `/v1/runs/{runId}/stream` | SSE stream. |
 | `POST` | `/v1/runs/{runId}/input` or `…/messages` | HITL completion or conversational message. |
+| `POST` | `/v1/runs/{runId}/skip-agent-wait` | Skip **phrony_wait** while **`WaitingForTimer`**. |
 
 ## Examples
 

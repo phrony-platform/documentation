@@ -130,7 +130,7 @@ with urllib.request.urlopen(req) as r:
 
 When the model hits an operation that requires approval, the run **pauses** and Phrony creates a **[user task](/concepts/user-task)**. Your backend can treat this like a **second phase** of the same `runId`:
 
-1. **Poll** `GET /v1/runs/{runId}` until `status` indicates the run is waiting for input—common values include **`WaitingForHITL`**, **`WaitingForAITL`**, and **`WaitingForResponse`** (your workspace may use the same strings in the public poll body). If the run finishes without a pause, there is no task to complete in that loop.
+1. **Poll** `GET /v1/runs/{runId}` until `status` indicates the run is waiting for input—common values include **`WaitingForHITL`**, **`WaitingForAITL`**, **`WaitingForResponse`**, and **`WaitingForTimer`** (your workspace may use the same strings in the public poll body). If the run finishes without a pause, there is no task to complete in that loop.
 2. **Fetch the timeline** with `GET /v1/runs/{runId}/conversation` (same API key). With **Expose step timeline to API clients** **on**, the JSON includes an **`items`** array. Find the row whose **`type`** is **`UserTaskReq`**: the step **`content`** includes a **`user_task_id`** (snake_case in the payload) identifying the pending task.
 3. **Resume** with `POST /v1/runs/{runId}/messages` (or `.../input`) and a JSON body that includes:
    - **`runId`** — same UUID as in the path
@@ -142,6 +142,8 @@ Other [user task kinds](/concepts/user-task#kinds) use different fields (for exa
 4. **Poll** `GET /v1/runs/{runId}` again. The run may continue, pause again (another task), or complete.
 
 **Waiting for chat-style text:** If the run is **`WaitingForResponse`**, send **`text`** or **`message`** instead of **`userTaskId`** (see the same API reference section).
+
+**Waiting on a phrony_wait timer:** If the run is **`WaitingForTimer`**, call **`POST /v1/runs/{runId}/skip-agent-wait`** with no JSON body (same **`X-API-Key`**), or use **`phrony.skipAgentWaitTimer(runId)`** in the TypeScript SDK. See **[Runs — Skip agent wait](/api-reference/runs#post-v1-runs-runid-skip-agent-wait)**.
 
 Example (TypeScript SDK) after you have `runId` and have called **`getConversation`**:
 
