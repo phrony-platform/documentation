@@ -9,7 +9,7 @@ The Phrony team maintains an open-source registry on GitHub—[**phrony-platform
 
 ### In the Phrony dashboard
 
-Open **Import manifest** on the agents list, or **Apply manifest** under **Agent options** on an agent. Upload the sample YAML file from this repo. After **checks** pass, map **`integration`** and **`llm_provider`** inputs (and any **`string`** inputs such as ids) in the dialog—defaults in each folder’s **`phrony.values.yaml`** show the shape of the resolved map. Then **dry run** and **apply**. See [Manifest — Where you use manifests in Phrony](/concepts/manifest#where-you-use-manifests-in-phrony).
+Open **Import manifest** on the agents list, or **Apply manifest** under **Agent options** on an agent. Upload the sample YAML file from this repo. After **checks** pass, map **`integration`** and **`llm_provider`** inputs (and any **`string`** inputs such as ids) in the dialog—the dashboard **filters** workspace LLM providers and integrations to match what the manifest declares on the tied `llmProviders` / `services` rows (for example **OpenAI** only, or a specific built-in **toolkit**). If nothing matches yet, create the resource, then **Check manifest** or upload again. Defaults in each folder’s **`phrony.values.yaml`** show the shape of the resolved map. Then **dry run** and **apply**. See [Manifest — Where you use manifests in Phrony](/concepts/manifest#where-you-use-manifests-in-phrony).
 
 ### With the CLI
 

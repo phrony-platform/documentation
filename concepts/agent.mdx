@@ -57,6 +57,10 @@ An **agent version** is a versioned configuration of an agent. When an agent is 
 | **Live version** | Which snapshot label is **currently deployed**—the line new runs pick up—or nothing if you have never deployed. |
 | **Created**      | When the agent record was created (may be hidden on narrow layouts).                                            |
 
+### Row menu (⋯)
+
+Each row’s menu includes **Edit agent** and **Export manifest**. When a snapshot is **live** (**Live version** is set), you also get **Retract deployment**—that moves the deployed line back to **testing** without deleting the agent. **Delete agent** is available only when **nothing** is deployed; retract the live version first if you need to remove the agent.
+
 ## Agent detail page (high level)
 
 | Area                 | Meaning                                                                                                                                                                                                                              |
@@ -66,6 +70,8 @@ An **agent version** is a versioned configuration of an agent. When an agent is 
 | **LLM provider**     | The **default credential bundle** (vendor keys, optional base URL) used for this agent’s model calls. Each version still picks a concrete **model id**; that id must exist for the chosen provider.                                  |
 | **Version switcher** | Lets you pick which snapshot you are viewing or editing. The **deployed** one is the live default for new runs. You can open full history, create a new snapshot from the current line, or jump back to the latest or deployed view. |
 | **Main tabs**        | **Version configuration** (sub-tabs below, including **[Manifest](#manifest)**), **Sessions**, and **[Triggers](#triggers)** when the agent is not a sub-agent.                                                                          |
+
+The header **Agent options** menu (⋯) follows the same rules as the agents list row menu above: **Delete agent** appears only when **no** version is deployed; if a version is live, use **Retract deployment** in that menu first.
 
 ## Triggers
 
